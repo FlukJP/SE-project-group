@@ -1,4 +1,4 @@
-import db from '@/lib/MySQL'; // เรียกตัวเชื่อม Database
+import db from '@/lib/mysql'; // เรียกตัวเชื่อม Database
 import { User } from '@/types/User'; // เรียก Type ที่เราเพิ่งทำ
 import bcrypt from 'bcrypt'; // ตัวช่วยเข้ารหัส
 
