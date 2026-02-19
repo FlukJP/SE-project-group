@@ -13,3 +13,7 @@ export interface Product {
     Created_at?: Date;
     Updated_at?: Date;
 }
+
+export interface ProductWithSeller extends Product {
+    SellerName: string; 
+}

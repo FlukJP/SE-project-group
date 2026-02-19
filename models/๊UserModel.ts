@@ -3,29 +3,40 @@ import { User } from '@/types/User';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export const UserModel = {
-    // 1.หา User จาก Email (Login/Check)
+    // 1.ดึงข้อมูล User จาก Email (Login/Check)
     findByEmail: async (email: string): Promise<User | null> => {
-        const sql = `SELECT * FROM User WHERE Email = ?`;
+        const sql = `
+            SELECT * FROM User 
+            WHERE Email = ?
+        `;
         const [rows]: any = await db.query(sql, [email]);
         return rows.length > 0 ? rows[0] : null;
     },
 
-    // 2.หา  User จาก ID (Profile/Identity)
+    // 2.ดึงข้อมูล User จาก ID (Profile/Identity)
     findByID: async (id: number): Promise<User | null> => {
-        const sql = `SELECT * FROM User WHERE UserID = ?`;
+        const sql = `
+            SELECT * FROM User 
+            WHERE UserID = ?
+        `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
     // 3.ดึงรายชื่อ User ทั้งหมด (Admin List)
     findAll: async (): Promise<User[]> => {
-        const sql = 'SELECT UserID, Username, Email, Role, Verified_Date, RatingScore FROM User';
+        const sql = `
+            SELECT UserID, Username, Email, Role, Verified_Date, RatingScore FROM User
+        `;
         const [rows] = await db.query<RowDataPacket[]>(sql);
         return rows as User[];
     },
     // 4.สร้าง User ใหม่ (Register)
     createUser: async (userData: User): Promise<number> => {
-        const sql = `INSERT INTO User (Username, Email, Password, Role, Phone_number, Address) VALUES (?, ?, ?, ?, ?, ?)`;
+        const sql = `
+            INSERT INTO User (Username, Email, Password, Role, Phone_number, Address, Verified_Date, RatingScore) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `;
         const valuse = [
             userData.Username,
             userData.Email,
@@ -36,7 +47,6 @@ export const UserModel = {
             userData.Verified_Date || null,
             userData.RatingScore || 0
         ];
-
         const [result] = await db.query<ResultSetHeader>(sql, valuse);
         return result.insertId;
     },
