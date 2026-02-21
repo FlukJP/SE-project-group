@@ -26,7 +26,7 @@ export const ReportModel = {
     findReportsByUserID: async (userID: number): Promise<Report[]> => {
         const sql = `
             SELECT * FROM Report
-            WHERE ReporterID = ?
+            WHERE Reporter_ID = ?
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [userID]);
         return rows as Report[];
@@ -35,12 +35,12 @@ export const ReportModel = {
     // 4.สร้าง Report ใหม่(Report)
     createReport: async (reportData: Report): Promise<number> => {
         const sql = `
-            INSERT INTO Report (ReporterID, TargetID, ReportType, Reason)
+            INSERT INTO Report (Reporter_ID, Target_ID, ReportType, Reason)
             VALUES (?, ?, ?, ?)
         `;
         const values = [
-            reportData.ReporterID,
-            reportData.TargetID,
+            reportData.Reporter_ID,
+            reportData.Target_ID,
             reportData.ReportType,
             reportData.Reason
         ];

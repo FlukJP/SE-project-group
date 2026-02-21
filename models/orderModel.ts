@@ -17,7 +17,7 @@ export const OrderModel = {
     findByBuyerID: async (buyerID: number): Promise<Order[]> => {
         const sql = `
             SELECT * FROM \`Order\`
-            WHERE BuyerID = ?
+            WHERE Buyer_ID = ?
             ORDER BY Created_at DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [buyerID]);
@@ -28,8 +28,8 @@ export const OrderModel = {
     findBySellerID: async (sellerID: number): Promise<Order[]> => {
         const sql = `
             SELECT o.* FROM \`Order\` o
-            JOIN Product p ON o.ProductID = p.ProductID
-            WHERE p.SellerID = ?
+            JOIN Product p ON o.Product_ID = p.Product_ID
+            WHERE p.Seller_ID = ?
             ORDER BY o.Created_at DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [sellerID]);
@@ -51,7 +51,7 @@ export const OrderModel = {
     findByProductTitle: async (title: string): Promise<Order[]> => {
         const sql = `
             SELECT o.* FROM \`Order\` o
-            JOIN Product p ON o.ProductID = p.ProductID
+            JOIN Product p ON o.Product_ID = p.Product_ID
             WHERE p.Title LIKE ?
             ORDER BY o.Created_at DESC
         `;
@@ -83,12 +83,12 @@ export const OrderModel = {
     // 10.สร้าง Order ใหม่ (Create Order)
     createOrder: async (orderData: Order): Promise<number> => {
         const sql = `
-            INSERT INTO \`Order\` (ProductID, BuyerID, Quantity, Total_Price)
+            INSERT INTO \`Order\` (Product_ID, Buyer_ID, Quantity, Total_Price)
             VALUES (?, ?, ?, ?)
         `;
         const values = [
-            orderData.ProductID,
-            orderData.BuyerID,
+            orderData.Product_ID,
+            orderData.Buyer_ID,
             orderData.Quantity,
             orderData.Total_Price
         ];
@@ -101,7 +101,7 @@ export const OrderModel = {
         const sql = `
             UPDATE \`Order\`
             SET Status = ?
-            WHERE OrderID = ?
+            WHERE Order_ID = ?
         `;
         const [result] = await db.query<ResultSetHeader>(sql, [status, orderID]);
         return result.affectedRows > 0;
@@ -113,7 +113,7 @@ export const OrderModel = {
         const sql = `
             UPDATE \`Order\`
             SET Status = 'cancelled'
-            WHERE OrderID = ?
+            WHERE Order_ID = ?
         `;
         const [result] = await db.query<ResultSetHeader>(sql, [orderID]);
         return result.affectedRows > 0;

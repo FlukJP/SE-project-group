@@ -17,7 +17,7 @@ export const UserModel = {
     findByID: async (id: number): Promise<User | null> => {
         const sql = `
             SELECT * FROM User 
-            WHERE UserID = ?
+            WHERE User_ID = ?
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as User) : null;
@@ -26,7 +26,7 @@ export const UserModel = {
     // 3.ดึงรายชื่อ User ทั้งหมด (Admin List)
     findAll: async (): Promise<User[]> => {
         const sql = `
-            SELECT UserID, Username, Email, Role, Verified_Date, RatingScore FROM User
+            SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore FROM User
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql);
         return rows as User[];
@@ -66,7 +66,7 @@ export const UserModel = {
 
     // 6.ลบ User (Ban/Close Account)
     delete: async (id: number): Promise<boolean> => {
-        const sql = 'DELETE FROM User WHERE UserID = ?';
+        const sql = 'DELETE FROM User WHERE User_ID = ?';
         const [result] = await db.query<ResultSetHeader>(sql, [id]);
         return result.affectedRows > 0;
     }

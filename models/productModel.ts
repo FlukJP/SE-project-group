@@ -8,8 +8,8 @@ export const ProductModel = {
         const sql = `
             SELECT p.*, u.Username AS SellerName
             FROM Product p
-            LEFT JOIN User u ON p.SellerID = u.UserID
-            WHERE p.ProductID = ?
+            LEFT JOIN User u ON p.Seller_ID = u.User_ID
+            WHERE p.Product_ID = ?
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as ProductWithSeller) : null;
@@ -20,8 +20,8 @@ export const ProductModel = {
         const sql = `
             SELECT p.*, u.Username AS SellerName
             FROM Product p
-            LEFT JOIN User u ON p.SellerID = u.UserID
-            WHERE p.SellerID = ? 
+            LEFT JOIN User u ON p.Seller_ID = u.User_ID
+            WHERE p.Seller_ID = ? 
             ORDER BY p.Created_at DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [sellerID]);
@@ -33,7 +33,7 @@ export const ProductModel = {
         const sql = `
             SELECT p.*, u.Username AS SellerName
             FROM Product p
-            LEFT JOIN User u ON p.SellerID = u.UserID
+            LEFT JOIN User u ON p.Seller_ID = u.User_ID
             WHERE p.Category = ? 
             ORDER BY p.Created_at DESC
         `;
@@ -46,7 +46,7 @@ export const ProductModel = {
         const sql = `
             SELECT p.*, u.Username AS SellerName
             FROM Product p
-            LEFT JOIN User u ON p.SellerID = u.UserID
+            LEFT JOIN User u ON p.Seller_ID = u.User_ID
             WHERE p.Condition = ? 
             ORDER BY p.Created_at DESC
         `;
@@ -59,7 +59,7 @@ export const ProductModel = {
         const sql = `
             SELECT p.*, u.Username AS SellerName
             FROM Product p
-            LEFT JOIN User u ON p.SellerID = u.UserID
+            LEFT JOIN User u ON p.Seller_ID = u.User_ID
             WHERE p.Title LIKE ? 
             ORDER BY p.Created_at DESC
         `;
@@ -75,7 +75,7 @@ export const ProductModel = {
         const sql = `
             SELECT p.*, u.Username AS SellerName
             FROM Product p
-            LEFT JOIN User u ON p.SellerID = u.UserID
+            LEFT JOIN User u ON p.Seller_ID = u.User_ID
             WHERE p.Price BETWEEN ? AND ? 
             ORDER BY p.Created_at DESC
         `;
@@ -88,7 +88,7 @@ export const ProductModel = {
         const sql = `
             SELECT p.*, u.Username AS SellerName 
             FROM Product p
-            LEFT JOIN User u ON p.SellerID = u.UserID
+            LEFT JOIN User u ON p.Seller_ID = u.User_ID
             ORDER BY p.Created_at DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql);
@@ -98,11 +98,11 @@ export const ProductModel = {
     // 8.สร้างสินค้าใหม่ (Create Product)
     createProduct: async (productData: Product): Promise<number> => {
         const sql = `
-            INSERT INTO Product (SellerID, Title, Description, Price, Condition, Category, Status, Quantity, Image_URL) 
+            INSERT INTO Product (Seller_ID, Title, Description, Price, Condition, Category, Status, Quantity, Image_URL) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
-            productData.SellerID,
+            productData.Seller_ID,
             productData.Title,
             productData.Description,
             productData.Price,
@@ -129,7 +129,7 @@ export const ProductModel = {
         const values = keys.map((key) => productData[key as keyof Product]);
         const sql = `
             UPDATE Product SET ${setClause} 
-            WHERE ProductID = ?
+            WHERE Product_ID = ?
         `;
         const [result] = await db.query<ResultSetHeader>(sql, [...values, id]);
         return result.affectedRows > 0;
@@ -139,7 +139,7 @@ export const ProductModel = {
     deleteProduct: async (id: number): Promise<boolean> => {
         const sql = `
             DELETE FROM Product 
-            WHERE ProductID = ?
+            WHERE Product_ID = ?
         `;
         const [result] = await db.query<ResultSetHeader>(sql, [id]);
         return result.affectedRows > 0;
