@@ -45,3 +45,6 @@ next-env.d.ts
 .env.local
 
 firebase_key.json
+
+# claude temp files
+tmpclaude-*

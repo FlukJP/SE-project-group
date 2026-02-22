@@ -6,7 +6,7 @@ export const UserModel = {
     // 1.ดึงข้อมูล User จาก Email (Login/Check)
     findByEmail: async (email: string): Promise<User | null> => {
         const sql = `
-            SELECT * FROM User 
+            SELECT * FROM User
             WHERE Email = ?
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [email]);
@@ -16,7 +16,7 @@ export const UserModel = {
     // 2.ดึงข้อมูล User จาก ID (Profile/Identity)
     findByID: async (id: number): Promise<User | null> => {
         const sql = `
-            SELECT * FROM User 
+            SELECT * FROM User
             WHERE User_ID = ?
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
@@ -26,7 +26,7 @@ export const UserModel = {
     // 3.ดึงรายชื่อ User ทั้งหมด (Admin List)
     findAll: async (offset: number, limit: number): Promise<User[]> => {
         const sql = `
-            SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore 
+            SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore
             FROM User
             LIMIT ? OFFSET ?
         `;
@@ -44,7 +44,7 @@ export const UserModel = {
     // 5.ดึงข้อมูล User ที่โดนBan (Admin List)
     findBannedUsers: async (offset: number, limit: number): Promise<User[]> => {
         const sql = `
-            SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore 
+            SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore
             FROM User
             WHERE Is_Banned = 1
             LIMIT ? OFFSET ?
@@ -56,7 +56,7 @@ export const UserModel = {
     // 6.สร้าง User ใหม่ (Register)
     createUser: async (userData: User): Promise<number> => {
         const sql = `
-            INSERT INTO User (Username, Email, Password, Role, Phone_number, Address, Verified_Date, RatingScore) 
+            INSERT INTO User (Username, Email, Password, Role, Phone_number, Address, Verified_Date, RatingScore)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
@@ -81,7 +81,7 @@ export const UserModel = {
         if (keys.length === 0) return false;
         const setClause = keys.map((key) => `${key} = ?`).join(', ');
         const values = keys.map((key) => userData[key as keyof User]);
-        const sql = `UPDATE User SET ${setClause} WHERE UserID = ?`;
+        const sql = `UPDATE User SET ${setClause} WHERE User_ID = ?`;
         const [result] = await db.query<ResultSetHeader>(sql, [...values, id]);
         return result.affectedRows > 0;
     },
