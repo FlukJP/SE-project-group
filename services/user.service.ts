@@ -5,7 +5,7 @@ import { AppError } from "@/errors/AppError";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
-import crypto, { verify } from "crypto";
+import crypto from "crypto";
 
 // Env guard
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -91,7 +91,7 @@ export const UserService = {
         const newUser: User = {
             ...userData,
             Password: await bcrypt.hash(userData.Password, SALT_ROUNDS),
-            Role: userData.Role,
+            Role: 'customer',
         }
 
         return await UserModel.createUser(newUser);
