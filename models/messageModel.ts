@@ -26,7 +26,7 @@ export const MessageModel = {
             message.Chat_ID,
             message.Sender_ID,
             message.Content,
-            message.MessagesType || 'text' // เผื่อค่า Default เป็น text ไว้กันพลาด
+            message.MessagesType || 'text'
         ]);
         return result.insertId;
     },
@@ -41,7 +41,6 @@ export const MessageModel = {
             AND m.Sender_ID != ? 
             AND m.Is_Read = 0
         `;
-        // ส่ง userID เข้าไป 3 ตัว เพื่อแทนค่าในเงื่อนไข Participant_1, Participant_2 และ Sender_ID
         const [rows] = await db.query<RowDataPacket[]>(sql, [userID, userID, userID]);
         return (rows[0] as any).UnreadCount || 0;
     },

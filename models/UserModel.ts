@@ -31,13 +31,21 @@ export const UserModel = {
         const [rows] = await db.query<RowDataPacket[]>(sql);
         return rows as User[];
     },
-    // 4.สร้าง User ใหม่ (Register)
+
+    // 4.ดึงข้อมูล User จากเบอร์โทรศัพท์ (Phone number lookup)
+    findByPhone: async (phone: string): Promise<User | null> => {
+        const sql = `SELECT * FROM User WHERE Phone_number = ?`;
+        const [rows] = await db.query<RowDataPacket[]>(sql, [phone]);
+        return rows.length > 0 ? (rows[0] as User) : null;
+    },
+
+    // 5.สร้าง User ใหม่ (Register)
     createUser: async (userData: User): Promise<number> => {
         const sql = `
             INSERT INTO User (Username, Email, Password, Role, Phone_number, Address, Verified_Date, RatingScore) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
-        const valuse = [
+        const values = [
             userData.Username,
             userData.Email,
             userData.Password,
@@ -47,24 +55,24 @@ export const UserModel = {
             userData.Verified_Date || null,
             userData.RatingScore || 0
         ];
-        const [result] = await db.query<ResultSetHeader>(sql, valuse);
+        const [result] = await db.query<ResultSetHeader>(sql, values);
         return result.insertId;
     },
 
-    // 5.Update ข้อมูลUser (Edit Profile)
-    updateUser: async (email: string, userData: Partial<User>): Promise<boolean> => {
+    // 6.Update ข้อมูล User (Edit Profile)
+    updateUser: async (id: number, userData: Partial<User>): Promise<boolean> => { // 👈 1. เปลี่ยน email: string เป็น id: number
         const keys = Object.keys(userData).filter(
             (key) => userData[key as keyof User] !== undefined
         );
         if (keys.length === 0) return false;
         const setClause = keys.map((key) => `${key} = ?`).join(', ');
         const values = keys.map((key) => userData[key as keyof User]);
-        const sql = `UPDATE User SET ${setClause} WHERE Email = ?`;
-        const [result] = await db.query<ResultSetHeader>(sql, [...values, email]);
+        const sql = `UPDATE User SET ${setClause} WHERE UserID = ?`;
+        const [result] = await db.query<ResultSetHeader>(sql, [...values, id]); // 👈 3. เปลี่ยนตัวแปรท้ายสุดเป็น id
         return result.affectedRows > 0;
     },
 
-    // 6.ลบ User (Ban/Close Account)
+    // 7.ลบ User (Ban/Close Account)
     delete: async (id: number): Promise<boolean> => {
         const sql = 'DELETE FROM User WHERE User_ID = ?';
         const [result] = await db.query<ResultSetHeader>(sql, [id]);

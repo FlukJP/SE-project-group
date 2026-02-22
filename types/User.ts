@@ -5,6 +5,7 @@ export interface User {
     Password?: string;
     Role: 'customer' | 'admin';
     Phone_number?: string;
+    Is_Phone_Verified?: boolean;
     Address?: string;
     Verified_Date?: Date;
     RatingScore?: number;
