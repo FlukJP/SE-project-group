@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import Navbar from "@/components/Navbar";
 import LoginModal from '@/components/LoginModal';
 import Profile from '@/components/Profile';
 
@@ -58,75 +59,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-zinc-50">
       {/* Top Nav */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-zinc-200">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-emerald-600 text-white grid place-items-center font-extrabold">
-              K
-            </div>
-            <div className="leading-tight">
-              <div className="font-extrabold text-zinc-900">Kaidee-like</div>
-              <div className="text-[11px] text-zinc-500 -mt-0.5">ตลาดมือสองใกล้คุณ</div>
-            </div>
-          </Link>
-
-<div className="hidden md:flex items-center gap-3">
-  {isLoggedIn ? (
-    <>
-      <button
-        type="button"
-        className="p-2 rounded-full hover:bg-zinc-100"
-        aria-label="Favorites"
-        title="รายการโปรด"
-      >
-        <span className="text-xl">♡</span>
-      </button>
-
-      <Link
-        href="/chat"
-        className="p-2 rounded-full hover:bg-zinc-100"
-        aria-label="Chat"
-        title="แชท"
-      >
-        <span className="text-xl">💬</span>
-      </Link>
-
-      <button
-        onClick={() => setShowProfile(true)}
-        className="h-9 w-9 rounded-full bg-zinc-200 grid place-items-center hover:bg-zinc-300"
-        aria-label="Profile"
-        title="โปรไฟล์"
-      >
-        <span className="text-sm">👤</span>
-      </button>
-
-      <Link
-        href="/products/create"
-        className="px-4 py-2 rounded-lg bg-blue-900 text-white text-sm font-semibold hover:opacity-95"
-      >
-        ลงขาย
-      </Link>
-    </>
-  ) : (
-    <>
-      <button 
-        onClick={() => setShowLogin(true)}
-        className="text-sm font-semibold text-zinc-700 hover:underline"
-      >
-        เข้าสู่ระบบ
-      </button>
-
-      <button
-        onClick={() => setShowLogin(true)}
-        className="px-4 py-2 rounded-lg bg-blue-900 text-white text-sm font-semibold hover:opacity-95"
-      >
-        ลงขาย
-      </button>
-    </>
-  )}
-</div>
-        </div>
-      </header>
+      <Navbar isLoggedIn={isLoggedIn} onProfileClick={() => setShowProfile(true)} />
 
       {/* Hero */}
       <section className="relative overflow-hidden">

@@ -1,16 +1,25 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 export default function ProfileMenu({ onClose }: { onClose: () => void }) {
+  const router = useRouter()
+
+  const handleNavigate = (tab: string) => {
+    router.push(`/profile?tab=${tab}`)
+    onClose()
+  }
+
   return (
     <div style={overlay} onClick={onClose}>
       <div style={menu} onClick={(e) => e.stopPropagation()}>
-        <div style={item}>รีวิวของฉัน</div>
-        <div style={item}>จัดการประกาศ</div>
-        <div style={item}>โปรไฟล์ของฉัน</div>
+        <div style={item} onClick={() => handleNavigate('review')}>รีวิวของฉัน</div>
+        <div style={item} onClick={() => handleNavigate('manageProfile')}>จัดการประกาศ</div>
+        <div style={item} onClick={() => handleNavigate('manageProfile')}>โปรไฟล์ของฉัน</div>
         <div style={item}>ประวัติการใช้งาน</div>
         <div style={item}>แชท</div> 
         <div style={item}>รายการโปรด</div> 
-        <div style={item}>ดูและแก้ไขข้อมูลส่วนตัว</div> 
+        <div style={item} onClick={() => handleNavigate('profile')}>ดูและแก้ไขข้อมูลส่วนตัว</div> 
         <hr />
         <div style={{ ...item, color: 'red' }}>ออกจากระบบ</div>
       </div>

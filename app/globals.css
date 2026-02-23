@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+.kd-input {
+  @apply w-full h-[44px] border border-zinc-300 rounded-md px-3 text-sm
+         focus:outline-none focus:ring-1 focus:ring-blue-300;
+}
+
+.kd-btn-primary {
+  @apply bg-blue-900 text-white px-8 py-2.5 rounded-md text-sm
+         hover:opacity-95;
+}
+
+.kd-btn-secondary {
+  @apply border border-zinc-300 px-4 py-1.5 rounded-md text-sm
+         hover:bg-zinc-50;
+}
+
+.kd-btn-outline {
+  @apply border border-blue-900 text-blue-900 px-4 py-2 rounded-md text-sm
+         hover:bg-blue-50;
+}
