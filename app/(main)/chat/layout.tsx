@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Navbar from "@/components/Navbar";
 
 export default function ChatLayout({
   children,
@@ -9,8 +10,11 @@ export default function ChatLayout({
 }) {
   // State สำหรับแท็บแชท
   const [activeTab, setActiveTab] = useState("all");
+  const [showProfile, setShowProfile] = useState(false);
 
   return (
+    <>
+    <Navbar isLoggedIn onProfileClick={() => setShowProfile(true)} />
     <div className="flex h-[calc(100vh-80px)] max-w-6xl mx-auto my-6 border border-gray-200 rounded-md overflow-hidden bg-white shadow-sm">
       
       {/* ----------------- ฝั่งซ้าย: รายการแชท (Sidebar) ----------------- */}
@@ -79,5 +83,6 @@ export default function ChatLayout({
       </div>
 
     </div>
+    </>
   );
 }
