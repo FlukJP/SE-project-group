@@ -2,13 +2,14 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import LoginModal from '@/components/LoginModal';
 import Profile from '@/components/Profile';
-
-type Category = { id: number; name: string; emoji: string; href: string };
-type Product = { id: number; title: string; price: string; img: string; location: string; timeAgo: string };
+import CategoriesSection, { Category } from "@/components/CategoriesSection";
+import ProductCard, { Product } from "@/components/ProductCard";
+import SearchBar from "@/components/SearchBar";
+import SectionHeader from "@/components/SectionHeader";
+import FeaturedSection from "@/components/FeaturedSection";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
@@ -59,7 +60,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-zinc-50">
       {/* Top Nav */}
-      <Navbar isLoggedIn={isLoggedIn} onProfileClick={() => setShowProfile(true)} />
+      <Navbar isLoggedIn={isLoggedIn} onProfileClick={() => setShowProfile(true)} onLoginClick={() => setShowLogin(true)} />
 
       {/* Hero */}
       <section className="relative overflow-hidden">
@@ -82,140 +83,26 @@ export default function HomePage() {
           </div>
 
           {/* Search Card */}
-          <div className="mt-7 bg-white text-zinc-900 rounded-2xl p-4 md:p-5 shadow-xl shadow-emerald-900/10 border border-white/70">
-            <form onSubmit={onSearch} className="grid grid-cols-1 md:grid-cols-[1fr_220px_140px] gap-3">
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">🔎</span>
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="ค้นหาสินค้า เช่น 'จักรยาน', 'iPhone', 'คอนโด'..."
-                  className="w-full rounded-xl border border-zinc-200 pl-10 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                />
-              </div>
-
-              <select
-                value={province}
-                onChange={(e) => setProvince(e.target.value)}
-                className="rounded-xl px-3 py-3 bg-white text-sm text-zinc-700 border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-              >
-                <option>ทุกจังหวัด</option>
-                <option>กรุงเทพ</option>
-                <option>เชียงใหม่</option>
-                <option>ชลบุรี</option>
-                <option>ขอนแก่น</option>
-              </select>
-
-              <button
-                type="submit"
-                className="rounded-xl bg-emerald-600 text-white text-sm font-semibold px-4 py-3 hover:opacity-95"
-              >
-                ค้นหา
-              </button>
-            </form>
-
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-zinc-600">
-              <span className="font-semibold text-zinc-700">ฮิต:</span>
-              {["iPhone", "มอเตอร์ไซค์", "คอนโด", "โน้ตบุ๊ก", "เสื้อผ้า"].map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setQuery(t)}
-                  className="px-2.5 py-1 rounded-full bg-zinc-100 hover:bg-zinc-200"
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
+          <SearchBar
+            query={query}
+            setQuery={setQuery}
+            province={province}
+            setProvince={setProvince}
+            onSearch={onSearch}
+          />
         </div>
       </section>
 
       <div className="container mx-auto px-4 py-8">
         {/* Categories */}
-        <section className="mb-9">
-          <div className="flex items-end justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-extrabold text-zinc-900">หมวดหมู่ยอดนิยม</h2>
-              <p className="text-sm text-zinc-500 mt-1">เลือกหมวดเพื่อดูประกาศที่เกี่ยวข้อง</p>
-            </div>
-            <Link href="/search" className="text-emerald-700 text-sm font-semibold hover:underline">
-              ดูหมวดทั้งหมด
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {categories.map((c) => (
-              <Link
-                key={c.id}
-                href={c.href}
-                className="group bg-white rounded-2xl border border-zinc-200 p-4 hover:shadow-md hover:-translate-y-0.5 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-2xl bg-emerald-50 grid place-items-center text-2xl">
-                    {c.emoji}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-zinc-900 group-hover:text-emerald-700">{c.name}</div>
-                    <div className="text-xs text-zinc-500">ดูประกาศ</div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <CategoriesSection categories={categories} />
 
         {/* Featured */}
-        <section>
-          <div className="flex items-end justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-extrabold text-zinc-900">ประกาศแนะนำ</h2>
-              <p className="text-sm text-zinc-500 mt-1">ประกาศยอดนิยมวันนี้ (ตัวอย่าง)</p>
-            </div>
-            <Link href="/search" className="text-emerald-700 text-sm font-semibold hover:underline">
-              ดูทั้งหมด
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            {featured.map((p) => (
-              <Link
-                key={p.id}
-                href={`/products/${p.id}`}
-                className="group bg-white rounded-2xl overflow-hidden border border-zinc-200 hover:shadow-lg transition"
-              >
-                <div className="relative h-44">
-                  <Image
-                    src={p.img}
-                    alt={p.title}
-                    fill
-                    className="object-cover group-hover:scale-[1.03] transition"
-                    sizes="(max-width: 1024px) 100vw, 25vw"
-                    priority={p.id <= 4}
-                  />
-                  <div className="absolute top-3 left-3">
-                    <span className="text-[11px] font-semibold bg-white/95 border border-zinc-200 px-2 py-1 rounded-full">
-                      ⭐ แนะนำ
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-4">
-                  <div className="line-clamp-2 font-semibold text-zinc-900 group-hover:text-emerald-700">
-                    {p.title}
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between">
-                    <div className="text-emerald-700 font-extrabold">{p.price}</div>
-                    <span className="text-[11px] text-zinc-500">{p.timeAgo}</span>
-                  </div>
-
-                  <div className="mt-2 text-xs text-zinc-500">📍 {p.location}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <FeaturedSection
+          title="ประกาศแนะนำ"
+          subtitle="ประกาศยอดนิยมวันนี้ (ตัวอย่าง)"
+          products={featured}
+        />
 
         {/* Mobile actions */}
         <div className="md:hidden mt-8 grid grid-cols-2 gap-3">
@@ -228,25 +115,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      <footer className="border-t border-zinc-200 bg-white">
-        <div className="container mx-auto px-4 py-8 text-sm text-zinc-600">
-          <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-            <div className="font-semibold text-zinc-800">© {new Date().getFullYear()} Kaidee-like (Demo)</div>
-            <div className="flex gap-4">
-              <Link href="#" className="hover:underline">
-                วิธีใช้งาน
-              </Link>
-              <Link href="#" className="hover:underline">
-                ติดต่อเรา
-              </Link>
-              <Link href="#" className="hover:underline">
-                ข้อกำหนด
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-      
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
       {showProfile && <Profile onClose={() => setShowProfile(false)} />}
     </main>

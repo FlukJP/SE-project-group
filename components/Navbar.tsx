@@ -5,9 +5,11 @@ import Link from 'next/link'
 export default function Navbar({
   isLoggedIn = true,
   onProfileClick,
+  onLoginClick,
 }: {
   isLoggedIn?: boolean
   onProfileClick?: () => void
+  onLoginClick?: () => void
 }) {
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-zinc-200">
@@ -21,7 +23,7 @@ export default function Navbar({
         </Link>
 
         <div className="flex items-center gap-3">
-          {isLoggedIn && (
+          {isLoggedIn ? (
             <>
               <Link href="/chat" className="p-2 hover:bg-zinc-100 rounded-full">
                 💬
@@ -41,6 +43,13 @@ export default function Navbar({
                 ลงขาย
               </Link>
             </>
+          ) : (
+            <button
+              onClick={onLoginClick}
+              className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
+            >
+              เข้าสู่ระบบ
+            </button>
           )}
         </div>
       </div>
