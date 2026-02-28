@@ -3,13 +3,13 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import LoginModal from '@/components/LoginModal';
-import Profile from '@/components/Profile';
-import CategoriesSection, { Category } from "@/components/CategoriesSection";
-import ProductCard, { Product } from "@/components/ProductCard";
+import LoginModal from "@/components/LoginModal";
+import Profile from "@/components/Profile";
+import CategoriesSection from "@/components/CategoriesSection";
+import { Product } from "@/components/ProductCard";
 import SearchBar from "@/components/SearchBar";
-import SectionHeader from "@/components/SectionHeader";
 import FeaturedSection from "@/components/FeaturedSection";
+import { CATEGORIES } from "@/components/categoriesData";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
@@ -17,18 +17,6 @@ export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(true); // เปลี่ยนเป็น true เพื่อดูเมนูผู้ใช้
   const [showLogin, setShowLogin] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const categories: Category[] = [
-    { id: 1, name: "รถยนต์", emoji: "🚗", href: "/search?cat=cars" },
-    { id: 2, name: "มือถือ", emoji: "📱", href: "/search?cat=phones" },
-    { id: 3, name: "บ้าน & ที่ดิน", emoji: "🏡", href: "/search?cat=property" },
-    { id: 4, name: "แฟชั่น", emoji: "👗", href: "/search?cat=fashion" },
-    { id: 5, name: "งาน", emoji: "💼", href: "/search?cat=jobs" },
-    { id: 6, name: "คอมพิวเตอร์", emoji: "💻", href: "/search?cat=computers" },
-    { id: 7, name: "เครื่องใช้ไฟฟ้า", emoji: "🔌", href: "/search?cat=appliances" },
-    { id: 8, name: "กีฬา", emoji: "🏀", href: "/search?cat=sports" },
-    { id: 9, name: "สัตว์เลี้ยง", emoji: "🐾", href: "/search?cat=pets" },
-    { id: 10, name: "อื่น ๆ", emoji: "🧩", href: "/search?cat=others" },
-  ];
 
   const featured: Product[] = useMemo(() => {
     const locs = ["กรุงเทพ", "นนทบุรี", "ปทุมธานี", "เชียงใหม่", "ชลบุรี", "ขอนแก่น"];
@@ -40,7 +28,6 @@ export default function HomePage() {
         id: i + 1,
         title: `สินค้าตัวอย่าง ${i + 1} • สภาพดี`,
         price: `${priceVal.toFixed(0)} ฿`,
-        // ใช้รูป stable (ไม่เปลี่ยนทุกครั้ง) ลดแปลก ๆ ระหว่าง SSR/Client
         img: `https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=60&sig=${i}`,
         location: locs[i % locs.length],
         timeAgo: ago[i % ago.length],
@@ -53,14 +40,17 @@ export default function HomePage() {
     const params = new URLSearchParams();
     if (query.trim()) params.set("q", query.trim());
     if (province && province !== "ทุกจังหวัด") params.set("province", province);
-    // ส่งไปหน้า search ของโปรเจกต์แก
     window.location.href = `/search?${params.toString()}`;
   };
 
   return (
     <main className="min-h-screen bg-zinc-50">
       {/* Top Nav */}
-      <Navbar isLoggedIn={isLoggedIn} onProfileClick={() => setShowProfile(true)} onLoginClick={() => setShowLogin(true)} />
+      <Navbar
+        isLoggedIn={isLoggedIn}
+        onProfileClick={() => setShowProfile(true)}
+        onLoginClick={() => setShowLogin(true)}
+      />
 
       {/* Hero */}
       <section className="relative overflow-hidden">
@@ -94,8 +84,8 @@ export default function HomePage() {
       </section>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Categories */}
-        <CategoriesSection categories={categories} />
+        {/* ✅ Categories */}
+        <CategoriesSection categories={CATEGORIES} />
 
         {/* Featured */}
         <FeaturedSection
@@ -106,10 +96,16 @@ export default function HomePage() {
 
         {/* Mobile actions */}
         <div className="md:hidden mt-8 grid grid-cols-2 gap-3">
-          <Link href="/products/create" className="text-center py-3 rounded-xl bg-emerald-600 text-white font-semibold">
+          <Link
+            href="/products/create"
+            className="text-center py-3 rounded-xl bg-emerald-600 text-white font-semibold"
+          >
             ลงขาย
           </Link>
-          <Link href="/profile" className="text-center py-3 rounded-xl border border-zinc-200 font-semibold text-zinc-800">
+          <Link
+            href="/profile"
+            className="text-center py-3 rounded-xl border border-zinc-200 font-semibold text-zinc-800"
+          >
             โปรไฟล์
           </Link>
         </div>
