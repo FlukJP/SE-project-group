@@ -6,10 +6,10 @@ import Navbar from "@/components/Navbar";
 import LoginModal from "@/components/LoginModal";
 import Profile from "@/components/Profile";
 import CategoriesSection from "@/components/CategoriesSection";
-import { Product } from "@/components/ProductCard";
+import { CATEGORIES } from "@/components/categoriesData";
+import { Product } from "@/types/Product";
 import SearchBar from "@/components/SearchBar";
 import FeaturedSection from "@/components/FeaturedSection";
-import { CATEGORIES } from "@/components/categoriesData";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
@@ -25,12 +25,17 @@ export default function HomePage() {
       const base = ((i + 1) * 34567) % 50000;
       const priceVal = base + 500;
       return {
-        id: i + 1,
+        id: String(i + 1),
         title: `สินค้าตัวอย่าง ${i + 1} • สภาพดี`,
-        price: `${priceVal.toFixed(0)} ฿`,
-        img: `https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=60&sig=${i}`,
+        price: priceVal,
+        images: [
+          `https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=60&sig=${i}`,
+        ],
         location: locs[i % locs.length],
-        timeAgo: ago[i % ago.length],
+        postedAt: ago[i % ago.length],
+        description: "สินค้าตัวอย่าง",
+        categoryKey: "demo",
+        seller: { id: "u-demo", name: "ผู้ขายตัวอย่าง" },
       };
     });
   }, []);

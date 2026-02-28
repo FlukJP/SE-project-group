@@ -1,5 +1,6 @@
 import SectionHeader from "@/components/SectionHeader";
-import ProductCard, { Product } from "@/components/ProductCard";
+import ProductCard from "@/components/ProductCard";
+import { Product } from "@/types/Product";
 
 interface FeaturedSectionProps {
   title: string;
