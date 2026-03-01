@@ -101,13 +101,13 @@ export default function Navbar({
                 {/* เมนู Dropdown จะแสดงเมื่อ isProfileOpen เป็น true */}
                 {isProfileOpen && (
                   <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 flex flex-col z-50 py-2">
-                    <Link href="/profile/edit" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
+                    <Link href="/profile?tab=profile" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
                       ดูแลและแก้ไขข้อมูลส่วนตัว
                     </Link>
-                    <Link href="/reviews" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
+                    <Link href="/profile?tab=review" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
                       รีวิวของฉัน
                     </Link>
-                    <Link href="/profile" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
+                    <Link href="/profile?tab=manageProfile" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
                       โปรไฟล์ของฉัน
                     </Link>
                     

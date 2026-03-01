@@ -12,9 +12,9 @@ import SearchBar from "@/components/SearchBar";
 import FeaturedSection from "@/components/FeaturedSection";
 
 export default function HomePage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // เปลี่ยนเป็น true เพื่อดูเมนูผู้ใช้
   const [query, setQuery] = useState("");
   const [province, setProvince] = useState("ทุกจังหวัด");
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // เปลี่ยนเป็น true เพื่อดูเมนูผู้ใช้
   const [showLogin, setShowLogin] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
