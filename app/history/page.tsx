@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function HistoryEggPage() {
+export default function HistoryPage() {
   return (
     <div className="flex flex-col items-center justify-center pt-32 pb-16">
       
