@@ -27,7 +27,7 @@ const validateEmail = (email: string): boolean => {
 };
 
 const validatePassword = (password: string): boolean => {
-    return password.length >= 8; // อย่างน้อย 6 ตัวอักษร
+    return password.length >= 8;
 };
 
 const validatePhoneNumber = (phone: string): boolean => {
@@ -38,12 +38,10 @@ const validatePhoneNumber = (phone: string): boolean => {
 // Redis (rate limiters)
 const checkRateLimit = async (key: string, limit: number, ttlSeconds: number): Promise<void> => {
     await connectRedis();
-    const count = await redisClient.incr(key);
-    if (count === 1) {
-        await redisClient.expire(key, ttlSeconds);
-    }
+    const count = await redisClient.multi().incr(key).expire(key, ttlSeconds).exec();
+    const countValue = (count[0] as any)[1] as number;
 
-    if (count > limit) {
+    if (countValue > limit) {
         const ttl = await redisClient.ttl(key);
         const minutes = Math.ceil(ttl/60);
         throw new AppError(`Too many requests. Please try again in ${minutes} minute(s).`, 429);
@@ -174,78 +172,5 @@ export const UserService = {
     },
 
     // 6.request OTP
-    requestOTP: async (phone: string): Promise<boolean> => {
-        if(!phone){
-            throw new AppError("Phone number is required", 400);
-        }
-
-        if (!validatePhoneNumber(phone)) {
-            throw new AppError("Phone number must be 10 digits", 400);
-        }
-
-        const existingUser = await UserModel.findByPhone(phone);
-        if (!existingUser) {
-            throw new AppError("Phone number not found", 404);
-        }
-
-        await connectRedis();
-        await checkRateLimit(`otp_request:${phone}`, MAX_OTP_REQUESTS, RATE_LIMIT_TTL_SECONDS);
-
-        const otpcode = crypto.randomInt(100000, 1000000).toString();
-        const hashedotp = await bcrypt.hash(otpcode, 5);
-        await redisClient.setEx(`otp:${phone}`, OTP_TTL_SECONDS, hashedotp);
-        
-        console.log("\n================================");
-        console.log(`📱 [MOCK SMS] ส่งไปที่: ${phone}`);
-        console.log(`OTP: ${otpcode} (หมดอายุ 5 นาที)`);
-        console.log("================================\n");
-
-        return true;
-    },
-
     // 7.verify OTP
-    verifyOTP: async (phone: string, otp: string) => {
-        if (!phone || !otp) {
-            throw new AppError("Phone number and OTP are required", 400);
-        }
-
-        if (!validatePhoneNumber(phone)) {
-            throw new AppError("Phone number must be 10 digits", 400);
-        }
-
-        await connectRedis();
-        const failKey = `otp_fail:${phone}`;
-        const currentFails = await redisClient.get(failKey);
-        if (currentFails && parseInt(currentFails) >= MAX_OTP_ATTEMPTS) {
-            const ttl = await redisClient.ttl(failKey);
-            const minutes = Math.ceil(ttl/60);
-            throw new AppError(`Too many failed attempts. Please try again in ${minutes} minute(s).`, 429);
-        }
-
-        const storedHashedOTP = await redisClient.get(`otp:${phone}`);
-        if (!storedHashedOTP) {
-            throw new AppError("OTP expired or not found", 404);
-        }
-
-        const isValid = await bcrypt.compare(otp, storedHashedOTP);
-        if (!isValid) {
-            const newFailCount = await redisClient.incr(failKey);
-            if (newFailCount === 1) {
-                await redisClient.expire(failKey, RATE_LIMIT_TTL_SECONDS);
-            }
-            throw new AppError("Invalid OTP", 401);
-        }
-
-        await redisClient.del(`otp:${phone}`);
-        await redisClient.del(failKey);
-        
-        const user = await UserModel.findByPhone(phone);
-        if (!user) {
-            throw new AppError("User not found", 404);
-        }
-
-        const token = jwt.sign({userID: user.User_ID, role: user.Role}, JWT_SECRET, {expiresIn: "1h", issuer: "your-app", audience: "your-users"});
-        const {Password, ...userWithoutPassword} = user;
-        return { message: "OTP verified successfully", token: token, user: userWithoutPassword };
-    }
 };
