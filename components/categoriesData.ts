@@ -1,6 +1,6 @@
 // components/categoriesData.ts
 
-import type { Category } from "@/components/CategoriesSection";
+import type { Category } from "@/components/product/CategoriesSection";
 
 /** ใช้ร่วมกันเป็นแหล่งข้อมูลเดียว แล้วค่อยแปลงเป็นชุดต่าง ๆ */
 export type BaseCategory = {

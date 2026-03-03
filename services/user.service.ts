@@ -13,6 +13,21 @@ if (!JWT_SECRET){
     throw new Error("JWT_SECRET is not defined in environment variables");
 };
 
+const JWT_ISSUER = process.env.JWT_ISSUER;
+if (!JWT_ISSUER){
+    throw new Error("JWT_ISSUER is not defined in environment variables");
+};
+
+const JWT_AUDIENCE = process.env.JWT_AUDIENCE;
+if (!JWT_AUDIENCE){
+    throw new Error("JWT_AUDIENCE is not defined in environment variables");
+}
+
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
+if (!JWT_EXPIRES_IN){
+    throw new Error("JWT_EXPIRES_IN is not defined in environment variables");
+}
+
 // config
 const OTP_TTL_SECONDS = 5 * 60;
 const RATE_LIMIT_TTL_SECONDS = 15 * 60;
@@ -111,7 +126,7 @@ export const UserService = {
             throw new AppError("Invalid email or password", 401);
         }
 
-        const token = jwt.sign({userID: user.User_ID,role: user.Role},JWT_SECRET,{expiresIn: "1h",issuer: "your-app",audience: "your-users"});
+        const token = jwt.sign({userID: user.User_ID,role: user.Role},JWT_SECRET,{expiresIn: NumberJWT_EXPIRES_IN,issuer: JWT_ISSUER,audience: JWT_AUDIENCE});
         const {Password, ...userWithoutPassword} = user;
         return { token, user: userWithoutPassword };
     },

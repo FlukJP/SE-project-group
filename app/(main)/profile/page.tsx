@@ -2,8 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Navbar from "@/components/Navbar";
-import Profile from "@/components/Profile";
+import Navbar from "@/components/layout/Navbar";
+import Profile from "@/components/user/Profile";
 
 type TabKey = "profile" | "autoReply" | "review" | "manageProfile" | "account";
 

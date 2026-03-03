@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Navbar from "@/components/Navbar";
-import Profile from "@/components/Profile";
+import Navbar from "@/components/layout/Navbar";
+import Profile from "@/components/user/Profile";
 
 import CategoryPicker from "@/components/create/CategoryPicker";
 import CreateProductForm from "@/components/create/CreateProductForm";

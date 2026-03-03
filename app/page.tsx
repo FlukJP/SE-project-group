@@ -2,14 +2,14 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
-import LoginModal from "@/components/LoginModal";
-import Profile from "@/components/Profile";
-import CategoriesSection from "@/components/CategoriesSection";
+import Navbar from "@/components/layout/Navbar";
+import LoginModal from "@/components/user/LoginModal";
+import Profile from "@/components/user/Profile";
+import CategoriesSection from "@/components/product/CategoriesSection";
 import { CATEGORIES } from "@/components/categoriesData";
 import { Product } from "@/types/Product";
-import SearchBar from "@/components/SearchBar";
-import FeaturedSection from "@/components/FeaturedSection";
+import SearchBar from "@/components/product/SearchBar";
+import FeaturedSection from "@/components/product/FeaturedSection";
 
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(true); // เปลี่ยนเป็น true เพื่อดูเมนูผู้ใช้

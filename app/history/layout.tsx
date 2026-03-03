@@ -2,7 +2,7 @@
 
 import React from "react";
 // ไม่ต้องใช้ Link และ usePathname แล้ว เพราะเราเอาแท็บสลับหน้าออก
-import Navbar from "@/components/Navbar"; 
+import Navbar from "@/components/layout/Navbar"; 
 
 export default function HistoryLayout({
   children,
