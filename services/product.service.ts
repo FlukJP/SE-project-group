@@ -1,10 +1,23 @@
-import { Product } from "@/types/Product";
+import { Product , ProductFilters } from "@/types/Product";
 import { ProductModel } from "@/models/productModel";
 import { AppError } from "@/errors/AppError";
-import { Filter } from "firebase-admin/firestore";
 
 export const ProductService = {
-    // 1.Create product
+    // 1.Product list
+    getAllProducts: async (filters: ProductFilters = {} ) => {
+        return await ProductModel.searchProducts(filters);
+    },
+    // 2.Product by seller
+    getProductsBySeller: async (sellerID: number) => {
+        return await ProductModel.findBySellerID(sellerID);
+    },
+    // 3.Product detail
+    getProductByID: async (productID: number) => {
+        const product = await ProductModel.findByID(productID);
+        if (!product) throw new AppError("Product not found", 404);
+        return product;
+    }, 
+    // 4.Create product
     createProduct: async (sellerID: number, productData: Product) => {
         if (!productData.Title || !productData.Description || !productData.Price || !productData.Condition || !productData.Category || !productData.Image_URL || !productData.Quantity) throw new AppError("Missing required fields", 400);
         if (productData.Price <= 0) throw new AppError("Price must be greater than 0", 400);
@@ -23,15 +36,18 @@ export const ProductService = {
         };
         return await ProductModel.createProduct(newProduct as Product);
     },
-    // 2.Product list
-    // 3.Product by seller
-    // 4.Product detail
-    // 5.search product
-    // 6.Change product status
-    // 7.Update product
-    // 8.Delete product
-    // 9.Report product
-    // 10.Upload product image
-    // 11.Remove product image
-    // 12.GET categories
+    // 5.Update product
+    updateProduct: async ( productID: number, sellerID: number, updateData: Partial<Product>) => {
+        const product = await ProductModel.findByID(productID);
+        if (!product) throw new AppError("Product not found", 404);
+        if (product.Seller_ID !== sellerID) throw new AppError("Unauthorized to update this product", 403);
+        return await ProductModel.updateProduct(productID, updateData);
+    },
+    // 6.Delete product
+    deleteProduct: async (productID: number, sellerID: number) => {
+        const product = await ProductModel.findByID(productID);
+        if (!product) throw new AppError("Product not found", 404);
+        if (product.Seller_ID !== sellerID) throw new AppError("Unauthorized to delete this product", 403);
+        return await ProductModel.deleteProduct(productID);
+    }
 };

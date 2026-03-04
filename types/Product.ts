@@ -19,3 +19,16 @@ export interface ProductWithSeller extends Product {
     SellerEmail: string;
     SellerPhone_number?: string;
 }
+
+export interface ProductFilters {
+    keyword?: string;
+    category?: string;
+    condition?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    status?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: 'Price' | 'Created_At';
+    sortOrder?: 'asc' | 'desc';
+}

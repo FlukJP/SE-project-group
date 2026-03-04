@@ -1,5 +1,5 @@
 import db from "@/lib/mysql";
-import { Product, ProductWithSeller } from "@/types/Product";
+import { Product, ProductFilters, ProductWithSeller } from "@/types/Product";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 export const ProductModel = {
@@ -28,74 +28,61 @@ export const ProductModel = {
         return rows as ProductWithSeller[];
     },
 
-    // 3.ดึงข้อมูลสินค้าตาม Category (Category Browsing)
-    findByCategory: async (category: string): Promise<ProductWithSeller[]> => {
-        const sql = `
-            SELECT p.*, u.Username AS SellerName
-            FROM Product p
-            LEFT JOIN User u ON p.Seller_ID = u.User_ID
-            WHERE p.Category = ? 
-            ORDER BY p.Created_at DESC
-        `;
-        const [rows] = await db.query<RowDataPacket[]>(sql, [category]);
-        return rows as ProductWithSeller[];
-    },
-
-    // 4.ดึงข้อมูลสินค้าตาม Condition (Condition Browsing)
-    findByCondition: async (condition: string): Promise<ProductWithSeller[]> => {
-        const sql = `
-            SELECT p.*, u.Username AS SellerName
-            FROM Product p
-            LEFT JOIN User u ON p.Seller_ID = u.User_ID
-            WHERE p.Condition = ? 
-            ORDER BY p.Created_at DESC
-        `;
-        const [rows] = await db.query<RowDataPacket[]>(sql, [condition]);
-        return rows as ProductWithSeller[];
-    },
-
-    // 5.ดึงข้อมูลสินค้าตาม Title (Search by Title)
-    findByTitle: async (title: string): Promise<ProductWithSeller[]> => {
-        const sql = `
-            SELECT p.*, u.Username AS SellerName
-            FROM Product p
-            LEFT JOIN User u ON p.Seller_ID = u.User_ID
-            WHERE p.Title LIKE ? 
-            ORDER BY p.Created_at DESC
-        `;
-        const [rows] = await db.query<RowDataPacket[]>(sql, [`%${title}%`]);
-        return rows as ProductWithSeller[];
-    },
-
-    // 6.ดึงข้อมูลสินค้าตาม Price Range (Search by Price Range)
-    findByPriceRange: async (
-        minPrice: number,
-        maxPrice: number,
-    ): Promise<ProductWithSeller[]> => {
-        const sql = `
-            SELECT p.*, u.Username AS SellerName
-            FROM Product p
-            LEFT JOIN User u ON p.Seller_ID = u.User_ID
-            WHERE p.Price BETWEEN ? AND ? 
-            ORDER BY p.Created_at DESC
-        `;
-        const [rows] = await db.query<RowDataPacket[]>(sql, [minPrice, maxPrice]);
-        return rows as ProductWithSeller[];
-    },
-
-    // 7.ดึงข้อมูลสินค้าทั้งหมด (All Product List)
-    findAll: async (): Promise<ProductWithSeller[]> => {
-        const sql = `
+    // 3.ค้นหาสินค้า (Search Products)
+    searchProducts: async (filters: ProductFilters): Promise<ProductWithSeller[]> => {
+        let sql = `
             SELECT p.*, u.Username AS SellerName 
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
-            ORDER BY p.Created_at DESC
+            WHERE 1=1
         `;
-        const [rows] = await db.query<RowDataPacket[]>(sql);
+        
+        const values: any[] = [];
+
+        if (filters.category) {
+            sql += ` AND p.Category = ?`;
+            values.push(filters.category);
+        }
+        if (filters.condition) {
+            sql += ` AND p.Condition = ?`;
+            values.push(filters.condition);
+        }
+        if (filters.minPrice !== undefined) {
+            sql += ` AND p.Price >= ?`;
+            values.push(filters.minPrice);
+        }
+        if (filters.maxPrice !== undefined) {
+            sql += ` AND p.Price <= ?`;
+            values.push(filters.maxPrice);
+        }
+        if (filters.status) {
+            sql += ` AND p.Status = ?`;
+            values.push(filters.status);
+        }
+        if (filters.keyword) {
+            sql += ` AND (p.Title LIKE ? OR p.Description LIKE ?)`;
+            values.push(`%${filters.keyword}%`, `%${filters.keyword}%`);
+        }
+        if (filters.sortBy) {
+            const sortField = filters.sortBy === 'Price' ? 'p.Price' : 'p.Created_at';
+            const sortOrder = filters.sortOrder === 'asc' ? 'ASC' : 'DESC';
+            sql += ` ORDER BY ${sortField} ${sortOrder}`;
+        } else {
+            sql += ` ORDER BY p.Created_at DESC`;
+        }
+
+        const limit = filters.limit ? Number(filters.limit) : 20;
+        const page = filters.page ? Number(filters.page) : 1;
+        const offset = (page - 1) * limit;
+
+        sql += ` LIMIT ? OFFSET ?`;
+        values.push(limit, offset);
+
+        const [rows] = await db.query<RowDataPacket[]>(sql, values);
         return rows as ProductWithSeller[];
     },
 
-    // 8.สร้างสินค้าใหม่ (Create Product)
+    // 4.สร้างสินค้าใหม่ (Create Product)
     createProduct: async (productData: Product): Promise<number> => {
         const sql = `
             INSERT INTO Product (Seller_ID, Title, Description, Price, Condition, Category, Status, Quantity, Image_URL) 
@@ -116,13 +103,10 @@ export const ProductModel = {
         return result.insertId;
     },
 
-    // 9.Update ข้อมูลสินค้า (Edit Product)
-    updateProduct: async (
-        id: number,
-        productData: Partial<Product>,
-    ): Promise<boolean> => {
+    // 5.Update ข้อมูลสินค้า (Edit Product)
+    updateProduct: async ( id: number, productData: Partial<Product> ): Promise<boolean> => {
         const keys = Object.keys(productData).filter(
-            (key) => productData[key as keyof Product] !== undefined,
+            (key) => productData[key as keyof Product] !== undefined && key !== 'Product_ID' && key !== 'Seller_ID'
         );
         if (keys.length === 0) return false;
         const setClause = keys.map((key) => `${key} = ?`).join(", ");
@@ -135,7 +119,7 @@ export const ProductModel = {
         return result.affectedRows > 0;
     },
 
-    // 10.ลบสินค้า (Delete Product)
+    // 6.ลบสินค้า (Delete Product)
     deleteProduct: async (id: number): Promise<boolean> => {
         const sql = `
             DELETE FROM Product 
