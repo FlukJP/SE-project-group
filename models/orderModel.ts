@@ -117,5 +117,70 @@ export const OrderModel = {
         `;
         const [result] = await db.query<ResultSetHeader>(sql, [orderID]);
         return result.affectedRows > 0;
+    },
+
+    // 13.Transaction
+    createOrderTransaction: async (newOrder: Order, productID: number, remainingQuantity: number, newProductStatus: string): Promise<number> => {
+        const connection = await db.getConnection();
+        try{
+            await connection.beginTransaction();
+
+            const insertOrderSQL = `
+            INSERT INTO \`Order\` (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price, Status)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `;
+
+            const orderValues = [
+                newOrder.Product_ID,
+                newOrder.Buyer_ID,
+                newOrder.Seller_ID,
+                newOrder.Quantity,
+                newOrder.Total_Price,
+                newOrder.Status
+            ];
+
+            const [orderResult] = await connection.query<ResultSetHeader>(insertOrderSQL, orderValues);
+            const orderID = orderResult.insertId;
+
+            const updateProductSql = `
+                UPDATE Product 
+                SET Quantity = ?, Status = ? 
+                WHERE Product_ID = ?
+            `;
+            await connection.query(updateProductSql, [remainingQuantity, newProductStatus, productID]);
+            await connection.commit();
+            return orderID;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    },
+
+    // 14. Cancel Order Transaction
+    cancelOrderTransaction: async (orderID: number, productID: number, restoredQuantity: number): Promise<boolean> => {
+        const connection = await db.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            const updateProductSql = `
+                UPDATE Product SET Quantity = ?, Status = 'Available' WHERE Product_ID = ?
+            `;
+            await connection.query(updateProductSql, [restoredQuantity, productID]);
+
+            const updateOrderSql = `
+                UPDATE \`Order\` SET Status = 'cancelled' WHERE Order_ID = ?
+            `;
+            await connection.query(updateOrderSql, [orderID]);
+
+            await connection.commit();
+            return true;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     }
 };
