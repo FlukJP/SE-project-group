@@ -11,4 +11,5 @@ export interface User {
     Address?: string;
     Verified_Date?: Date;
     RatingScore?: number;
+    Avatar_URL?: string;
 }
