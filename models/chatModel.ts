@@ -57,6 +57,7 @@ export const ChatModel = {
         const [result] = await db.query<ResultSetHeader>(sql, values);
         return result.insertId;
     },
+    
     // 5.ลบแชททิ้ง (Delete chat)
     hideChatForParticipant: async (chatID: number, participantRole: 'P1' | 'P2'): Promise<boolean> => {
         const fieldToUpdate = participantRole === 'P1' ? 'Is_Deleted_By_P1' : 'Is_Deleted_By_P2';
