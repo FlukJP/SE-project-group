@@ -4,7 +4,7 @@ export interface Message {
     Sender_ID: number;
     Content: string;
     MessagesType: 'text' | 'image';
-    Is_Read?: boolean;
+    Is_Read?: number;
     Timestamp?: Date;
 }
 

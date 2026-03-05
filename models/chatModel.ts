@@ -12,9 +12,10 @@ export const ChatModel = {
                     ELSE u1.Username
                 END AS PartnerName
             FROM Chat c
-            JOIN User u1 ON c.Participant_1 = u1.UserID
-            JOIN User u2 ON c.Participant_2 = u2.UserID
-            WHERE c.Participant_1 = ? OR c.Participant_2 = ?
+            JOIN User u1 ON c.Participant_1 = u1.User_ID
+            JOIN User u2 ON c.Participant_2 = u2.User_ID
+            WHERE (c.Participant_1 = ? AND (c.Is_Deleted_By_P1 = 0 OR c.Is_Deleted_By_P1 IS NULL)) 
+            OR (c.Participant_2 = ? AND (c.Is_Deleted_By_P2 = 0 OR c.Is_Deleted_By_P2 IS NULL))
             ORDER BY c.Created_At DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [userID, userID, userID]);
@@ -57,13 +58,15 @@ export const ChatModel = {
         return result.insertId;
     },
     // 5.ลบแชททิ้ง (Delete chat)
-    deleteChatRoom(chatID: number): Promise<boolean> {
+    hideChatForParticipant: async (chatID: number, participantRole: 'P1' | 'P2'): Promise<boolean> => {
+        const fieldToUpdate = participantRole === 'P1' ? 'Is_Deleted_By_P1' : 'Is_Deleted_By_P2';
+
         const sql = `
-            DELETE FROM Chat
+            UPDATE Chat 
+            SET ?? = 1 
             WHERE Chat_ID = ?
         `;
-        return db.query<ResultSetHeader>(sql, [chatID])
-            .then(([result]) => result.affectedRows > 0)
-            .catch(() => false);
+        const [result] = await db.query<ResultSetHeader>(sql, [fieldToUpdate, chatID]);
+        return result.affectedRows > 0;
     }
 };
