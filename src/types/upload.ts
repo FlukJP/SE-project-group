@@ -10,3 +10,8 @@ export interface IUploadResponse {
     file?: IUploadedFile;
     message?: string;
 }
+
+export enum UploadFolderType {
+    PRODUCT = 'product',
+    USER = 'user', 
+}
