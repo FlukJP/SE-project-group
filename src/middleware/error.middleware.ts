@@ -24,7 +24,8 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
         method: req.method,
         path: req.path,
         statusCode,
-        message: err.message
+        message: err.message,
+        userId: (req as any).user?.userID
     };
     console.error(logData);
     if (statusCode === 500) console.error(err);
