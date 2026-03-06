@@ -32,3 +32,18 @@ export interface ProductFilters {
     sortBy?: 'Price' | 'Created_At';
     sortOrder?: 'asc' | 'desc';
 }
+
+export type UpdateProductData = Partial<Pick<Product, "Title" | "Description" | "Price" | "Condition" | "Category" | "Quantity" | "Image_URL" | "Status">>;
+
+export const pickProductUpdateFields = (data: Partial<Product>): UpdateProductData => {
+    const result: UpdateProductData = {};
+    if (data.Title !== undefined) result.Title = data.Title;
+    if (data.Description !== undefined) result.Description = data.Description;
+    if (data.Price !== undefined) result.Price = data.Price;
+    if (data.Condition !== undefined) result.Condition = data.Condition;
+    if (data.Category !== undefined) result.Category = data.Category;
+    if (data.Quantity !== undefined) result.Quantity = data.Quantity;
+    if (data.Image_URL !== undefined) result.Image_URL = data.Image_URL;
+    if (data.Status !== undefined) result.Status = data.Status;
+    return result;
+};
