@@ -14,11 +14,12 @@ export const ReportModel = {
     },
 
     // 2.ดึงข้อมูล Report ทั้งหมด (Admin List)
-    findAll: async (): Promise<Report[]> => {
+    findAll: async (offset: number, limit: number): Promise<Report[]> => {
         const sql = `
             SELECT * FROM Report
+            LIMIT ? OFFSET ?
         `;
-        const [rows] = await db.query<RowDataPacket[]>(sql);
+        const [rows] = await db.query<RowDataPacket[]>(sql, [limit, offset]);
         return rows as Report[];
     },
 

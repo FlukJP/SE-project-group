@@ -12,6 +12,7 @@ export interface Product {
     View_Count?: number;
     Created_at?: Date;
     Updated_at?: Date;
+    Is_Banned?: boolean;
 }
 
 export interface ProductWithSeller extends Product {

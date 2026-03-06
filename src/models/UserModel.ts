@@ -24,11 +24,13 @@ export const UserModel = {
     },
 
     // 3.ดึงรายชื่อ User ทั้งหมด (Admin List)
-    findAll: async (): Promise<User[]> => {
+    findAll: async (offset: number, limit: number): Promise<User[]> => {
         const sql = `
-            SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore FROM User
+            SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore 
+            FROM User
+            LIMIT ? OFFSET ?
         `;
-        const [rows] = await db.query<RowDataPacket[]>(sql);
+        const [rows] = await db.query<RowDataPacket[]>(sql, [limit, offset]);
         return rows as User[];
     },
 
@@ -39,7 +41,19 @@ export const UserModel = {
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 5.สร้าง User ใหม่ (Register)
+    // 5.ดึงข้อมูล User ที่โดนBan (Admin List)
+    findBannedUsers: async (offset: number, limit: number): Promise<User[]> => {
+        const sql = `
+            SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore 
+            FROM User
+            WHERE Is_Banned = 1
+            LIMIT ? OFFSET ?
+        `;
+        const [rows] = await db.query<RowDataPacket[]>(sql, [limit, offset]);
+        return rows as User[];
+    },
+
+    // 6.สร้าง User ใหม่ (Register)
     createUser: async (userData: User): Promise<number> => {
         const sql = `
             INSERT INTO User (Username, Email, Password, Role, Phone_number, Address, Verified_Date, RatingScore) 
@@ -59,7 +73,7 @@ export const UserModel = {
         return result.insertId;
     },
 
-    // 6.Update ข้อมูล User (Edit Profile)
+    // 7.Update ข้อมูล User (Edit Profile)
     updateUser: async (id: number, userData: Partial<User>): Promise<boolean> => { // 👈 1. เปลี่ยน email: string เป็น id: number
         const keys = Object.keys(userData).filter(
             (key) => userData[key as keyof User] !== undefined
@@ -72,7 +86,7 @@ export const UserModel = {
         return result.affectedRows > 0;
     },
 
-    // 7.ลบ User (Ban/Close Account)
+    // 8.ลบ User (Ban/Close Account)
     delete: async (id: number): Promise<boolean> => {
         const sql = 'DELETE FROM User WHERE User_ID = ?';
         const [result] = await db.query<ResultSetHeader>(sql, [id]);

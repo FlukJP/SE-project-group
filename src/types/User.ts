@@ -12,6 +12,7 @@ export interface User {
     Verified_Date?: Date;
     RatingScore?: number;
     Avatar_URL?: string;
+    Is_Banned?: boolean;
 }
 
 // TYPE safe pick
