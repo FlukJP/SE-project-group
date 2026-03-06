@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/src/components/layout/Navbar";
 import Profile from "@/src/components/user/Profile";
 
-import CategoryPicker from "@/src/components/create/CategoryPicker";
+import CategoryPicker from "@/src/components/product/CategoryPicker";
 import CreateProductForm from "@/src/components/create/CreateProductForm";
-import { CREATE_CATEGORIES } from "@/src/components/categoriesData";
+import { CREATE_CATEGORIES } from "@/src/components/product/categoriesData";
 
 export default function CreatePage() {
   const router = useRouter();

@@ -1,5 +1,5 @@
 import React from "react";
-import type { CreateCategory } from "@/src/components/categoriesData";
+import type { CreateCategory } from "@/src/components/product/categoriesData";
 
 interface CategoryPickerProps {
   categories: CreateCategory[];
@@ -21,7 +21,7 @@ export default function CategoryPicker({ categories, onPick }: CategoryPickerPro
               key={c.id}
               onClick={() => onPick(c.key)}
               className="w-full bg-zinc-100 hover:bg-zinc-200 border border-zinc-200
-                         rounded-lg px-5 py-4 flex items-center justify-between transition"
+                rounded-lg px-5 py-4 flex items-center justify-between transition"
             >
               <div className="flex items-center gap-3">
                 <span className="text-xl">{c.emoji}</span>

@@ -2,41 +2,45 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // 🌟 1. นำเข้า useRouter
 import Navbar from "@/src/components/layout/Navbar";
 import LoginModal from "@/src/components/user/LoginModal";
 import Profile from "@/src/components/user/Profile";
 import CategoriesSection from "@/src/components/product/CategoriesSection";
-import { CATEGORIES } from "@/src/components/categoriesData";
+import { CATEGORIES } from "@/src/components/product/categoriesData";
 import { Product } from "@/src/types/Product";
 import SearchBar from "@/src/components/product/SearchBar";
 import FeaturedSection from "@/src/components/product/FeaturedSection";
 
+// 🌟 ย้ายข้อมูลคงที่ออกมาข้างนอก เพื่อให้ React ไม่ต้องสร้างตัวแปรใหม่ทุกครั้งที่ Render
+const MOCK_LOCATIONS = ["กรุงเทพ", "นนทบุรี", "ปทุมธานี", "เชียงใหม่", "ชลบุรี", "ขอนแก่น"];
+const MOCK_TIME_AGO = ["10 นาทีที่แล้ว", "40 นาทีที่แล้ว", "2 ชั่วโมงที่แล้ว", "เมื่อวานนี้", "3 วันที่แล้ว"];
+
 export default function HomePage() {
+  const router = useRouter(); // 🌟 เรียกใช้งาน Router
   const [isLoggedIn, setIsLoggedIn] = useState(true); // เปลี่ยนเป็น true เพื่อดูเมนูผู้ใช้
   const [query, setQuery] = useState("");
   const [province, setProvince] = useState("ทุกจังหวัด");
   const [showLogin, setShowLogin] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
-  const featured: Product[] = useMemo(() => {
-    const locs = ["กรุงเทพ", "นนทบุรี", "ปทุมธานี", "เชียงใหม่", "ชลบุรี", "ขอนแก่น"];
-    const ago = ["10 นาทีที่แล้ว", "40 นาทีที่แล้ว", "2 ชั่วโมงที่แล้ว", "เมื่อวานนี้", "3 วันที่แล้ว"];
-    return new Array(12).fill(0).map((_, i) => {
-      const base = ((i + 1) * 34567) % 50000;
-      const priceVal = base + 500;
+  // 🌟 ใช้ Array.from เพื่อจำลองข้อมูล 12 รายการให้โค้ดดูคลีนขึ้น
+const featured = useMemo(() => {
+    return Array.from({ length: 12 }).map((_, i) => {
+      const basePrice = ((i + 1) * 34567) % 50000;
       return {
         id: String(i + 1),
         title: `สินค้าตัวอย่าง ${i + 1} • สภาพดี`,
-        price: priceVal,
+        price: basePrice + 500,
         images: [
           `https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=60&sig=${i}`,
         ],
-        location: locs[i % locs.length],
-        postedAt: ago[i % ago.length],
-        description: "สินค้าตัวอย่าง",
+        location: MOCK_LOCATIONS[i % MOCK_LOCATIONS.length],
+        postedAt: MOCK_TIME_AGO[i % MOCK_TIME_AGO.length],
+        description: "สินค้าตัวอย่าง สำหรับทดสอบการแสดงผล",
         categoryKey: "demo",
         seller: { id: "u-demo", name: "ผู้ขายตัวอย่าง" },
-      };
+      } as unknown as Product; // 🌟 เติม as unknown as Product ตรงนี้เพื่อปิดแจ้งเตือน TypeScript
     });
   }, []);
 
@@ -45,7 +49,9 @@ export default function HomePage() {
     const params = new URLSearchParams();
     if (query.trim()) params.set("q", query.trim());
     if (province && province !== "ทุกจังหวัด") params.set("province", province);
-    window.location.href = `/search?${params.toString()}`;
+    
+    // 🌟 2. ใช้ router.push แทน window.location.href (ไม่รีเฟรชหน้าเว็บ)
+    router.push(`/search?${params.toString()}`);
   };
 
   return (
@@ -57,7 +63,7 @@ export default function HomePage() {
         onLoginClick={() => setShowLogin(true)}
       />
 
-      {/* Hero */}
+      {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-emerald-600 to-emerald-500" />
         <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
@@ -103,16 +109,17 @@ export default function HomePage() {
         <div className="md:hidden mt-8 grid grid-cols-2 gap-3">
           <Link
             href="/products/create"
-            className="text-center py-3 rounded-xl bg-emerald-600 text-white font-semibold"
+            className="text-center py-3 rounded-xl bg-emerald-600 text-white font-semibold shadow-sm hover:bg-emerald-700 transition"
           >
             ลงขาย
           </Link>
-          <Link
-            href="/profile"
-            className="text-center py-3 rounded-xl border border-zinc-200 font-semibold text-zinc-800"
+          {/* 🌟 3. เปลี่ยนจาก Link ไปหน้า /profile ให้เรียก Modal Profile แทน เพื่อให้พฤติกรรมเหมือนปุ่มบน Navbar */}
+          <button
+            onClick={() => setShowProfile(true)}
+            className="text-center py-3 rounded-xl border border-zinc-200 bg-white font-semibold text-zinc-800 shadow-sm hover:bg-zinc-50 transition"
           >
             โปรไฟล์
-          </Link>
+          </button>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from "react";
-import { CREATE_CATEGORIES, CreateCategory } from "@/src/components/categoriesData";
+// 🌟 นำเข้า CREATE_CATEGORIES จากไฟล์ที่เราแยกไว้ (ตรวจสอบ path ให้ตรงกับโครงสร้างโฟลเดอร์ของคุณนะครับ)
+import { CREATE_CATEGORIES } from "../product/categoriesData";
 import { PROVINCES } from "./provinces";
 import ImageUploader, { UploadedImage } from "./ImageUploader";
 import { FieldLabel, ErrorText, Input, Select } from "./ui";
@@ -31,7 +32,7 @@ export default function CreateProductForm({
     if (defaultCategoryKey && defaultCategoryKey !== categoryKey) {
       setCategoryKey(defaultCategoryKey);
     }
-  }, [defaultCategoryKey]);
+  }, [defaultCategoryKey, categoryKey]);
 
   const provinceOptions = useMemo(
     () => PROVINCES.map((p) => ({ value: p.name, label: p.name })),
@@ -94,6 +95,8 @@ export default function CreateProductForm({
     };
     console.log("submitting:", payload);
     alert("ส่งข้อมูลเรียบร้อย (mock)");
+    
+    // ตรงนี้ในอนาคตเราจะเอา payload ส่งไปหา API ผ่าน ProductController ที่เราเขียนไว้นะครับ!
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

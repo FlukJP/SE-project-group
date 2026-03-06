@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 // อัปเดต Path ย้อนกลับ 2 ชั้น เพื่อให้เจอกับโฟลเดอร์ components
 import Navbar from "@/src/components/layout/Navbar"; 
-import { CATEGORIES } from "@/src/components/categoriesData";
+import { CATEGORIES } from "@/src/components/product/categoriesData";
 
 export default function FavoritesLayout({
   children,

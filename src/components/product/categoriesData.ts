@@ -1,6 +1,12 @@
-// components/categoriesData.ts
+// components/product/categoriesData.ts
 
-import type { Category } from "@/src/components/product/CategoriesSection";
+/** ✅ Type สำหรับใช้งานหน้า Home (มี href) */
+export type Category = { 
+  id: number; 
+  name: string; 
+  emoji: string; 
+  href: string; 
+};
 
 /** ใช้ร่วมกันเป็นแหล่งข้อมูลเดียว แล้วค่อยแปลงเป็นชุดต่าง ๆ */
 export type BaseCategory = {
@@ -23,7 +29,7 @@ const BASE: BaseCategory[] = [
   { id: 10, key: "others", name: "อื่น ๆ", emoji: "🧩" },
 ];
 
-/** ✅ สำหรับ Home / CategoriesSection (ตรง type Category ที่มี href) */
+/** ✅ สำหรับ Home / CategoriesSection */
 export const CATEGORIES: Category[] = BASE.map((c) => ({
   id: c.id,
   name: c.name,
@@ -31,7 +37,7 @@ export const CATEGORIES: Category[] = BASE.map((c) => ({
   href: `/search?cat=${c.key}`,
 }));
 
-/** ✅ สำหรับ Create page (มี key ให้กดแล้ว push ต่อได้เลย) */
+/** ✅ สำหรับ Create page */
 export type CreateCategory = Pick<BaseCategory, "id" | "key" | "name" | "emoji">;
 
 export const CREATE_CATEGORIES: CreateCategory[] = BASE.map((c) => ({

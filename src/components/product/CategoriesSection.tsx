@@ -1,7 +1,7 @@
+// components/product/CategoriesSection.tsx
 import React from "react";
 import Link from "next/link";
-
-export type Category = { id: number; name: string; emoji: string; href: string };
+import { Category } from "./categoriesData";
 
 export default function CategoriesSection({
   title = "หมวดหมู่ยอดนิยม",
