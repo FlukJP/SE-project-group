@@ -6,12 +6,16 @@ const JWT_AUDIENCE = process.env.JWT_AUDIENCE;
 const JWT_EXPIRES_IN = Number(process.env.JWT_EXPIRES_IN);
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN;
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL;
 
 
 if (!JWT_SECRET) throw new Error("JWT_SECRET is not defined in environment variables");
 if (!JWT_ISSUER) throw new Error("JWT_ISSUER is not defined in environment variables");
 if (!JWT_AUDIENCE) throw new Error("JWT_AUDIENCE is not defined in environment variables");
 if (!JWT_EXPIRES_IN || isNaN(JWT_EXPIRES_IN)) throw new Error("JWT_EXPIRES_IN is not defined or is not a valid number");
+if (!JWT_REFRESH_SECRET) throw new Error("JWT_REFRESH_SECRET is not defined in environment variables");
+if (!JWT_REFRESH_EXPIRES_IN) throw new Error("JWT_REFRESH_EXPIRES_IN is not defined in environment variables");
+if (!SOCKET_URL) throw new Error("SOCKET_URL is not defined in environment variables");
 
 export const ENV = {
     JWT_SECRET,
@@ -20,4 +24,5 @@ export const ENV = {
     JWT_EXPIRES_IN,
     JWT_REFRESH_SECRET,
     JWT_REFRESH_EXPIRES_IN,
+    SOCKET_URL,
 };
