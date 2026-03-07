@@ -159,6 +159,8 @@ export const reviewApi = {
 };
 
 import type { Report } from "@/src/types/Report";
+import type { ChatRoomWithPartner, Chat } from "@/src/types/Chat";
+import type { MessageWithSender } from "@/src/types/Messages";
 
 export const adminApi = {
   getUsers: (page = 1, limit = 20) =>
@@ -197,4 +199,44 @@ export const adminApi = {
     apiFetch<{ success: boolean; data: Report[]; pagination: { page: number; limit: number } }>(
       `/admin/reports?page=${page}&limit=${limit}`
     ),
+};
+
+export const chatApi = {
+  getRooms: () =>
+    apiFetch<{ success: boolean; data: ChatRoomWithPartner[] }>("/chats"),
+
+  getUnreadCount: () =>
+    apiFetch<{ success: boolean; unreadCount: number }>("/chats/unread"),
+
+  findOrCreateRoom: (sellerId: number, productId: number) =>
+    apiFetch<{ success: boolean; data: Chat }>("/chats", {
+      method: "POST",
+      body: JSON.stringify({ sellerId, productId }),
+    }),
+
+  getRoomById: (chatId: number) =>
+    apiFetch<{ success: boolean; data: Chat }>(`/chats/${chatId}`),
+
+  deleteRoom: (chatId: number) =>
+    apiFetch<{ success: boolean; message: string }>(`/chats/${chatId}`, {
+      method: "DELETE",
+    }),
+
+  getMessages: (chatId: number, page = 1) =>
+    apiFetch<{
+      success: boolean;
+      data: MessageWithSender[];
+      pagination: { page: number; limit: number; hasMore: boolean };
+    }>(`/chats/${chatId}/messages?page=${page}`),
+
+  sendMessage: (chatId: number, content: string, type: "text" | "image" = "text") =>
+    apiFetch<{ success: boolean; message: string; messageId: number }>(
+      `/chats/${chatId}/messages`,
+      { method: "POST", body: JSON.stringify({ content, type }) }
+    ),
+
+  markAsRead: (chatId: number) =>
+    apiFetch<{ success: boolean; message: string }>(`/chats/${chatId}/read`, {
+      method: "PATCH",
+    }),
 };

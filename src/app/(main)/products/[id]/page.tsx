@@ -155,7 +155,7 @@ export default function ProductDetailPage() {
               </div>
               <div className="flex gap-3">
                 <Link
-                  href={`/chat?seller=${product.seller.id}`}
+                  href={`/chat?seller=${product.seller.id}&product=${product.id}`}
                   className="flex-1 text-center bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-emerald-700"
                 >
                   แชท

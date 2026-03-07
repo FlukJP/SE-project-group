@@ -1,7 +1,8 @@
 import { io, Socket } from 'socket.io-client';
-import { ENV } from '../config/env';
 
-export const socket: Socket = io(ENV.SOCKET_URL, {
-    autoConnect: false, 
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+export const socket: Socket = io(SOCKET_URL, {
+    autoConnect: false,
     withCredentials: true,
 });
