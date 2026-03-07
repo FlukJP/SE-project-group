@@ -48,13 +48,3 @@ export const pickProductUpdateFields = (data: Partial<Product>): UpdateProductDa
     if (data.Status !== undefined) result.Status = data.Status;
     return result;
 };
-
-export interface CreateProductRequest {
-    title: string;
-    price: string; 
-    description: string;
-    categoryKey: string;
-    province: string;
-    district: string;
-    phone: string;
-}

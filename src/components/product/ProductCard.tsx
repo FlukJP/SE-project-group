@@ -1,7 +1,6 @@
-import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Product } from "@/src/types/Product"; // shared type
+import { ProductDisplay } from "@/src/types/ProductDisplay";
 
 
 export default function ProductCard({
@@ -9,7 +8,7 @@ export default function ProductCard({
   href,
   badgeText = "⭐ แนะนำ",
 }: {
-  product: Product;
+  product: ProductDisplay;
   href?: string;
   badgeText?: string;
 }) {

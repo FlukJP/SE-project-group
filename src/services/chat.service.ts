@@ -5,7 +5,6 @@ import { MessageModel } from "@/src/models/messageModel";
 import { AppError } from "@/src/errors/AppError";
 
 export const ChatService = {
-    // Chat room
     // 1.Get chat room by user ID
     getChatRoomByUserID: async (userID: number): Promise<Chat[]> => {
         if (!userID) throw new AppError("User ID is required", 400);
@@ -54,7 +53,6 @@ export const ChatService = {
         else throw new AppError("Unauthorized to delete this chat room", 403);
     },
 
-    // Message
     // 1.Get messages by chat room ID
     getMessagesByChatID: async (chatID: number, userID: number, page:number) => {
         if (!chatID || !userID) throw new AppError("Chat ID and User ID are required", 400);

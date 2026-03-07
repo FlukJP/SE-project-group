@@ -1,5 +1,7 @@
-import React, { useRef, useEffect } from "react";
-import { cn } from "./ui";
+"use client";
+
+import { useRef, useEffect, type Dispatch, type SetStateAction, type ChangeEvent } from "react";
+import { cn } from "@/src/components/ui";
 
 export interface UploadedImage {
   file: File;
@@ -8,7 +10,7 @@ export interface UploadedImage {
 
 interface ImageUploaderProps {
   images: UploadedImage[];
-  setImages: React.Dispatch<React.SetStateAction<UploadedImage[]>>;
+  setImages: Dispatch<SetStateAction<UploadedImage[]>>;
   coverIndex: number;
   setCoverIndex: (n: number) => void;
   error?: string;
@@ -25,14 +27,13 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // revoke URLs on unmount
   useEffect(() => {
     return () => {
       images.forEach((img) => URL.revokeObjectURL(img.url));
     };
   }, [images]);
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     const arr = Array.from(files);
@@ -40,16 +41,15 @@ export default function ImageUploader({
       file,
       url: URL.createObjectURL(file),
     }));
-    setImages((prev: UploadedImage[]) => [...prev, ...toAdd]);
-    // clear input so same file can be selected again
+    setImages((prev) => [...prev, ...toAdd]);
     e.target.value = "";
   };
 
   const removeImage = (idx: number) => {
-    setImages((prev: UploadedImage[]) => {
+    setImages((prev) => {
       const removed = prev[idx];
       URL.revokeObjectURL(removed.url);
-      const next = prev.filter((_: UploadedImage, i: number) => i !== idx);
+      const next = prev.filter((_, i) => i !== idx);
       if (coverIndex >= next.length) {
         setCoverIndex(next.length - 1);
       }
@@ -110,6 +110,7 @@ export default function ImageUploader({
         ref={inputRef}
         className="hidden"
         onChange={onFileChange}
+        aria-label="อัปโหลดรูปภาพ"
       />
     </div>
   );

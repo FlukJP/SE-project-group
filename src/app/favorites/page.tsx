@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function FavoritesEmptyPage() {
   return (
     <div className="flex flex-col items-center justify-center pt-28 pb-16">

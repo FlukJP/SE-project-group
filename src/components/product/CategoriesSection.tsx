@@ -1,7 +1,5 @@
-// components/product/CategoriesSection.tsx
-import React from "react";
 import Link from "next/link";
-import { Category } from "./categoriesData";
+import { Category } from "@/src/data/categoriesData";
 
 export default function CategoriesSection({
   title = "หมวดหมู่ยอดนิยม",
@@ -29,7 +27,7 @@ export default function CategoriesSection({
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
         {categories.map((c) => (
           <Link
-            key={c.id}
+            key={c.id ?? c.href}
             href={c.href}
             className="group bg-white rounded-2xl border border-zinc-200 p-4 hover:shadow-md hover:-translate-y-0.5 transition"
           >

@@ -1,5 +1,4 @@
-import React from "react";
-import type { CreateCategory } from "@/src/components/product/categoriesData";
+import type { CreateCategory } from "@/src/data/categoriesData";
 
 interface CategoryPickerProps {
   categories: CreateCategory[];

@@ -1,47 +1,44 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // 🌟 1. นำเข้า useRouter
+import { useRouter } from "next/navigation";
 import Navbar from "@/src/components/layout/Navbar";
 import LoginModal from "@/src/components/user/LoginModal";
-import Profile from "@/src/components/user/Profile";
 import CategoriesSection from "@/src/components/product/CategoriesSection";
-import { CATEGORIES } from "@/src/components/product/categoriesData";
-import { Product } from "@/src/types/Product";
+import { toCategory, toPopularCategory } from "@/src/data/categoriesData";
+import type { Category } from "@/src/data/categoriesData";
+import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 import SearchBar from "@/src/components/product/SearchBar";
 import FeaturedSection from "@/src/components/product/FeaturedSection";
-
-// 🌟 ย้ายข้อมูลคงที่ออกมาข้างนอก เพื่อให้ React ไม่ต้องสร้างตัวแปรใหม่ทุกครั้งที่ Render
-const MOCK_LOCATIONS = ["กรุงเทพ", "นนทบุรี", "ปทุมธานี", "เชียงใหม่", "ชลบุรี", "ขอนแก่น"];
-const MOCK_TIME_AGO = ["10 นาทีที่แล้ว", "40 นาทีที่แล้ว", "2 ชั่วโมงที่แล้ว", "เมื่อวานนี้", "3 วันที่แล้ว"];
+import { productApi, categoryApi } from "@/src/lib/api";
+import { useAuth } from "@/src/contexts/AuthContext";
 
 export default function HomePage() {
-  const router = useRouter(); // 🌟 เรียกใช้งาน Router
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // เปลี่ยนเป็น true เพื่อดูเมนูผู้ใช้
+  const router = useRouter();
+  const { isLoggedIn } = useAuth();
   const [query, setQuery] = useState("");
   const [province, setProvince] = useState("ทุกจังหวัด");
   const [showLogin, setShowLogin] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
+  const [featured, setFeatured] = useState<ProductDisplay[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 🌟 ใช้ Array.from เพื่อจำลองข้อมูล 12 รายการให้โค้ดดูคลีนขึ้น
-const featured = useMemo(() => {
-    return Array.from({ length: 12 }).map((_, i) => {
-      const basePrice = ((i + 1) * 34567) % 50000;
-      return {
-        id: String(i + 1),
-        title: `สินค้าตัวอย่าง ${i + 1} • สภาพดี`,
-        price: basePrice + 500,
-        images: [
-          `https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=60&sig=${i}`,
-        ],
-        location: MOCK_LOCATIONS[i % MOCK_LOCATIONS.length],
-        postedAt: MOCK_TIME_AGO[i % MOCK_TIME_AGO.length],
-        description: "สินค้าตัวอย่าง สำหรับทดสอบการแสดงผล",
-        categoryKey: "demo",
-        seller: { id: "u-demo", name: "ผู้ขายตัวอย่าง" },
-      } as unknown as Product; // 🌟 เติม as unknown as Product ตรงนี้เพื่อปิดแจ้งเตือน TypeScript
-    });
+  useEffect(() => {
+    Promise.all([
+      productApi.list({ limit: "12" }).then((res) => res.data.map(toProductDisplay)),
+      categoryApi.popular(10).then((res) => res.data.map(toPopularCategory))
+        .catch(() => categoryApi.list().then((res) => res.data.map(toCategory))),
+    ])
+      .then(([products, cats]) => {
+        setFeatured(products);
+        setCategories(cats);
+      })
+      .catch(() => {
+        setFeatured([]);
+        setCategories([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const onSearch = (e: React.FormEvent) => {
@@ -49,21 +46,13 @@ const featured = useMemo(() => {
     const params = new URLSearchParams();
     if (query.trim()) params.set("q", query.trim());
     if (province && province !== "ทุกจังหวัด") params.set("province", province);
-    
-    // 🌟 2. ใช้ router.push แทน window.location.href (ไม่รีเฟรชหน้าเว็บ)
     router.push(`/search?${params.toString()}`);
   };
 
   return (
     <main className="min-h-screen bg-zinc-50">
-      {/* Top Nav */}
-      <Navbar
-        isLoggedIn={isLoggedIn}
-        onProfileClick={() => setShowProfile(true)}
-        onLoginClick={() => setShowLogin(true)}
-      />
+      <Navbar onLoginClick={() => setShowLogin(true)} />
 
-      {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-emerald-600 to-emerald-500" />
         <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
@@ -83,7 +72,6 @@ const featured = useMemo(() => {
             </p>
           </div>
 
-          {/* Search Card */}
           <SearchBar
             query={query}
             setQuery={setQuery}
@@ -95,17 +83,20 @@ const featured = useMemo(() => {
       </section>
 
       <div className="container mx-auto px-4 py-8">
-        {/* ✅ Categories */}
-        <CategoriesSection categories={CATEGORIES} />
+        <CategoriesSection categories={categories} />
 
-        {/* Featured */}
-        <FeaturedSection
-          title="ประกาศแนะนำ"
-          subtitle="ประกาศยอดนิยมวันนี้ (ตัวอย่าง)"
-          products={featured}
-        />
+        {loading ? (
+          <div className="text-center text-zinc-500 py-12">กำลังโหลดสินค้า...</div>
+        ) : featured.length > 0 ? (
+          <FeaturedSection
+            title="ประกาศแนะนำ"
+            subtitle="ประกาศล่าสุด"
+            products={featured}
+          />
+        ) : (
+          <div className="text-center text-zinc-500 py-12">ยังไม่มีประกาศในขณะนี้</div>
+        )}
 
-        {/* Mobile actions */}
         <div className="md:hidden mt-8 grid grid-cols-2 gap-3">
           <Link
             href="/products/create"
@@ -113,18 +104,16 @@ const featured = useMemo(() => {
           >
             ลงขาย
           </Link>
-          {/* 🌟 3. เปลี่ยนจาก Link ไปหน้า /profile ให้เรียก Modal Profile แทน เพื่อให้พฤติกรรมเหมือนปุ่มบน Navbar */}
-          <button
-            onClick={() => setShowProfile(true)}
+          <Link
+            href="/profile"
             className="text-center py-3 rounded-xl border border-zinc-200 bg-white font-semibold text-zinc-800 shadow-sm hover:bg-zinc-50 transition"
           >
             โปรไฟล์
-          </button>
+          </Link>
         </div>
       </div>
 
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
-      {showProfile && <Profile onClose={() => setShowProfile(false)} />}
     </main>
   );
 }

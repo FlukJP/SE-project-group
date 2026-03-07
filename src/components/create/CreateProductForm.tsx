@@ -1,20 +1,25 @@
-import React, { useState, useRef, useMemo, useEffect } from "react";
-// 🌟 นำเข้า CREATE_CATEGORIES จากไฟล์ที่เราแยกไว้ (ตรวจสอบ path ให้ตรงกับโครงสร้างโฟลเดอร์ของคุณนะครับ)
-import { CREATE_CATEGORIES } from "../product/categoriesData";
-import { PROVINCES } from "./provinces";
+"use client";
+
+import { useState, useRef, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import type { CreateCategory } from "@/src/data/categoriesData";
+import { PROVINCES } from "@/src/data/provinces";
 import ImageUploader, { UploadedImage } from "./ImageUploader";
-import { FieldLabel, ErrorText, Input, Select } from "./ui";
+import { FieldLabel, ErrorText, Input, Select } from "@/src/components/ui";
+import { productApi } from "@/src/lib/api";
 
 interface CreateProductFormProps {
   defaultCategoryKey: string;
   onChangeCategory?: (key: string) => void;
   onBackToPickCategory: () => void;
+  categories: CreateCategory[];
 }
 
 export default function CreateProductForm({
   defaultCategoryKey,
   onChangeCategory,
   onBackToPickCategory,
+  categories,
 }: CreateProductFormProps) {
   const [categoryKey, setCategoryKey] = useState(defaultCategoryKey);
   const [title, setTitle] = useState("");
@@ -26,8 +31,10 @@ export default function CreateProductForm({
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const router = useRouter();
 
-  // sync defaultCategoryKey into state
   useEffect(() => {
     if (defaultCategoryKey && defaultCategoryKey !== categoryKey) {
       setCategoryKey(defaultCategoryKey);
@@ -69,7 +76,7 @@ export default function CreateProductForm({
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       const firstKey = Object.keys(newErrors)[0];
-      const ref = refs[firstKey as keyof typeof refs] as any;
+      const ref = refs[firstKey as keyof typeof refs] as React.RefObject<HTMLDivElement | null>;
       if (ref && ref.current) {
         ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
         ref.current.focus && ref.current.focus();
@@ -79,24 +86,32 @@ export default function CreateProductForm({
     return true;
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    const payload = {
-      categoryKey,
-      title,
-      price: Number(price),
-      description,
-      phone,
-      province,
-      district,
-      images,
-      coverIndex,
-    };
-    console.log("submitting:", payload);
-    alert("ส่งข้อมูลเรียบร้อย (mock)");
-    
-    // ตรงนี้ในอนาคตเราจะเอา payload ส่งไปหา API ผ่าน ProductController ที่เราเขียนไว้นะครับ!
+    setSubmitting(true);
+    setSubmitError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("price", price);
+      formData.append("description", description);
+      formData.append("categoryKey", categoryKey);
+      formData.append("province", province);
+      formData.append("district", district);
+      formData.append("phone", phone);
+      images.forEach((img) => {
+        formData.append("images", img.file);
+      });
+
+      await productApi.create(formData);
+      router.push("/");
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด กรุณาลองใหม่");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -119,7 +134,7 @@ export default function CreateProductForm({
         <FieldLabel>หมวดหมู่ *</FieldLabel>
         <Select value={categoryKey} onChange={handleCategoryChange}>
           <option value="">-- เลือกหมวด --</option>
-          {CREATE_CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <option key={c.key} value={c.key}>
               {c.name}
             </option>
@@ -213,11 +228,18 @@ export default function CreateProductForm({
         {errors.phone && <ErrorText>{errors.phone}</ErrorText>}
       </div>
 
+      {submitError && (
+        <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2">
+          {submitError}
+        </div>
+      )}
+
       <button
         type="submit"
-        className="w-full bg-indigo-900 hover:bg-indigo-800 text-white font-semibold py-3 rounded-md transition"
+        disabled={submitting}
+        className="w-full bg-indigo-900 hover:bg-indigo-800 text-white font-semibold py-3 rounded-md transition disabled:opacity-50"
       >
-        ต่อไป
+        {submitting ? "กำลังส่ง..." : "ต่อไป"}
       </button>
     </form>
   );

@@ -2,6 +2,7 @@ import { Order } from "@/src/types/Order";
 import { OrderModel } from "@/src/models/orderModel";
 import { AppError } from "@/src/errors/AppError";
 import { ProductModel } from "@/src/models/productModel";
+import { CategoryService } from "@/src/services/category.service";
 
 export const OrderService = {
     // 1.Create order
@@ -29,6 +30,10 @@ export const OrderService = {
         const remainingQuantity = currentQuantity - orderData.Quantity;
         const newProductStatus = remainingQuantity === 0 ? 'Sold Out' : product.Status;
         const orderID = await OrderModel.createOrderTransaction(newOrder, product.Product_ID!, remainingQuantity, newProductStatus as string);
+
+        if (product.Category) {
+            CategoryService.recordPopularity(product.Category, 'purchase').catch(() => {});
+        }
 
         return orderID;
 

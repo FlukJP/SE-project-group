@@ -1,116 +1,178 @@
-import React from "react";
-import { products } from "@/src/mock/products";
-import { Product } from "@/src/types/Product";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
+import Navbar from "@/src/components/layout/Navbar";
+import { productApi, reviewApi, type SellerRatingData } from "@/src/lib/api";
+import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
+export default function ProductDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const [product, setProduct] = useState<ProductDisplay | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [mainImage, setMainImage] = useState("");
+  const [sellerRating, setSellerRating] = useState<SellerRatingData | null>(null);
 
-export default function ProductDetailPage({ params }: PageProps) {
-  const product = products.find((p) => p.id === params.id);
-  if (!product) {
+  useEffect(() => {
+    if (!id) return;
+    productApi
+      .getById(id)
+      .then((res) => {
+        const display = toProductDisplay(res.data);
+        setProduct(display);
+        setMainImage(display.images[0] || "");
+        reviewApi.getSellerRating(Number(display.seller.id))
+          .then((r) => setSellerRating(r.data))
+          .catch(() => {});
+      })
+      .catch(() => setProduct(null))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p className="text-lg">ไม่พบประกาศ</p>
-        <Link href="/" className="text-emerald-700 hover:underline">
-          กลับไปหน้าหลัก
-        </Link>
-      </div>
+      <>
+        <Navbar />
+        <div className="container mx-auto px-4 py-16 text-center text-zinc-500">
+          กำลังโหลด...
+        </div>
+      </>
     );
   }
 
-  return <ProductDetailClient product={product} />;
-}
-
-// client component for interactivity (image gallery)
-function ProductDetailClient({ product }: { product: Product }) {
-  "use client";
-  const [mainImage, setMainImage] = React.useState(product.images[0]);
+  if (!product) {
+    return (
+      <>
+        <Navbar />
+        <div className="container mx-auto px-4 py-16 text-center">
+          <p className="text-lg mb-4">ไม่พบประกาศ</p>
+          <Link href="/" className="text-emerald-700 hover:underline">
+            กลับไปหน้าหลัก
+          </Link>
+        </div>
+      </>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-4">
-        <Link href="/search" className="text-sm text-emerald-700 hover:underline">
-          &larr; กลับไปหน้าค้นหา
-        </Link>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* images */}
-        <div className="flex-1">
-          <div className="w-full aspect-w-4 aspect-h-3 bg-zinc-100 rounded-2xl overflow-hidden">
-            <img src={mainImage} alt={product.title} className="object-cover w-full h-full" />
-          </div>
-          <div className="mt-4 flex gap-2">
-            {product.images.map((img) => (
-              <button
-                key={img}
-                onClick={() => setMainImage(img)}
-                className={`w-20 h-20 rounded-xl overflow-hidden border ${
-                  img === mainImage ? "border-emerald-600" : "border-zinc-200"
-                }`}
-              >
-                <img src={img} alt="thumbnail" className="object-cover w-full h-full" />
-              </button>
-            ))}
-          </div>
+    <>
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-4">
+          <Link href="/" className="text-sm text-emerald-700 hover:underline">
+            &larr; กลับไปหน้าหลัก
+          </Link>
         </div>
 
-        {/* details */}
-        <div className="flex-1">
-          <h1 className="text-2xl font-extrabold mb-2">{product.title}</h1>
-          <div className="text-sm text-zinc-500 mb-4">
-            {product.categoryKey}
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex-1">
+            <div className="w-full aspect-video bg-zinc-100 rounded-2xl overflow-hidden">
+              {mainImage && (
+                <img
+                  src={mainImage}
+                  alt={product.title}
+                  className="object-cover w-full h-full"
+                />
+              )}
+            </div>
+            {product.images.length > 1 && (
+              <div className="mt-4 flex gap-2">
+                {product.images.map((img) => (
+                  <button
+                    key={img}
+                    type="button"
+                    onClick={() => setMainImage(img)}
+                    className={`w-20 h-20 rounded-xl overflow-hidden border ${
+                      img === mainImage
+                        ? "border-emerald-600"
+                        : "border-zinc-200"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt="thumbnail"
+                      className="object-cover w-full h-full"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="text-3xl font-bold text-emerald-700 mb-4">
-            {product.price.toLocaleString()} ฿
-          </div>
+          <div className="flex-1">
+            <h1 className="text-2xl font-extrabold mb-2">{product.title}</h1>
+            <div className="text-sm text-zinc-500 mb-4">
+              {product.categoryKey}
+            </div>
 
-          <div className="flex items-center gap-4 text-xs text-zinc-500 mb-6">
-            <span>📍 {product.location}</span>
-            <span>•</span>
-            <span>{product.postedAt}</span>
-          </div>
+            <div className="text-3xl font-bold text-emerald-700 mb-4">
+              {product.price.toLocaleString()} ฿
+            </div>
 
-          <div className="prose max-w-none mb-6">
-            <p>{product.description}</p>
-          </div>
+            <div className="flex items-center gap-4 text-xs text-zinc-500 mb-6">
+              {product.location && <span>📍 {product.location}</span>}
+              {product.location && product.postedAt && <span>•</span>}
+              {product.postedAt && <span>{product.postedAt}</span>}
+            </div>
 
-          <div className="border-t border-zinc-200 pt-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="h-12 w-12 rounded-full bg-zinc-200 overflow-hidden">
-                {product.seller.avatarUrl ? (
-                  <img src={product.seller.avatarUrl} alt={product.seller.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="grid place-items-center h-full">👤</span>
+            {product.description && (
+              <div className="prose max-w-none mb-6">
+                <p className="whitespace-pre-line">{product.description}</p>
+              </div>
+            )}
+
+            <div className="border-t border-zinc-200 pt-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-12 w-12 rounded-full bg-zinc-200 overflow-hidden">
+                  {product.seller.avatarUrl ? (
+                    <img
+                      src={product.seller.avatarUrl}
+                      alt={product.seller.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="grid place-items-center h-full">👤</span>
+                  )}
+                </div>
+                <div>
+                  <div className="font-semibold">{product.seller.name}</div>
+                  <div className="text-sm text-zinc-500">ผู้ขาย</div>
+                  {sellerRating && sellerRating.totalReviews > 0 && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="text-yellow-400 text-sm">
+                        {"★".repeat(Math.round(sellerRating.averageRating))}
+                        <span className="text-zinc-300">
+                          {"★".repeat(5 - Math.round(sellerRating.averageRating))}
+                        </span>
+                      </span>
+                      <span className="text-xs text-zinc-500">
+                        {sellerRating.averageRating.toFixed(1)} ({sellerRating.totalReviews} รีวิว)
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Link
+                  href={`/chat?seller=${product.seller.id}`}
+                  className="flex-1 text-center bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-emerald-700"
+                >
+                  แชท
+                </Link>
+                {product.seller.phone && (
+                  <a
+                    href={`tel:${product.seller.phone}`}
+                    className="flex-1 text-center border border-zinc-300 px-4 py-3 rounded-lg font-semibold hover:bg-zinc-50"
+                  >
+                    โทร
+                  </a>
                 )}
               </div>
-              <div>
-                <div className="font-semibold">{product.seller.name}</div>
-                <div className="text-sm text-zinc-500">ผู้ใช้งาน</div>
-              </div>
             </div>
-            <div className="flex gap-3">
-              <button className="flex-1 bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-emerald-700">
-                แชท
-              </button>
-              <button className="flex-1 border border-zinc-300 px-4 py-3 rounded-lg font-semibold hover:bg-zinc-50">
-                โทร
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-6 text-xs text-zinc-500">
-            <Link href="#" className="hover:underline">
-              รายงานประกาศ
-            </Link>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

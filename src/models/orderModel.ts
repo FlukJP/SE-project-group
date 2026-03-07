@@ -109,7 +109,6 @@ export const OrderModel = {
 
     // 10.ยกเลิก Order (Cancel Order)
     cancelOrder: async (orderID: number): Promise<boolean> => {
-        // เปลี่ยนมาใช้ UPDATE แทน DELETE
         const sql = `
             UPDATE \`Order\`
             SET Status = 'cancelled'

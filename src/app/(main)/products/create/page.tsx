@@ -1,20 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/src/components/layout/Navbar";
-import Profile from "@/src/components/user/Profile";
 
 import CategoryPicker from "@/src/components/product/CategoryPicker";
 import CreateProductForm from "@/src/components/create/CreateProductForm";
-import { CREATE_CATEGORIES } from "@/src/components/product/categoriesData";
+import { toCreateCategory } from "@/src/data/categoriesData";
+import type { CreateCategory } from "@/src/data/categoriesData";
+import { categoryApi } from "@/src/lib/api";
 
-export default function CreatePage() {
+function CreatePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const cat = searchParams.get("cat") || "";
+  const [categories, setCategories] = useState<CreateCategory[]>([]);
 
-  const [showProfile, setShowProfile] = useState(false);
+  useEffect(() => {
+    categoryApi
+      .list()
+      .then((res) => setCategories(res.data.map(toCreateCategory)))
+      .catch(() => setCategories([]));
+  }, []);
 
   const goPick = (key: string) => {
     router.push(`/products/create?cat=${key}`);
@@ -26,12 +33,10 @@ export default function CreatePage() {
 
   return (
     <>
-      {/* ✅ Navbar ต้องอยู่บนสุด */}
-      <Navbar isLoggedIn onProfileClick={() => setShowProfile(true)} />
+      <Navbar />
 
-      {/* ✅ เนื้อหาหน้า */}
       {!cat ? (
-        <CategoryPicker categories={CREATE_CATEGORIES} onPick={goPick} />
+        <CategoryPicker categories={categories} onPick={goPick} />
       ) : (
         <div className="py-10">
           <div className="container mx-auto px-4 max-w-3xl">
@@ -43,13 +48,19 @@ export default function CreatePage() {
               defaultCategoryKey={cat}
               onChangeCategory={goPick}
               onBackToPickCategory={backToPicker}
+              categories={categories}
             />
           </div>
         </div>
       )}
-
-      {/* ✅ Profile popup */}
-      {showProfile && <Profile onClose={() => setShowProfile(false)} />}
     </>
+  );
+}
+
+export default function CreatePage() {
+  return (
+    <Suspense fallback={<div className="text-center py-16 text-zinc-500">กำลังโหลด...</div>}>
+      <CreatePageContent />
+    </Suspense>
   );
 }

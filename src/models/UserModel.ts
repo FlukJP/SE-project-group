@@ -9,8 +9,8 @@ export const UserModel = {
             SELECT * FROM User 
             WHERE Email = ?
         `;
-        const [rows]: any = await db.query(sql, [email]);
-        return rows.length > 0 ? rows[0] : null;
+        const [rows] = await db.query<RowDataPacket[]>(sql, [email]);
+        return rows.length > 0 ? (rows[0] as User) : null;
     },
 
     // 2.ดึงข้อมูล User จาก ID (Profile/Identity)
@@ -74,7 +74,7 @@ export const UserModel = {
     },
 
     // 7.Update ข้อมูล User (Edit Profile)
-    updateUser: async (id: number, userData: Partial<User>): Promise<boolean> => { // 👈 1. เปลี่ยน email: string เป็น id: number
+    updateUser: async (id: number, userData: Partial<User>): Promise<boolean> => {
         const keys = Object.keys(userData).filter(
             (key) => userData[key as keyof User] !== undefined
         );
@@ -82,7 +82,7 @@ export const UserModel = {
         const setClause = keys.map((key) => `${key} = ?`).join(', ');
         const values = keys.map((key) => userData[key as keyof User]);
         const sql = `UPDATE User SET ${setClause} WHERE UserID = ?`;
-        const [result] = await db.query<ResultSetHeader>(sql, [...values, id]); // 👈 3. เปลี่ยนตัวแปรท้ายสุดเป็น id
+        const [result] = await db.query<ResultSetHeader>(sql, [...values, id]);
         return result.affectedRows > 0;
     },
 

@@ -1,11 +1,11 @@
 import SectionHeader from "@/src/components/layout/SectionHeader";
 import ProductCard from "@/src/components/product/ProductCard";
-import { Product } from "@/src/types/Product";
+import { ProductDisplay } from "@/src/types/ProductDisplay";
 
 interface FeaturedSectionProps {
   title: string;
   subtitle?: string;
-  products: Product[];
+  products: ProductDisplay[];
   viewAllHref?: string;
   badgeText?: string;
 }

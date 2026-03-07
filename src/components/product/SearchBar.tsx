@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import type { FormEvent } from "react";
+import { PROVINCES } from "@/src/data/provinces";
 
 export default function SearchBar({
   query,
@@ -14,7 +15,7 @@ export default function SearchBar({
   setQuery: (v: string) => void;
   province: string;
   setProvince: (v: string) => void;
-  onSearch: (e: React.FormEvent) => void;
+  onSearch: (e: FormEvent) => void;
   hotKeywords?: string[];
 }) {
   return (
@@ -33,13 +34,13 @@ export default function SearchBar({
         <select
           value={province}
           onChange={(e) => setProvince(e.target.value)}
+          aria-label="เลือกจังหวัด"
           className="rounded-xl px-3 py-3 bg-white text-sm text-zinc-700 border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-300"
         >
           <option>ทุกจังหวัด</option>
-          <option>กรุงเทพ</option>
-          <option>เชียงใหม่</option>
-          <option>ชลบุรี</option>
-          <option>ขอนแก่น</option>
+          {PROVINCES.map((p) => (
+            <option key={p.name} value={p.name}>{p.name}</option>
+          ))}
         </select>
 
         <button

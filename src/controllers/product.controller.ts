@@ -5,6 +5,7 @@ import { UploadFolderType } from '../types/upload';
 import { ProductModel } from '../models/productModel';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { Product, pickProductUpdateFields } from '../types/Product';
+import { CategoryService } from '../services/category.service';
 
 export const ProductController = {
     // 1.สร้างสินค้าใหม่ (Create)
@@ -70,6 +71,10 @@ export const ProductController = {
                 sortOrder: sortOrder as 'asc' | 'desc'
             });
 
+            if (category) {
+                CategoryService.recordPopularity(category as string, 'search').catch(() => {});
+            }
+
             res.status(200).json({ success: true, data: products });
         } catch (error) {
             next(error);
@@ -129,7 +134,6 @@ export const ProductController = {
 
             res.status(200).json({ success: true, message: "Product updated successfully" });
         } catch (error) {
-            // ลบรูปใหม่ที่ upload มาถ้า update ล้มเหลว
             if (files && files.length > 0) {
                 files.forEach(file => {
                     deleteUploadedFile(file.filename, UploadFolderType.PRODUCT);

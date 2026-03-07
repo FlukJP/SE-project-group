@@ -15,7 +15,6 @@ export interface User {
     Is_Banned?: boolean;
 }
 
-// TYPE safe pick
 export type UpdateUserData = Partial<Pick<User, "Username" | "Phone_number" | "Address">>;
 
 export const pickUpdateFields = (data: Partial<User>): UpdateUserData => {
