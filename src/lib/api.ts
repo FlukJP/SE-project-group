@@ -1,6 +1,9 @@
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 import type { ProductWithSeller, Product } from "@/src/types/Product";
 import type { User } from "@/src/types/User";
+import type { Report } from "@/src/types/Report";
+import type { ChatRoomWithPartner, Chat } from "@/src/types/Chat";
+import type { MessageWithSender } from "@/src/types/Messages";
 
 export class ApiError extends Error {
   status: number;
@@ -157,10 +160,6 @@ export const reviewApi = {
       body: JSON.stringify(data),
     }),
 };
-
-import type { Report } from "@/src/types/Report";
-import type { ChatRoomWithPartner, Chat } from "@/src/types/Chat";
-import type { MessageWithSender } from "@/src/types/Messages";
 
 export const adminApi = {
   getUsers: (page = 1, limit = 20) =>

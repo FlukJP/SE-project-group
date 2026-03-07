@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useChatLayout } from "@/src/contexts/ChatLayoutContext";
@@ -11,6 +11,7 @@ function ChatPageInner() {
   const router = useRouter();
   const { user } = useAuth();
   const { refreshRooms } = useChatLayout();
+  const isCreatingRef = useRef(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
 
@@ -18,8 +19,14 @@ function ChatPageInner() {
   const productId = searchParams.get("product");
 
   useEffect(() => {
-    if (!sellerId || !productId || !user || isCreating) return;
+    if (!sellerId || !productId || !user || isCreatingRef.current) return;
 
+    if (Number(sellerId) === user.User_ID) {
+      setError("ไม่สามารถแชทกับตัวเองได้");
+      return;
+    }
+
+    isCreatingRef.current = true;
     setIsCreating(true);
     chatApi
       .findOrCreateRoom(Number(sellerId), Number(productId))
@@ -30,10 +37,10 @@ function ChatPageInner() {
       .catch((err) => {
         console.error("Failed to create chat room:", err);
         setError("ไม่สามารถเปิดแชทได้");
+        isCreatingRef.current = false;
         setIsCreating(false);
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sellerId, productId, user]);
+  }, [sellerId, productId, user, refreshRooms, router]);
 
   if (isCreating) {
     return (

@@ -12,4 +12,7 @@ export interface ChatRoomWithPartner extends Chat {
     PartnerName: string;
     ProductTitle?: string;
     ProductImage?: string;
+    LastMessage?: string;
+    LastMessageTime?: Date | string;
+    UnreadCount?: number;
 }

@@ -9,8 +9,9 @@ interface Props {
 }
 
 export default function ChatRoomItem({ room, isActive }: Props) {
-  const timeStr = room.Created_At
-    ? new Date(room.Created_At).toLocaleDateString("th-TH", {
+  const displayTime = room.LastMessageTime || room.Created_At;
+  const timeStr = displayTime
+    ? new Date(displayTime).toLocaleDateString("th-TH", {
         day: "numeric",
         month: "short",
       })
@@ -33,10 +34,22 @@ export default function ChatRoomItem({ room, isActive }: Props) {
           <span className="font-medium text-sm text-gray-900 truncate">
             {room.PartnerName}
           </span>
-          <span className="text-[11px] text-gray-400 shrink-0 ml-2">
-            {timeStr}
-          </span>
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            <span className="text-[11px] text-gray-400">
+              {timeStr}
+            </span>
+            {!!room.UnreadCount && room.UnreadCount > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                {room.UnreadCount > 99 ? "99+" : room.UnreadCount}
+              </span>
+            )}
+          </div>
         </div>
+        {room.LastMessage && (
+          <p className="text-xs text-gray-500 truncate mt-0.5">
+            {room.LastMessage}
+          </p>
+        )}
       </div>
     </Link>
   );

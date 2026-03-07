@@ -5,7 +5,7 @@ export interface Message {
     Content: string;
     MessagesType: 'text' | 'image';
     Is_Read?: number;
-    Timestamp?: Date;
+    Timestamp?: Date | string;
 }
 
 export interface MessageWithSender extends Message {

@@ -18,7 +18,12 @@ export default function ChatConversationPage() {
   const [messages, setMessages] = useState<MessageWithSender[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const isInitialLoad = useRef(true);
 
   const chatIdNum = Number(chatId);
 
@@ -33,11 +38,14 @@ export default function ChatConversationPage() {
   useEffect(() => {
     if (!chatId || !user) return;
 
+    isInitialLoad.current = true;
     setIsLoading(true);
+    setPage(1);
     chatApi
       .getMessages(chatIdNum)
       .then((res) => {
         setMessages(res.data);
+        setHasMore(res.pagination.hasMore);
         chatApi.markAsRead(chatIdNum).catch(() => {});
       })
       .catch((err) => {
@@ -46,8 +54,7 @@ export default function ChatConversationPage() {
       .finally(() => {
         setIsLoading(false);
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatId, user]);
+  }, [chatId, chatIdNum, user]);
 
   // Socket: join room, listen for newMessage
   useEffect(() => {
@@ -67,13 +74,59 @@ export default function ChatConversationPage() {
       socket.emit("leave", roomId);
       socket.off("newMessage", handleNewMessage);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatId]);
+  }, [chatId, chatIdNum]);
 
-  // Auto-scroll when messages change
+  // Auto-scroll on initial load and new messages
   useEffect(() => {
-    scrollToBottom();
+    if (isInitialLoad.current && messages.length > 0) {
+      scrollToBottom();
+      isInitialLoad.current = false;
+    }
   }, [messages, scrollToBottom]);
+
+  // Auto-scroll when a new message is appended (not when loading older)
+  useEffect(() => {
+    if (!isInitialLoad.current && !isLoadingMore) {
+      scrollToBottom();
+    }
+  }, [messages.length, scrollToBottom, isLoadingMore]);
+
+  // Load older messages
+  const loadMoreMessages = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    const container = messagesContainerRef.current;
+    const prevScrollHeight = container?.scrollHeight || 0;
+
+    try {
+      const nextPage = page + 1;
+      const res = await chatApi.getMessages(chatIdNum, nextPage);
+      setMessages((prev) => [...res.data, ...prev]);
+      setPage(nextPage);
+      setHasMore(res.pagination.hasMore);
+
+      // Restore scroll position so it doesn't jump
+      requestAnimationFrame(() => {
+        if (container) {
+          container.scrollTop = container.scrollHeight - prevScrollHeight;
+        }
+      });
+    } catch (err) {
+      console.error("Failed to load more messages:", err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, page, chatIdNum]);
+
+  // Detect scroll to top
+  const handleScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    if (container.scrollTop < 50 && hasMore && !isLoadingMore) {
+      loadMoreMessages();
+    }
+  }, [hasMore, isLoadingMore, loadMoreMessages]);
 
   // Send message
   const handleSend = async (content: string) => {
@@ -90,7 +143,7 @@ export default function ChatConversationPage() {
         Content: content,
         MessagesType: "text",
         Is_Read: 0,
-        Timestamp: new Date(),
+        Timestamp: new Date().toISOString(),
         SenderName: user.Username,
       };
 
@@ -124,7 +177,21 @@ export default function ChatConversationPage() {
         <span className="font-medium text-sm text-gray-900">{partnerName}</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-4"
+      >
+        {isLoadingMore && (
+          <div className="text-center text-xs text-gray-400 py-2">
+            กำลังโหลดข้อความเก่า...
+          </div>
+        )}
+        {!hasMore && messages.length > 0 && (
+          <div className="text-center text-xs text-gray-300 py-2">
+            ไม่มีข้อความเก่ากว่านี้แล้ว
+          </div>
+        )}
         {messages.length === 0 ? (
           <div className="text-center text-sm text-gray-400 py-8">
             เริ่มต้นการสนทนา
