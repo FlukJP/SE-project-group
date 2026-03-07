@@ -53,10 +53,10 @@ export const AdminService = {
     // 5.Ban product
     banProduct: async (productID: number) => {
         if (!productID) throw new AppError("Product ID is required", 400);
-        const product = await ProductModel.findByID(productID);
+        const product = await ProductModel.findByIDIncludingBanned(productID);
         if (!product) throw new AppError("Product not found", 404);
         if (product.Is_Banned) throw new AppError("Product is already banned", 400);
-        
+
         const success = await ProductModel.updateProduct(productID, { Is_Banned: true } );
         if (!success) throw new AppError("Failed to ban product. Please try again.", 500);
         return { message: `Product ID ${productID} has been banned.` };
@@ -65,7 +65,7 @@ export const AdminService = {
     // 6.Unban product
     unbanProduct: async (productID: number) => {
         if (!productID) throw new AppError("Product ID is required", 400);
-        const product = await ProductModel.findByID(productID);
+        const product = await ProductModel.findByIDIncludingBanned(productID);
         if (!product) throw new AppError("Product not found", 404);
         if (!product.Is_Banned) throw new AppError("Product is not banned", 400);
 

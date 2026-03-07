@@ -154,5 +154,18 @@ export const ProductModel = {
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [limit, offset]);
         return rows as ProductWithSeller[];
+    },
+
+    // 8.ดึงข้อมูลสินค้าจาก ID รวมที่โดน Ban (สำหรับ Admin)
+    findByIDIncludingBanned: async (id: number): Promise<ProductWithSeller | null> => {
+        if (!id || id <= 0) throw new AppError("Invalid product ID", 400);
+        const sql = `
+            SELECT p.*, u.Username AS SellerName
+            FROM Product p
+            LEFT JOIN User u ON p.Seller_ID = u.User_ID
+            WHERE p.Product_ID = ?
+        `;
+        const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
+        return rows.length > 0 ? (rows[0] as ProductWithSeller) : null;
     }
 };
