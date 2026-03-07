@@ -7,7 +7,7 @@ export const OrderModel = {
     findByID: async (id: number): Promise<Order | null> => {
         const sql = `
             SELECT * FROM \`Order\`
-            WHERE OrderID = ?
+            WHERE Order_ID = ?
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as Order) : null;
@@ -40,7 +40,7 @@ export const OrderModel = {
     findByProductID: async (productID: number): Promise<Order[]> => {
         const sql = `
             SELECT * FROM \`Order\`
-            WHERE ProductID = ? 
+            WHERE Product_ID = ?
             ORDER BY Created_at DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [productID]);
@@ -124,6 +124,19 @@ export const OrderModel = {
         try{
             await connection.beginTransaction();
 
+            // Lock the product row to prevent race conditions
+            const [lockedRows] = await connection.query<RowDataPacket[]>(
+                `SELECT Quantity FROM Product WHERE Product_ID = ? FOR UPDATE`,
+                [productID]
+            );
+            if (!lockedRows || lockedRows.length === 0) {
+                throw new Error('Product not found');
+            }
+            const currentQty = lockedRows[0].Quantity;
+            if (currentQty < newOrder.Quantity) {
+                throw new Error('Insufficient stock');
+            }
+
             const insertOrderSQL = `
             INSERT INTO \`Order\` (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price, Status)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -164,7 +177,7 @@ export const OrderModel = {
             await connection.beginTransaction();
 
             const updateProductSql = `
-                UPDATE Product SET Quantity = ?, Status = 'Available' WHERE Product_ID = ?
+                UPDATE Product SET Quantity = ?, Status = 'available' WHERE Product_ID = ?
             `;
             await connection.query(updateProductSql, [restoredQuantity, productID]);
 

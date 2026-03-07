@@ -3,13 +3,13 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { authApi } from "@/src/lib/api";
 
-interface PhoneOTPProps {
-    phone: string;
+interface EmailOTPProps {
+    email: string;
     onVerified: (data: { access_token: string; refresh_token: string }) => void;
     onError: (message: string) => void;
 }
 
-export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) {
+export default function EmailOTP({ email, onVerified, onError }: EmailOTPProps) {
     const [step, setStep] = useState<"send" | "verify">("send");
     const [otp, setOtp] = useState("");
     const [loading, setLoading] = useState(false);
@@ -42,7 +42,7 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
         if (loading) return;
         setLoading(true);
         try {
-            await authApi.requestPhoneOTP(phone);
+            await authApi.requestOTP(email);
             setStep("verify");
             startCountdown();
         } catch (err: unknown) {
@@ -56,7 +56,7 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
         if (loading) return;
         setLoading(true);
         try {
-            const response = await authApi.verifyPhoneOTP(phone, otp);
+            const response = await authApi.verifyOTP(email, otp);
             onVerified({
                 access_token: response.access_token,
                 refresh_token: response.refresh_token,
@@ -73,15 +73,14 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
             {step === "send" && (
                 <div className="space-y-3">
                     <p className="text-sm text-zinc-600">
-                        ระบบจะส่งรหัส OTP ไปที่อีเมลของคุณ เพื่อยืนยันเบอร์โทร{" "}
-                        <span className="font-semibold">{phone}</span>
+                        ระบบจะส่งรหัส OTP ไปที่อีเมล <span className="font-semibold">{email}</span>
                     </p>
                     <button
                         onClick={handleSendOTP}
                         disabled={loading}
                         className="w-full py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
                     >
-                        {loading ? "กำลังส่ง..." : "ส่งรหัส OTP ยืนยันเบอร์โทร"}
+                        {loading ? "กำลังส่ง..." : "ส่งรหัส OTP ทางอีเมล"}
                     </button>
                 </div>
             )}
@@ -89,8 +88,7 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
             {step === "verify" && (
                 <div className="space-y-3">
                     <p className="text-sm text-zinc-600">
-                        กรอกรหัส OTP 6 หลักที่ส่งไปยังอีเมลของคุณ (สำหรับยืนยันเบอร์{" "}
-                        <span className="font-semibold">{phone}</span>)
+                        กรอกรหัส OTP 6 หลักที่ส่งไปยังอีเมล <span className="font-semibold">{email}</span>
                     </p>
                     <input
                         type="text"

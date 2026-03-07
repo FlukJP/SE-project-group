@@ -41,6 +41,7 @@ export default function ChatConversationPage() {
     isInitialLoad.current = true;
     setIsLoading(true);
     setPage(1);
+    setMessages([]); // Fix #7: reset old messages when switching rooms
     chatApi
       .getMessages(chatIdNum)
       .then((res) => {
@@ -61,17 +62,33 @@ export default function ChatConversationPage() {
     if (!chatId) return;
 
     const roomId = String(chatId);
-    socket.emit("join", roomId);
 
+    // Only join when socket is connected
+    if (socket.connected) {
+      socket.emit("join", roomId);
+    }
+
+    const handleConnect = () => {
+      socket.emit("join", roomId);
+    };
+
+    // Fix #6: Prevent duplicate messages by checking Messages_ID
     const handleNewMessage = (message: MessageWithSender) => {
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => {
+        if (prev.some((m) => m.Messages_ID === message.Messages_ID)) {
+          return prev;
+        }
+        return [...prev, message];
+      });
       chatApi.markAsRead(chatIdNum).catch(() => {});
     };
 
+    socket.on("connect", handleConnect);
     socket.on("newMessage", handleNewMessage);
 
     return () => {
       socket.emit("leave", roomId);
+      socket.off("connect", handleConnect);
       socket.off("newMessage", handleNewMessage);
     };
   }, [chatId, chatIdNum]);

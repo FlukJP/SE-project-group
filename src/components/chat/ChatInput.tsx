@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type KeyboardEvent } from "react";
+import { useState, useRef, useCallback, type KeyboardEvent } from "react";
 
 interface Props {
   onSend: (content: string) => void;
@@ -11,11 +11,22 @@ export default function ChatInput({ onSend, disabled }: Props) {
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const autoResize = useCallback(() => {
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 120) + "px";
+    }
+  }, []);
+
   const handleSend = () => {
     const trimmed = text.trim();
     if (!trimmed || disabled) return;
     onSend(trimmed);
     setText("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
     textareaRef.current?.focus();
   };
 
@@ -31,11 +42,15 @@ export default function ChatInput({ onSend, disabled }: Props) {
       <textarea
         ref={textareaRef}
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value);
+          autoResize();
+        }}
         onKeyDown={handleKeyDown}
         placeholder="พิมพ์ข้อความ..."
         disabled={disabled}
         rows={1}
+        style={{ maxHeight: "120px" }}
         className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#121E4D]/20 focus:border-[#121E4D] disabled:opacity-50"
       />
       <button

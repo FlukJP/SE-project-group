@@ -11,7 +11,6 @@ import redisClient, { connectRedis } from "@/src/config/redis";
 import { OTP_TTL_SECONDS, RATE_LIMIT_TTL_SECONDS, MAX_OTP_REQUESTS, MAX_OTP_ATTEMPTS, SALT_ROUNDS } from "@/src/config/constants";
 import { REFRESH_TOKEN_TTL_SECONDS } from "@/src/config/constants";
 import { generateAccessToken, generateRefreshToken, TokenPayload } from "@/src/utils/jwt";
-import firebaseAdmin from "@/src/config/firebaseAdmin";
 
 // Redis (rate limiters)
 const checkRateLimit = async (key: string, limit: number, ttlSeconds: number): Promise<void> => {
@@ -28,8 +27,7 @@ const checkRateLimit = async (key: string, limit: number, ttlSeconds: number): P
 
 const roleHierarchy: Record<Role, number> = {
     customer: 1,
-    seller: 2,
-    admin: 3
+    admin: 2
 };
 
 export const AuthService = {
@@ -50,7 +48,8 @@ export const AuthService = {
         }
 
         const insertId = await UserModel.createUser(newUser);
-        await AuthService.requestOTP(userData.Email);
+        // Fire-and-forget: send OTP email in background without blocking response
+        AuthService.requestOTP(userData.Email).catch(() => {});
 
         return insertId
     },
@@ -79,6 +78,9 @@ export const AuthService = {
             }
             throw new AppError("Invalid email or password", 401);
         }
+
+        // Fix #13: Clear login attempts counter on successful login
+        await redisClient.del(`login_attempts:${params.email}`);
 
         const accessToken = generateAccessToken({ userID: user.User_ID, role: user.Role });
         const refreshToken = generateRefreshToken({ userID: user.User_ID });
@@ -215,7 +217,7 @@ export const AuthService = {
         const user = await UserModel.findByEmail(email);
         if (!user || !user.User_ID) throw new AppError("User not found", 404);
 
-        await UserModel.updateUser(user.User_ID!, { Is_Phone_Verified: true, Verified_Date: new Date() });
+        await UserModel.updateUser(user.User_ID!, { Is_Email_Verified: true, Verified_Date: new Date() });
         const accessToken = generateAccessToken({ userID: user.User_ID, role: user.Role });
         const refreshToken = generateRefreshToken({ userID: user.User_ID });
 
@@ -250,28 +252,49 @@ export const AuthService = {
         await UserModel.updateUser(user.User_ID, { Password: hashedNewPassword });
     },
 
-    // 11. Verify Firebase Phone Auth Token
-    verifyFirebasePhone: async (firebaseToken: string) => {
-        if (!firebaseToken) throw new AppError("Firebase token is required", 400);
+    // 11. Request Phone OTP (ส่ง OTP ไปยังอีเมลที่ผูกบัญชี โดยระบุเบอร์โทร)
+    requestPhoneOTP: async (phone: string): Promise<void> => {
+        if (!validatePhoneNumber(phone)) throw new AppError("เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก", 400);
 
-        let decoded;
-        try {
-            decoded = await firebaseAdmin.auth().verifyIdToken(firebaseToken);
-        } catch {
-            throw new AppError("Invalid or expired Firebase token", 401);
+        const user = await UserModel.findByPhone(phone);
+        if (!user) throw new AppError("ไม่พบบัญชีที่ผูกกับเบอร์โทรนี้", 404);
+        if (!user.Is_Email_Verified) throw new AppError("กรุณายืนยันอีเมลก่อนยืนยันเบอร์โทรศัพท์", 400);
+
+        await checkRateLimit(`otp_request:phone:${phone}`, MAX_OTP_REQUESTS, RATE_LIMIT_TTL_SECONDS);
+        const otp = crypto.randomInt(100000, 1000000).toString();
+        const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+        await redisClient.setEx(`otp:phone:${phone}`, OTP_TTL_SECONDS, hashedOtp);
+
+        // ส่ง OTP ทางอีเมลแทน SMS (ไม่ต้องมี SMS provider)
+        await sendEmail(
+            user.Email,
+            "รหัส OTP ยืนยันเบอร์โทรศัพท์",
+            `รหัส OTP สำหรับยืนยันเบอร์โทรศัพท์ ${phone} คือ ${otp}\nรหัสจะหมดอายุใน ${OTP_TTL_SECONDS / 60} นาที`
+        );
+    },
+
+    // 12. Verify Phone OTP
+    verifyPhoneOTP: async (phone: string, otp: string) => {
+        if (!validatePhoneNumber(phone)) throw new AppError("เบอร์โทรศัพท์ไม่ถูกต้อง", 400);
+
+        const storedOtp = await redisClient.get(`otp:phone:${phone}`);
+        if (!storedOtp) throw new AppError("OTP หมดอายุหรือไม่พบ", 400);
+
+        const hashedInput = crypto.createHash("sha256").update(otp).digest("hex");
+        const a = Buffer.from(hashedInput);
+        const b = Buffer.from(storedOtp);
+        const isValid = a.length === b.length && crypto.timingSafeEqual(a, b);
+
+        if (!isValid) {
+            await checkRateLimit(`otp_attempt:phone:${phone}`, MAX_OTP_ATTEMPTS, RATE_LIMIT_TTL_SECONDS);
+            throw new AppError("รหัส OTP ไม่ถูกต้อง", 400);
         }
 
-        const phoneNumber = decoded.phone_number;
-        if (!phoneNumber) throw new AppError("No phone number found in Firebase token", 400);
+        await redisClient.del(`otp:phone:${phone}`);
+        await redisClient.del(`otp_attempt:phone:${phone}`);
 
-        // แปลงเบอร์จาก +66 เป็น 0 สำหรับค้นหาใน DB
-        let localPhone = phoneNumber;
-        if (phoneNumber.startsWith("+66")) {
-            localPhone = "0" + phoneNumber.substring(3);
-        }
-
-        const user = await UserModel.findByPhone(localPhone);
-        if (!user || !user.User_ID) throw new AppError("No account found with this phone number. Please register first.", 404);
+        const user = await UserModel.findByPhone(phone);
+        if (!user || !user.User_ID) throw new AppError("ไม่พบผู้ใช้", 404);
 
         await UserModel.updateUser(user.User_ID, { Is_Phone_Verified: true, Verified_Date: new Date() });
 

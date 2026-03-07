@@ -37,7 +37,7 @@ export default function SearchBar({
           aria-label="เลือกจังหวัด"
           className="rounded-xl px-3 py-3 bg-white text-sm text-zinc-700 border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-300"
         >
-          <option>ทุกจังหวัด</option>
+          <option value="">ทุกจังหวัด</option>
           {PROVINCES.map((p) => (
             <option key={p.name} value={p.name}>{p.name}</option>
           ))}

@@ -141,17 +141,30 @@ export const AuthController = {
         }
     },
 
-    // 9.ยืนยันเบอร์โทรด้วย Firebase Phone Auth
-    verifyPhone: async (req: AuthRequest, res: Response, next: NextFunction) => {
+    // 9. ขอ OTP ยืนยันเบอร์โทร (Request Phone OTP)
+    requestPhoneOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
-            const { firebaseToken } = req.body;
-            if (!firebaseToken) throw new AppError("Firebase token is required", 400);
-
-            const result = await AuthService.verifyFirebasePhone(firebaseToken);
+            const { phone } = req.body;
+            await AuthService.requestPhoneOTP(phone);
 
             res.status(200).json({
                 success: true,
-                message: "Phone verified successfully",
+                message: "OTP สำหรับยืนยันเบอร์โทรถูกส่งไปยังอีเมลของคุณแล้ว",
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    // 10. ยืนยัน OTP เบอร์โทร (Verify Phone OTP)
+    verifyPhoneOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
+        try {
+            const { phone, otp } = req.body;
+            const result = await AuthService.verifyPhoneOTP(phone, otp);
+
+            res.status(200).json({
+                success: true,
+                message: "ยืนยันเบอร์โทรสำเร็จ",
                 ...result,
             });
         } catch (error) {

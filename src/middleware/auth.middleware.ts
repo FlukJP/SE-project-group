@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../errors/AppError';
-import 'dotenv/config';
+import { ENV } from '../config/env';
 import { UserModel } from '../models/UserModel';
+import redisClient, { connectRedis } from '../config/redis';
 
 export interface AuthPayload {
     userID: number;
-    role: 'customer' | 'seller' | 'admin';
+    role: 'customer' | 'admin';
 }
 
 export interface AuthRequest extends Request {
@@ -19,9 +20,16 @@ export const authenticateJWT = async (req: AuthRequest, res: Response, next: Nex
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) throw new AppError("Authorization header is missing", 401);
         const token = authHeader.split(' ')[1];
-        const secret = process.env.JWT_ACCESS_SECRET;
-        if (!secret) throw new AppError("JWT secret is not configured", 500);
-        const decoded = jwt.verify(token, secret) as AuthPayload;
+
+        // Fix #12: Check if token has been blacklisted (logged out)
+        await connectRedis();
+        const isBlacklisted = await redisClient.get(`blacklist:${token}`);
+        if (isBlacklisted) throw new AppError("Token has been revoked", 401);
+
+        const decoded = jwt.verify(token, ENV.JWT_SECRET, {
+            issuer: ENV.JWT_ISSUER,
+            audience: ENV.JWT_AUDIENCE,
+        }) as AuthPayload;
         const user = await UserModel.findByID(decoded.userID);
         if (!user) throw new AppError("User not found", 404);
         if (user.Is_Banned) throw new AppError("User is banned", 403);
@@ -40,7 +48,7 @@ export const authenticateJWT = async (req: AuthRequest, res: Response, next: Nex
 };
 
 // Authorization Middleware
-export const authorizeRoles = (roles: ('customer' | 'seller' | 'admin')[]) => {
+export const authorizeRoles = (roles: ('customer' | 'admin')[]) => {
     return (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -50,4 +58,22 @@ export const authorizeRoles = (roles: ('customer' | 'seller' | 'admin')[]) => {
         next(err);
         }
     };
+};
+
+// Require OTP-verified user (both email AND phone verified)
+export const requireVerified = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        if (!req.user) throw new AppError("Unauthorized", 401);
+        const user = await UserModel.findByID(req.user.userID);
+        if (!user) throw new AppError("User not found", 404);
+        if (!user.Is_Email_Verified) {
+            throw new AppError("กรุณายืนยันอีเมลผ่าน OTP ก่อนใช้งานฟีเจอร์นี้", 403);
+        }
+        if (!user.Is_Phone_Verified) {
+            throw new AppError("กรุณายืนยันเบอร์โทรศัพท์ผ่าน OTP ก่อนใช้งานฟีเจอร์นี้", 403);
+        }
+        next();
+    } catch (err) {
+        next(err);
+    }
 };

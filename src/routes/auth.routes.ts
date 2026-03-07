@@ -9,7 +9,8 @@ router.post('/login', AuthController.login);
 router.post('/refresh-token', AuthController.refreshToken);
 router.post('/request-otp', AuthController.requestOTP);
 router.post('/verify-otp', AuthController.verifyOTP);
-router.post('/verify-phone', AuthController.verifyPhone);
+router.post('/request-phone-otp', AuthController.requestPhoneOTP);
+router.post('/verify-phone-otp', AuthController.verifyPhoneOTP);
 router.post('/reset-password', AuthController.resetPassword);
 
 router.post('/logout', authenticateJWT, AuthController.logout);

@@ -18,7 +18,7 @@ export default function HomePage() {
   const router = useRouter();
   const { isLoggedIn } = useAuth();
   const [query, setQuery] = useState("");
-  const [province, setProvince] = useState("ทุกจังหวัด");
+  const [province, setProvince] = useState("");
   const [showLogin, setShowLogin] = useState(false);
   const [featured, setFeatured] = useState<ProductDisplay[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -45,7 +45,7 @@ export default function HomePage() {
     e.preventDefault();
     const params = new URLSearchParams();
     if (query.trim()) params.set("q", query.trim());
-    if (province && province !== "ทุกจังหวัด") params.set("province", province);
+    if (province) params.set("province", province);
     router.push(`/search?${params.toString()}`);
   };
 
@@ -83,18 +83,22 @@ export default function HomePage() {
       </section>
 
       <div className="container mx-auto px-4 py-8">
-        <CategoriesSection categories={categories} />
-
         {loading ? (
           <div className="text-center text-zinc-500 py-12">กำลังโหลดสินค้า...</div>
-        ) : featured.length > 0 ? (
-          <FeaturedSection
-            title="ประกาศแนะนำ"
-            subtitle="ประกาศล่าสุด"
-            products={featured}
-          />
         ) : (
-          <div className="text-center text-zinc-500 py-12">ยังไม่มีประกาศในขณะนี้</div>
+          <>
+            <CategoriesSection categories={categories} />
+
+            {featured.length > 0 ? (
+              <FeaturedSection
+                title="ประกาศแนะนำ"
+                subtitle="ประกาศล่าสุด"
+                products={featured}
+              />
+            ) : (
+              <div className="text-center text-zinc-500 py-12">ยังไม่มีประกาศในขณะนี้</div>
+            )}
+          </>
         )}
 
         <div className="md:hidden mt-8 grid grid-cols-2 gap-3">

@@ -15,7 +15,7 @@ export default function ProductCard({
   const to = href ?? `/products/${product.id}`;
   const image = product.images[0] || "";
   const timeAgo = product.postedAt;
-  const priceStr = `${product.price.toLocaleString()} ฿`;
+  const priceStr = `${(product.price ?? 0).toLocaleString()} ฿`;
 
   return (
     <Link
@@ -23,14 +23,20 @@ export default function ProductCard({
       className="group bg-white rounded-2xl overflow-hidden border border-zinc-200 hover:shadow-lg transition"
     >
       <div className="relative h-44">
-        <Image
-          src={image}
-          alt={product.title}
-          fill
-          className="object-cover group-hover:scale-[1.03] transition"
-          sizes="(max-width: 1024px) 100vw, 25vw"
-          priority={false}
-        />
+        {image ? (
+          <Image
+            src={image}
+            alt={product.title}
+            fill
+            className="object-cover group-hover:scale-[1.03] transition"
+            sizes="(max-width: 1024px) 100vw, 25vw"
+            priority={false}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full bg-zinc-100 text-zinc-300 text-4xl">
+            📷
+          </div>
+        )}
         <div className="absolute top-3 left-3">
           <span className="text-[11px] font-semibold bg-white/95 border border-zinc-200 px-2 py-1 rounded-full">
             {badgeText}

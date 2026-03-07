@@ -32,6 +32,14 @@ export const ProductService = {
         if (productData.Description.trim().length > 2000) throw new AppError("Description must be less than 2000 characters", 400);
         if (productData.Image_URL.includes('..') || productData.Image_URL.startsWith('/')) throw new AppError("Invalid image URL", 400);
 
+        // Validate Image_URL is valid JSON array
+        try {
+            const parsed = JSON.parse(productData.Image_URL);
+            if (!Array.isArray(parsed)) throw new Error();
+        } catch {
+            throw new AppError("Image_URL must be a valid JSON array", 400);
+        }
+
         const newProduct: Product = {
             Title: productData.Title.trim(),
             Description: productData.Description.trim(),

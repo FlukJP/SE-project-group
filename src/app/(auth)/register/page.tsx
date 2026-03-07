@@ -1,15 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { authApi } from "@/src/lib/api";
+import EmailOTP from "@/src/components/auth/EmailOTP";
 import PhoneOTP from "@/src/components/auth/PhoneOTP";
+
+function getPasswordStrength(pw: string): { level: number; label: string; color: string } {
+  if (!pw) return { level: 0, label: "", color: "" };
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+
+  if (score <= 1) return { level: 1, label: "อ่อนมาก", color: "bg-red-500" };
+  if (score === 2) return { level: 2, label: "อ่อน", color: "bg-orange-500" };
+  if (score === 3) return { level: 3, label: "ปานกลาง", color: "bg-yellow-500" };
+  if (score === 4) return { level: 4, label: "แข็งแรง", color: "bg-emerald-400" };
+  return { level: 5, label: "แข็งแรงมาก", color: "bg-emerald-600" };
+}
+
+function validatePhone(phone: string): string | null {
+  const cleaned = phone.replace(/\D/g, "");
+  if (!cleaned) return "กรุณากรอกเบอร์โทรศัพท์";
+  if (!cleaned.startsWith("0")) return "เบอร์โทรศัพท์ต้องขึ้นต้นด้วย 0";
+  if (cleaned.length !== 10) return "เบอร์โทรศัพท์ต้องมี 10 หลัก";
+  return null;
+}
+
+function validateEmail(email: string): string | null {
+  if (!email.trim()) return "กรุณากรอกอีเมล";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "รูปแบบอีเมลไม่ถูกต้อง";
+  return null;
+}
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, setTokensAndLoadUser } = useAuth();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -17,28 +48,48 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"form" | "otp">("form");
+  const [step, setStep] = useState<"form" | "email-otp" | "phone-otp">("form");
 
-  if (isLoggedIn) {
-    router.replace("/");
-    return null;
-  }
+  // Track which fields have been touched for inline validation
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (isLoggedIn) router.replace("/");
+  }, [isLoggedIn, router]);
+
+  if (isLoggedIn) return null;
+
+  const markTouched = (field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  // Per-field validation (only shown after touch)
+  const usernameError = touched.username && !username.trim() ? "กรุณากรอกชื่อผู้ใช้" : null;
+  const emailError = touched.email ? validateEmail(email) : null;
+  const phoneError = touched.phone ? validatePhone(phone) : null;
+  const passwordError = touched.password && password.length > 0 && password.length < 8 ? "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร" : null;
+  const confirmError = touched.confirmPassword && confirmPassword.length > 0 && password !== confirmPassword ? "รหัสผ่านไม่ตรงกัน" : null;
+
+  const pwStrength = getPasswordStrength(password);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
 
+    // Mark all fields as touched
+    setTouched({ username: true, email: true, phone: true, password: true, confirmPassword: true });
+
+    // Validate all
     if (!username.trim() || !email.trim() || !password.trim() || !phone.trim()) {
       setError("กรุณากรอกข้อมูลให้ครบ");
       return;
     }
-    if (password !== confirmPassword) {
-      setError("รหัสผ่านไม่ตรงกัน");
-      return;
-    }
-    if (password.length < 8) {
-      setError("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร");
-      return;
-    }
+    const eErr = validateEmail(email);
+    if (eErr) { setError(eErr); return; }
+    const pErr = validatePhone(phone);
+    if (pErr) { setError(pErr); return; }
+    if (password.length < 8) { setError("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"); return; }
+    if (password !== confirmPassword) { setError("รหัสผ่านไม่ตรงกัน"); return; }
 
     setError("");
     setLoading(true);
@@ -49,8 +100,7 @@ export default function RegisterPage() {
         password,
         phone: phone.trim(),
       });
-      // สมัครสำเร็จ -> ไปขั้นตอนยืนยัน OTP ทาง SMS
-      setStep("otp");
+      setStep("email-otp");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "สมัครสมาชิกไม่สำเร็จ");
     } finally {
@@ -58,10 +108,24 @@ export default function RegisterPage() {
     }
   };
 
-  const handlePhoneVerified = (data: { access_token: string; refresh_token: string }) => {
-    localStorage.setItem("access_token", data.access_token);
-    localStorage.setItem("refresh_token", data.refresh_token);
-    router.push("/");
+  // Fix #19: After email OTP verified, move to phone OTP step before going home
+  const handleEmailVerified = async (data: { access_token: string; refresh_token: string }) => {
+    try {
+      await setTokensAndLoadUser(data.access_token, data.refresh_token);
+      setError("");
+      setStep("phone-otp");
+    } catch {
+      setError("เข้าสู่ระบบอัตโนมัติไม่สำเร็จ กรุณาเข้าสู่ระบบด้วยตัวเอง");
+    }
+  };
+
+  const handlePhoneVerified = async (data: { access_token: string; refresh_token: string }) => {
+    try {
+      await setTokensAndLoadUser(data.access_token, data.refresh_token);
+      router.push("/");
+    } catch {
+      setError("เข้าสู่ระบบอัตโนมัติไม่สำเร็จ กรุณาเข้าสู่ระบบด้วยตัวเอง");
+    }
   };
 
   return (
@@ -90,9 +154,12 @@ export default function RegisterPage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  onBlur={() => markTouched("username")}
                   placeholder="ชื่อที่แสดงให้ผู้อื่นเห็น"
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  autoComplete="username"
+                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${usernameError ? "border-red-300" : "border-zinc-200"}`}
                 />
+                {usernameError && <p className="text-xs text-red-500 mt-1">{usernameError}</p>}
               </div>
 
               <div>
@@ -101,9 +168,12 @@ export default function RegisterPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => markTouched("email")}
                   placeholder="your@email.com"
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  autoComplete="email"
+                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${emailError ? "border-red-300" : "border-zinc-200"}`}
                 />
+                {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
               </div>
 
               <div>
@@ -112,9 +182,12 @@ export default function RegisterPage() {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  onBlur={() => markTouched("phone")}
                   placeholder="08x-xxx-xxxx"
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  autoComplete="tel"
+                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${phoneError ? "border-red-300" : "border-zinc-200"}`}
                 />
+                {phoneError && <p className="text-xs text-red-500 mt-1">{phoneError}</p>}
               </div>
 
               <div>
@@ -123,9 +196,27 @@ export default function RegisterPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onBlur={() => markTouched("password")}
                   placeholder="อย่างน้อย 8 ตัวอักษร"
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  autoComplete="new-password"
+                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${passwordError ? "border-red-300" : "border-zinc-200"}`}
                 />
+                {passwordError && <p className="text-xs text-red-500 mt-1">{passwordError}</p>}
+                {password.length > 0 && (
+                  <div className="mt-2">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div
+                          key={i}
+                          className={`h-1.5 flex-1 rounded-full transition-colors ${
+                            i <= pwStrength.level ? pwStrength.color : "bg-zinc-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-zinc-500 mt-1">{pwStrength.label}</p>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -134,9 +225,12 @@ export default function RegisterPage() {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  onBlur={() => markTouched("confirmPassword")}
                   placeholder="กรอกรหัสผ่านอีกครั้ง"
-                  className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  autoComplete="new-password"
+                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${confirmError ? "border-red-300" : "border-zinc-200"}`}
                 />
+                {confirmError && <p className="text-xs text-red-500 mt-1">{confirmError}</p>}
               </div>
 
               <button
@@ -163,14 +257,14 @@ export default function RegisterPage() {
           </>
         )}
 
-        {step === "otp" && (
+        {step === "email-otp" && (
           <>
             <div className="text-center mb-8">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
-                <span className="text-3xl">📱</span>
+                <span className="text-3xl">📧</span>
               </div>
-              <h1 className="text-2xl font-bold text-zinc-900">ยืนยันเบอร์โทรศัพท์</h1>
-              <p className="text-sm text-zinc-500 mt-1">ยืนยันตัวตนด้วยรหัส OTP ทาง SMS</p>
+              <h1 className="text-2xl font-bold text-zinc-900">ยืนยันอีเมล</h1>
+              <p className="text-sm text-zinc-500 mt-1">ยืนยันตัวตนด้วยรหัส OTP ทางอีเมล</p>
             </div>
 
             {error && (
@@ -179,9 +273,9 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <PhoneOTP
-              phoneNumber={phone}
-              onVerified={handlePhoneVerified}
+            <EmailOTP
+              email={email}
+              onVerified={handleEmailVerified}
               onError={(msg) => setError(msg)}
             />
 
@@ -191,6 +285,39 @@ export default function RegisterPage() {
                 className="text-sm text-zinc-400 hover:text-zinc-600"
               >
                 ข้ามขั้นตอนนี้ ไปหน้าเข้าสู่ระบบ
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === "phone-otp" && (
+          <>
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                <span className="text-3xl">📱</span>
+              </div>
+              <h1 className="text-2xl font-bold text-zinc-900">ยืนยันเบอร์โทรศัพท์</h1>
+              <p className="text-sm text-zinc-500 mt-1">ยืนยันเบอร์โทรศัพท์เพื่อเริ่มซื้อขาย</p>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2 mb-4">
+                {error}
+              </div>
+            )}
+
+            <PhoneOTP
+              phone={phone}
+              onVerified={handlePhoneVerified}
+              onError={(msg) => setError(msg)}
+            />
+
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => router.push("/")}
+                className="text-sm text-zinc-400 hover:text-zinc-600"
+              >
+                ข้ามขั้นตอนนี้
               </button>
             </div>
           </>

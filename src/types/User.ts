@@ -1,4 +1,4 @@
-export type Role = 'customer' | 'seller' | 'admin';
+export type Role = 'customer' | 'admin';
 
 export interface User {
     User_ID?: number;
@@ -8,6 +8,7 @@ export interface User {
     Role: Role;
     Phone_number?: string;
     Is_Phone_Verified?: boolean;
+    Is_Email_Verified?: boolean;
     Address?: string;
     Verified_Date?: Date;
     RatingScore?: number;

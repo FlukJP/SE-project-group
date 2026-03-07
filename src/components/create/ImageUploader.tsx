@@ -26,18 +26,30 @@ export default function ImageUploader({
   max = 18,
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const imagesRef = useRef(images);
+  imagesRef.current = images;
 
+  // Only revoke all URLs on unmount to prevent leaks
   useEffect(() => {
     return () => {
-      images.forEach((img) => URL.revokeObjectURL(img.url));
+      imagesRef.current.forEach((img) => URL.revokeObjectURL(img.url));
     };
-  }, [images]);
+  }, []);
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
   const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     const arr = Array.from(files);
-    const toAdd = arr.slice(0, max - images.length).map((file) => ({
+    const valid = arr.filter((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`ไฟล์ "${file.name}" มีขนาดเกิน 5MB`);
+        return false;
+      }
+      return true;
+    });
+    const toAdd = valid.slice(0, max - images.length).map((file) => ({
       file,
       url: URL.createObjectURL(file),
     }));
@@ -50,8 +62,12 @@ export default function ImageUploader({
       const removed = prev[idx];
       URL.revokeObjectURL(removed.url);
       const next = prev.filter((_, i) => i !== idx);
-      if (coverIndex >= next.length) {
+      if (next.length === 0) {
+        setCoverIndex(0);
+      } else if (coverIndex >= next.length) {
         setCoverIndex(next.length - 1);
+      } else if (idx < coverIndex) {
+        setCoverIndex(coverIndex - 1);
       }
       return next;
     });

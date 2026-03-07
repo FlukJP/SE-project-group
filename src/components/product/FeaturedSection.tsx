@@ -17,6 +17,10 @@ export default function FeaturedSection({
   viewAllHref = "/search",
   badgeText = "⭐ แนะนำ",
 }: FeaturedSectionProps) {
+  if (products.length === 0) {
+    return null;
+  }
+
   return (
     <section>
       <SectionHeader

@@ -1,33 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
 import { productApi, reviewApi, type SellerRatingData } from "@/src/lib/api";
 import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
+import { useAuth } from "@/src/contexts/AuthContext";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { user, isLoggedIn } = useAuth();
   const [product, setProduct] = useState<ProductDisplay | null>(null);
   const [loading, setLoading] = useState(true);
   const [mainImage, setMainImage] = useState("");
   const [sellerRating, setSellerRating] = useState<SellerRatingData | null>(null);
+  const cancelledRef = useRef(false);
 
   useEffect(() => {
     if (!id) return;
+    cancelledRef.current = false;
+
     productApi
       .getById(id)
       .then((res) => {
+        if (cancelledRef.current) return;
         const display = toProductDisplay(res.data);
         setProduct(display);
         setMainImage(display.images[0] || "");
         reviewApi.getSellerRating(Number(display.seller.id))
-          .then((r) => setSellerRating(r.data))
+          .then((r) => {
+            if (!cancelledRef.current) setSellerRating(r.data);
+          })
           .catch(() => {});
       })
-      .catch(() => setProduct(null))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!cancelledRef.current) setProduct(null);
+      })
+      .finally(() => {
+        if (!cancelledRef.current) setLoading(false);
+      });
+
+    return () => {
+      cancelledRef.current = true;
+    };
   }, [id]);
 
   if (loading) {
@@ -55,6 +71,14 @@ export default function ProductDetailPage() {
     );
   }
 
+  // P-7: Clamp star rating to 0-5
+  const safeRating = sellerRating
+    ? Math.min(5, Math.max(0, Math.round(sellerRating.averageRating)))
+    : 0;
+
+  // P-1: Determine if chat button should be shown / disabled
+  const isSelfProduct = isLoggedIn && user && String(user.User_ID) === product.seller.id;
+
   return (
     <>
       <Navbar />
@@ -68,12 +92,16 @@ export default function ProductDetailPage() {
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="flex-1">
             <div className="w-full aspect-video bg-zinc-100 rounded-2xl overflow-hidden">
-              {mainImage && (
+              {mainImage ? (
                 <img
                   src={mainImage}
                   alt={product.title}
                   className="object-cover w-full h-full"
                 />
+              ) : (
+                <div className="flex items-center justify-center h-full text-zinc-400 text-sm">
+                  ไม่มีรูปภาพ
+                </div>
               )}
             </div>
             {product.images.length > 1 && (
@@ -107,7 +135,7 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="text-3xl font-bold text-emerald-700 mb-4">
-              {product.price.toLocaleString()} ฿
+              {(product.price ?? 0).toLocaleString()} ฿
             </div>
 
             <div className="flex items-center gap-4 text-xs text-zinc-500 mb-6">
@@ -141,9 +169,9 @@ export default function ProductDetailPage() {
                   {sellerRating && sellerRating.totalReviews > 0 && (
                     <div className="flex items-center gap-1 mt-0.5">
                       <span className="text-yellow-400 text-sm">
-                        {"★".repeat(Math.round(sellerRating.averageRating))}
+                        {"★".repeat(safeRating)}
                         <span className="text-zinc-300">
-                          {"★".repeat(5 - Math.round(sellerRating.averageRating))}
+                          {"★".repeat(5 - safeRating)}
                         </span>
                       </span>
                       <span className="text-xs text-zinc-500">
@@ -154,12 +182,25 @@ export default function ProductDetailPage() {
                 </div>
               </div>
               <div className="flex gap-3">
-                <Link
-                  href={`/chat?seller=${product.seller.id}&product=${product.id}`}
-                  className="flex-1 text-center bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-emerald-700"
-                >
-                  แชท
-                </Link>
+                {isSelfProduct ? (
+                  <span className="flex-1 text-center bg-zinc-300 text-zinc-500 px-4 py-3 rounded-lg font-semibold cursor-not-allowed">
+                    สินค้าของคุณ
+                  </span>
+                ) : isLoggedIn ? (
+                  <Link
+                    href={`/chat?seller=${product.seller.id}&product=${product.id}`}
+                    className="flex-1 text-center bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-emerald-700"
+                  >
+                    แชท
+                  </Link>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="flex-1 text-center bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-emerald-700"
+                  >
+                    เข้าสู่ระบบเพื่อแชท
+                  </Link>
+                )}
                 {product.seller.phone && (
                   <a
                     href={`tel:${product.seller.phone}`}

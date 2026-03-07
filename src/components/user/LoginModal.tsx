@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useAuth } from "@/src/contexts/AuthContext";
 
 export default function LoginModal({ onClose }: { onClose: () => void }) {
@@ -11,10 +12,24 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Fix #2: Escape key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !loading) onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [loading, onClose]);
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     if (!email.trim() || !password.trim()) {
       setError("กรุณากรอกอีเมลและรหัสผ่าน");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("รูปแบบอีเมลไม่ถูกต้อง");
       return;
     }
     setError("");
@@ -30,12 +45,19 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999]">
+    // Fix #1: Backdrop click to close modal (blocked during loading)
+    <div
+      className="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999]"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !loading) onClose();
+      }}
+    >
       <div className="bg-white rounded-2xl w-[520px] px-10 py-8 relative text-center">
         <button
           type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 border-none bg-transparent text-xl cursor-pointer"
+          onClick={() => { if (!loading) onClose(); }}
+          disabled={loading}
+          className="absolute top-4 right-4 border-none bg-transparent text-xl cursor-pointer disabled:opacity-50"
         >
           ✕
         </button>
@@ -120,6 +142,13 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
             </button>
           </form>
         )}
+
+        <p className="text-sm text-zinc-600 mt-5">
+          ยังไม่มีบัญชี?{" "}
+          <Link href="/register" onClick={onClose} className="text-emerald-600 font-semibold hover:underline">
+            สมัครสมาชิก
+          </Link>
+        </p>
 
         <p className="text-xs text-zinc-500 mt-4">
           กด &quot;เข้าสู่ระบบ&quot; เพื่อยอมรับ{" "}

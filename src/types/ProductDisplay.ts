@@ -47,7 +47,9 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
   }
 
   const cleanDescription =
-    p.Description?.replace(/\n\n📍 พื้นที่:[\s\S]*$/, "").trim() || "";
+    p.Description?.replace(/\n\n📍 พื้นที่:[\s\S]*$/, "")
+      .replace(/📞\s*ติดต่อ:\s*\S+/g, "")
+      .trim() || "";
 
   return {
     id: String(p.Product_ID),

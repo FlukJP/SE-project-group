@@ -22,8 +22,19 @@ export const ProductController = {
             const numPrice = Number(price);
             if (isNaN(numPrice) || numPrice <= 0) throw new AppError("Price must be a positive number", 400);
 
+            const numQuantity = quantity ? Number(quantity) : 1;
+            if (isNaN(numQuantity) || numQuantity <= 0) throw new AppError("Quantity must be a positive integer", 400);
+
             if (!files || files.length === 0) throw new AppError("At least one image is required", 400);
-            const imageUrls = files.map(file => `/uploads/products/${file.filename}`);
+
+            // P-9: Reorder images so coverIndex image is first
+            const coverIdx = req.body.coverIndex != null ? Number(req.body.coverIndex) : 0;
+            const orderedFiles = [...files];
+            if (coverIdx > 0 && coverIdx < orderedFiles.length) {
+                const [cover] = orderedFiles.splice(coverIdx, 1);
+                orderedFiles.unshift(cover);
+            }
+            const imageUrls = orderedFiles.map(file => `/uploads/products/${file.filename}`);
 
             const fullDescription = `${description ? description.trim() : ''}\n\n📍 พื้นที่: ${province.trim()} (${district.trim()})\n📞 ติดต่อ: ${phone.trim()}`;
 
@@ -35,7 +46,7 @@ export const ProductController = {
                 Condition: condition?.trim() || "มือสอง",
                 Category: categoryKey.trim(),
                 Status: "available",
-                Quantity: quantity ? Number(quantity) : 1,
+                Quantity: numQuantity,
                 Image_URL: JSON.stringify(imageUrls),
             };
 
@@ -75,7 +86,7 @@ export const ProductController = {
                 CategoryService.recordPopularity(category as string, 'search').catch(() => {});
             }
 
-            res.status(200).json({ success: true, data: products });
+            res.status(200).json({ success: true, data: products, meta: { page: page ? Number(page) : 1, limit: limit ? Number(limit) : 20, total: products.length } });
         } catch (error) {
             next(error);
         }

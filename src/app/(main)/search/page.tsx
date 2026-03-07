@@ -33,18 +33,29 @@ function SearchPageContent() {
   const [query, setQuery] = useState(q);
   const [results, setResults] = useState<ProductDisplay[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
+  // Sync local query state when URL search param changes
+  useEffect(() => {
+    setQuery(q);
+  }, [q]);
+
+  // Fix #17: Show error state instead of silently swallowing errors
   useEffect(() => {
     setLoading(true);
+    setError("");
     const params: Record<string, string> = {};
-    if (q) params.search = q;
+    if (q) params.q = q;
     if (province) params.province = province;
     if (category) params.category = category;
 
     productApi
       .list(params)
       .then((res) => setResults(res.data.map(toProductDisplay)))
-      .catch(() => setResults([]))
+      .catch((err) => {
+        setResults([]);
+        setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการค้นหา");
+      })
       .finally(() => setLoading(false));
   }, [q, province, category]);
 
@@ -104,6 +115,18 @@ function SearchPageContent() {
 
           {loading ? (
             <div className="text-center text-zinc-500 py-16">กำลังค้นหา...</div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <div className="text-4xl mb-3">&#9888;&#65039;</div>
+              <p className="text-red-500">{error}</p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-3 text-emerald-600 hover:underline text-sm"
+              >
+                ลองใหม่อีกครั้ง
+              </button>
+            </div>
           ) : results.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {results.map((product) => (

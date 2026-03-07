@@ -18,6 +18,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  setTokensAndLoadUser: (accessToken: string, refreshToken: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -27,6 +28,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (typeof window === "undefined") {
+      setIsLoading(false);
+      return;
+    }
     const token = localStorage.getItem("access_token");
     if (!token) {
       setIsLoading(false);
@@ -64,9 +69,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(res.data);
   }, []);
 
+  // Fix #8: Rollback tokens if getMe fails to prevent inconsistent state
+  const setTokensAndLoadUser = useCallback(async (accessToken: string, refreshToken: string) => {
+    localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("refresh_token", refreshToken);
+    try {
+      const res = await userApi.getMe();
+      setUser(res.data);
+    } catch (err) {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      setUser(null);
+      throw err;
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
-      value={{ user, isLoggedIn: !!user, isLoading, login, logout, refreshUser }}
+      value={{ user, isLoggedIn: !!user, isLoading, login, logout, refreshUser, setTokensAndLoadUser }}
     >
       {children}
     </AuthContext.Provider>

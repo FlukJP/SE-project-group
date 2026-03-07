@@ -39,7 +39,9 @@ export default function CreateProductForm({
     if (defaultCategoryKey && defaultCategoryKey !== categoryKey) {
       setCategoryKey(defaultCategoryKey);
     }
-  }, [defaultCategoryKey, categoryKey]);
+    // Only react to prop changes, not internal categoryKey changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultCategoryKey]);
 
   const provinceOptions = useMemo(
     () => PROVINCES.map((p) => ({ value: p.name, label: p.name })),
@@ -71,6 +73,8 @@ export default function CreateProductForm({
     if (!province) newErrors.province = "เลือกจังหวัด";
     if (!district) newErrors.district = "เลือกอำเภอ/เขต";
     if (!phone.trim()) newErrors.phone = "ระบุเบอร์โทรศัพท์";
+    else if (!/^0\d{9}$/.test(phone.replace(/\D/g, "")))
+      newErrors.phone = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักขึ้นต้นด้วย 0";
     if (images.length === 0) newErrors.images = "เพิ่มรูปอย่างน้อย 1 รูป";
 
     setErrors(newErrors);
@@ -88,6 +92,7 @@ export default function CreateProductForm({
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     if (!validate()) return;
     setSubmitting(true);
     setSubmitError("");
@@ -104,6 +109,7 @@ export default function CreateProductForm({
       images.forEach((img) => {
         formData.append("images", img.file);
       });
+      formData.append("coverIndex", String(coverIndex));
 
       await productApi.create(formData);
       router.push("/");
@@ -148,17 +154,27 @@ export default function CreateProductForm({
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          maxLength={255}
           placeholder="ชื่อสินค้า เช่น ไอโฟน X 64GB สภาพเหมือนใหม่"
         />
+        <div className="text-xs text-zinc-400 text-right mt-1">{title.length}/255</div>
         {errors.title && <ErrorText>{errors.title}</ErrorText>}
       </div>
 
       <div ref={refs.price}>
         <FieldLabel>ระบุราคาที่เหมาะสม *</FieldLabel>
         <Input
+          type="number"
+          min="0"
+          step="1"
           value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          placeholder="ระบุราคา"
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "" || /^\d+(\.\d{0,2})?$/.test(val)) {
+              setPrice(val);
+            }
+          }}
+          placeholder="ระบุราคา (บาท)"
         />
         {errors.price && <ErrorText>{errors.price}</ErrorText>}
       </div>
@@ -181,16 +197,18 @@ export default function CreateProductForm({
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          maxLength={2000}
           rows={5}
           className="w-full border border-zinc-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-indigo-200"
           placeholder="ข้อมูลเพิ่มเติม เช่น สภาพสินค้า สี อายุการใช้งาน"
         />
+        <div className="text-xs text-zinc-400 text-right mt-1">{description.length}/2000</div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div ref={refs.province}>
           <FieldLabel>จังหวัด *</FieldLabel>
-          <Select value={province} onChange={(e) => setProvince(e.target.value)}>
+          <Select value={province} onChange={(e) => { setProvince(e.target.value); setDistrict(""); }}>
             <option value="">-- เลือกจังหวัด --</option>
             {provinceOptions.map((p) => (
               <option key={p.value} value={p.value}>

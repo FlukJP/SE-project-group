@@ -4,26 +4,53 @@ import cors from 'cors';
 import path from 'path';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import jwt from 'jsonwebtoken';
 
 import apiRoutes from './routes';
 import { AppError } from './errors/AppError';
 import { errorHandler } from './middleware/error.middleware';
 import { globalLimiter } from './middleware/rateLimit.middleware';
-import { connectRedis, disconnectRedis } from './config/redis';
+import { connectRedis, disconnectRedis, isRedisAvailable } from './config/redis';
+import { ENV } from './config/env';
 import pool from './lib/mysql';
 
 const app = express();
 const server = http.createServer(app);
 
+const CLIENT_URLS = (process.env.CLIENT_URL || 'http://localhost:3000')
+    .split(',')
+    .map(u => u.trim());
+// Also allow common dev ports
+if (!CLIENT_URLS.includes('http://localhost:3001')) CLIENT_URLS.push('http://localhost:3001');
+
 const io = new SocketIOServer(server, {
     cors: {
-        origin: process.env.CLIENT_URL || 'http://localhost:3000',
+        origin: CLIENT_URLS,
         credentials: true,
     },
 });
 
+// Fix #14: Socket.IO authentication middleware - use validated ENV config instead of process.env fallback
+io.use((socket, next) => {
+    const token = socket.handshake.auth?.token;
+    if (!token) {
+        return next(new Error("Authentication required"));
+    }
+    try {
+        const decoded = jwt.verify(token, ENV.JWT_SECRET, {
+            issuer: ENV.JWT_ISSUER,
+            audience: ENV.JWT_AUDIENCE,
+        }) as { userID: number; role: string };
+        (socket as unknown as Record<string, unknown>).user = decoded;
+        next();
+    } catch {
+        next(new Error("Invalid token"));
+    }
+});
+
 io.on('connection', (socket) => {
-    console.log(`[Socket] connected: ${socket.id}`);
+    const socketUser = (socket as unknown as Record<string, unknown>).user as { userID: number } | undefined;
+    console.log(`[Socket] connected: ${socket.id}, user: ${socketUser?.userID}`);
 
     socket.on('join', (roomId: string) => {
         socket.join(roomId);
@@ -45,7 +72,7 @@ io.on('connection', (socket) => {
 app.set('io', io);
 
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: CLIENT_URLS,
     credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -60,7 +87,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api', apiRoutes);
 
-app.use('*', (req, _res, next) => {
+app.use('/{*path}', (req, _res, next) => {
     next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
 });
 
@@ -78,11 +105,11 @@ async function bootstrap() {
         process.exit(1);
     }
 
-    try {
-        await connectRedis();
+    await connectRedis();
+    if (isRedisAvailable()) {
         console.log('[Redis] connected');
-    } catch (err) {
-        console.warn('[Redis] connection failed — server will run without cache:', err);
+    } else {
+        console.warn('[Redis] not available — using in-memory fallback');
     }
 
     server.listen(PORT, () => {

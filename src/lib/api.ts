@@ -13,6 +13,31 @@ export class ApiError extends Error {
   }
 }
 
+// Fix #11: Shared refresh promise to prevent concurrent token refresh race condition
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) return null;
+
+  try {
+    const refreshRes = await fetch(`${API_BASE}/api/auth/refresh-token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    const refreshJson = await refreshRes.json();
+    if (refreshRes.ok && refreshJson.success) {
+      localStorage.setItem("access_token", refreshJson.access_token);
+      return refreshJson.access_token;
+    }
+  } catch {}
+
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  return null;
+}
+
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
@@ -29,15 +54,37 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}/api${path}`, {
+  let res = await fetch(`${API_BASE}/api${path}`, {
     ...options,
     headers,
   });
 
-  const json = await res.json();
+  // Attempt token refresh on 401 (with shared lock to prevent race condition)
+  if (res.status === 401 && typeof window !== "undefined") {
+    if (!refreshPromise) {
+      refreshPromise = refreshAccessToken().finally(() => {
+        refreshPromise = null;
+      });
+    }
+    const newToken = await refreshPromise;
+    if (newToken) {
+      headers["Authorization"] = `Bearer ${newToken}`;
+      res = await fetch(`${API_BASE}/api${path}`, { ...options, headers });
+    }
+  }
+
+  let json: Record<string, unknown>;
+  try {
+    json = await res.json();
+  } catch {
+    throw new ApiError(
+      `Server error (${res.status}): Invalid response format`,
+      res.status
+    );
+  }
 
   if (!res.ok || !json.success) {
-    throw new ApiError(json.message || `Request failed (${res.status})`, res.status);
+    throw new ApiError((json?.message as string) || `Request failed (${res.status})`, res.status);
   }
 
   return json as T;
@@ -53,6 +100,10 @@ export const productApi = {
   getById: (id: string | number) =>
     apiFetch<{ success: boolean; data: ProductWithSeller }>(
       `/products/${id}`
+    ),
+  getBySeller: (sellerId: number) =>
+    apiFetch<{ success: boolean; data: ProductWithSeller[] }>(
+      `/products/seller/${sellerId}`
     ),
   create: (formData: FormData) =>
     apiFetch<{ success: boolean; product: Product }>(
@@ -79,6 +130,26 @@ export const authApi = {
     }),
   logout: () =>
     apiFetch<{ success: boolean }>("/auth/logout", { method: "POST" }),
+  requestOTP: (email: string) =>
+    apiFetch<{ success: boolean; message: string }>("/auth/request-otp", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+  verifyOTP: (email: string, otp: string) =>
+    apiFetch<{ success: boolean; access_token: string; refresh_token: string }>("/auth/verify-otp", {
+      method: "POST",
+      body: JSON.stringify({ email, otp }),
+    }),
+  requestPhoneOTP: (phone: string) =>
+    apiFetch<{ success: boolean; message: string }>("/auth/request-phone-otp", {
+      method: "POST",
+      body: JSON.stringify({ phone }),
+    }),
+  verifyPhoneOTP: (phone: string, otp: string) =>
+    apiFetch<{ success: boolean; access_token: string; refresh_token: string }>("/auth/verify-phone-otp", {
+      method: "POST",
+      body: JSON.stringify({ phone, otp }),
+    }),
 };
 
 export const userApi = {

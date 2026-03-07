@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { API_BASE } from "@/src/lib/api";
 
 export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) {
+  const router = useRouter();
   const { isLoggedIn, user, logout } = useAuth();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -26,9 +28,15 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Fix #18: try-catch logout and redirect to home
   const handleLogout = async () => {
     setIsProfileOpen(false);
-    await logout();
+    try {
+      await logout();
+    } catch {
+      // logout API may fail but client-side cleanup already happened in AuthContext
+    }
+    router.push("/");
   };
 
   return (
@@ -159,7 +167,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
           ) : (
             <button
               type="button"
-              onClick={onLoginClick}
+              onClick={onLoginClick ?? (() => router.push("/login"))}
               className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
             >
               เข้าสู่ระบบ

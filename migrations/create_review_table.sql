@@ -1,9 +1,9 @@
 -- ตาราง Review: รีวิวและให้คะแนนผู้ขาย
 CREATE TABLE IF NOT EXISTS Review (
     Review_ID INT AUTO_INCREMENT PRIMARY KEY,
-    Order_ID INT NOT NULL,
-    Reviewer_ID INT NOT NULL,
-    Seller_ID INT NOT NULL,
+    Order_ID INT UNSIGNED NOT NULL,
+    Reviewer_ID INT UNSIGNED NOT NULL,
+    Seller_ID INT UNSIGNED NOT NULL,
     Rating TINYINT NOT NULL CHECK (Rating >= 1 AND Rating <= 5),
     Comment TEXT,
     Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -35,8 +35,10 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
       socket.connect();
     }
 
+    // Fix #20: Only disconnect socket listeners, don't fully disconnect
+    // Socket lifecycle should persist across page navigations while logged in
     return () => {
-      socket.disconnect();
+      socket.off("newMessage");
     };
   }, [isLoggedIn, refreshRooms]);
 
@@ -100,8 +102,8 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           <div className="p-3 border-t border-gray-200 bg-white">
-            <button className="px-4 py-1.5 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-              แก้ไข
+            <button disabled className="px-4 py-1.5 border border-gray-300 rounded text-sm text-gray-400 cursor-not-allowed opacity-50">
+              แก้ไข (เร็วๆ นี้)
             </button>
           </div>
         </div>

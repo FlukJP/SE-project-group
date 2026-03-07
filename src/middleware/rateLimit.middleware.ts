@@ -1,21 +1,7 @@
 import rateLimit from 'express-rate-limit';
-import RedisStore from 'rate-limit-redis';
-import Redis from 'ioredis';
 import 'dotenv/config';
 
-// Exponential Backoff
-export const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-    retryStrategy(times) {
-        const delay = Math.min(times * 50, 2000); 
-        if (times >= 10) console.error('[FATAL] Redis reconnect attempts exhausted!');
-        return delay;
-    },
-    enableOfflineQueue: false, 
-    maxRetriesPerRequest: 3
-});
-
-redisClient.on('error', (err) => console.error('Redis Client Error', err));
-redisClient.on('connect', () => console.log('Redis connected for Rate Limiting'));
+const isDevMode = process.env.NODE_ENV !== 'production';
 
 const createLimiter = (windowMs: number, max: number, message: string) => {
     return rateLimit({
@@ -24,10 +10,10 @@ const createLimiter = (windowMs: number, max: number, message: string) => {
         standardHeaders: true,
         legacyHeaders: false,
         skip: (req) => {
+            if (!isDevMode) return false;
             const ip = req.ip || '';
             return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
         },
-        store: new RedisStore({ sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any }),
         message: { success: false, message }
     });
 };

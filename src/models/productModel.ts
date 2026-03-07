@@ -9,7 +9,7 @@ export const ProductModel = {
     findByID: async (id: number): Promise<ProductWithSeller | null> => {
         if (!id || id <= 0) throw new AppError("Invalid product ID", 400);
         const sql = `
-            SELECT p.*, u.Username AS SellerName
+            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
             WHERE p.Product_ID = ?
@@ -23,7 +23,7 @@ export const ProductModel = {
     findBySellerID: async (sellerID: number): Promise<ProductWithSeller[]> => {
         if (!sellerID || sellerID <= 0) throw new AppError("Invalid seller ID", 400);
         const sql = `
-            SELECT p.*, u.Username AS SellerName
+            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
             WHERE p.Seller_ID = ? 
@@ -37,7 +37,7 @@ export const ProductModel = {
     // 3.ค้นหาสินค้า (Search Products)
     searchProducts: async (filters: ProductFilters): Promise<ProductWithSeller[]> => {
         let sql = `
-            SELECT p.*, u.Username AS SellerName 
+            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number 
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
             WHERE 1=1
@@ -51,7 +51,7 @@ export const ProductModel = {
             values.push(filters.category);
         }
         if (filters.condition) {
-            sql += ` AND p.Condition = ?`;
+            sql += ` AND p.\`Condition\` = ?`;
             values.push(filters.condition);
         }
         if (filters.minPrice !== undefined) {
@@ -71,6 +71,9 @@ export const ProductModel = {
             values.push(`%${filters.keyword}%`, `%${filters.keyword}%`);
         }
         if (filters.sortBy) {
+            // Fix #21: SECURITY NOTE - sortBy is validated against a strict whitelist
+            // before being interpolated into SQL. Do NOT remove this validation.
+            // ORDER BY columns cannot be parameterized in MySQL, so whitelist is required.
             const validSortFields = ['Price', 'Created_at'];
             if (!validSortFields.includes(filters.sortBy)) {
                 throw new AppError("Invalid sort field", 400);
@@ -98,7 +101,7 @@ export const ProductModel = {
         const seller = await UserModel.findByID(productData.Seller_ID);
         if (!seller) throw new AppError("Seller not found", 404);
         const sql = `
-            INSERT INTO Product (Seller_ID, Title, Description, Price, Condition, Category, Status, Quantity, Image_URL) 
+            INSERT INTO Product (Seller_ID, Title, Description, Price, \`Condition\`, Category, Status, Quantity, Image_URL)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
@@ -118,14 +121,18 @@ export const ProductModel = {
 
     // 5.Update ข้อมูลสินค้า (Edit Product)
     updateProduct: async ( id: number, productData: Partial<Product> ): Promise<boolean> => {
+        const ALLOWED_FIELDS = ['Title', 'Description', 'Price', 'Condition', 'Category', 'Status', 'Quantity', 'Image_URL'];
         const keys = Object.keys(productData).filter(
-            (key) => productData[key as keyof Product] !== undefined && key !== 'Product_ID' && key !== 'Seller_ID'
+            (key) => productData[key as keyof Product] !== undefined
+                && key !== 'Product_ID'
+                && key !== 'Seller_ID'
+                && ALLOWED_FIELDS.includes(key)
         );
         if (keys.length === 0) return false;
-        const setClause = keys.map((key) => `${key} = ?`).join(", ");
+        const setClause = keys.map((key) => `\`${key}\` = ?`).join(", ");
         const values = keys.map((key) => productData[key as keyof Product]);
         const sql = `
-            UPDATE Product SET ${setClause} 
+            UPDATE Product SET ${setClause}
             WHERE Product_ID = ?
         `;
         const [result] = await db.query<ResultSetHeader>(sql, [...values, id]);
@@ -145,7 +152,7 @@ export const ProductModel = {
     // 7.ดึงข้อมูลสินค้าที่โดนBan (Admin List)
     findBannedProducts: async (offset: number, limit: number): Promise<ProductWithSeller[]> => {
         const sql = `
-            SELECT p.*, u.Username AS SellerName
+            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
             WHERE p.Is_Banned = 1
@@ -160,7 +167,7 @@ export const ProductModel = {
     findByIDIncludingBanned: async (id: number): Promise<ProductWithSeller | null> => {
         if (!id || id <= 0) throw new AppError("Invalid product ID", 400);
         const sql = `
-            SELECT p.*, u.Username AS SellerName
+            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
             WHERE p.Product_ID = ?
