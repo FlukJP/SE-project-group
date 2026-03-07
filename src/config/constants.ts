@@ -5,6 +5,7 @@ export const MAX_OTP_ATTEMPTS = 5;
 export const SALT_ROUNDS = 10;
 export const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60;
 export const MAX_FILE_SIZE = 5 * 1024 * 1024;
+export const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const parseFileSize = (sizeInMB: string): number => { return parseInt(sizeInMB) * 1024 * 1024; };
 export const UPLOAD_CONFIG = {
     ALLOWED_MIMES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],

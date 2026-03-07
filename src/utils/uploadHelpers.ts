@@ -59,3 +59,16 @@ export const getFilePath = ( filename: string, folderType: UploadFolderType = Up
     const safeFilename = path.basename(filename);
     return path.join(FOLDER_MAP[folderType], safeFilename);
 };
+
+export const cleanupImages = (imageUrl: string) => {
+    try {
+        const images: string[] = JSON.parse(imageUrl);
+        images.forEach((url) => {
+            const filename = url.split('/').pop();
+            if (filename) deleteUploadedFile(filename, UploadFolderType.PRODUCT);
+        });
+    } catch {
+        const filename = imageUrl.split('/').pop();
+        if (filename) deleteUploadedFile(filename, UploadFolderType.PRODUCT);
+    }
+};

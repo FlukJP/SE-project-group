@@ -41,7 +41,7 @@ export const ProductService = {
             Image_URL: productData.Image_URL,
             Quantity: productData.Quantity,
             Seller_ID: sellerID,
-            Status: 'Available',
+            Status: 'available',
         };
         return await ProductModel.createProduct(newProduct as Product);
     },

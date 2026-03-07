@@ -6,7 +6,7 @@ export interface Product {
     Price: number;
     Condition: string;
     Category: string;
-    Status: 'Available' | 'Reserved' | 'Sold';
+    Status: 'available' | 'reserved' | 'sold';
     Quantity?: number;
     Image_URL: string;
     View_Count?: number;
@@ -30,7 +30,7 @@ export interface ProductFilters {
     status?: string;
     page?: number;
     limit?: number;
-    sortBy?: 'Price' | 'Created_At';
+    sortBy?: 'Price' | 'Created_at';
     sortOrder?: 'asc' | 'desc';
 }
 
@@ -48,3 +48,13 @@ export const pickProductUpdateFields = (data: Partial<Product>): UpdateProductDa
     if (data.Status !== undefined) result.Status = data.Status;
     return result;
 };
+
+export interface CreateProductRequest {
+    title: string;
+    price: string; 
+    description: string;
+    categoryKey: string;
+    province: string;
+    district: string;
+    phone: string;
+}
