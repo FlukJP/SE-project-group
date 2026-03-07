@@ -11,6 +11,7 @@ import redisClient, { connectRedis } from "@/src/config/redis";
 import { OTP_TTL_SECONDS, RATE_LIMIT_TTL_SECONDS, MAX_OTP_REQUESTS, MAX_OTP_ATTEMPTS, SALT_ROUNDS } from "@/src/config/constants";
 import { REFRESH_TOKEN_TTL_SECONDS } from "@/src/config/constants";
 import { generateAccessToken, generateRefreshToken, TokenPayload } from "@/src/utils/jwt";
+import firebaseAdmin from "@/src/config/firebaseAdmin";
 
 // Redis (rate limiters)
 const checkRateLimit = async (key: string, limit: number, ttlSeconds: number): Promise<void> => {
@@ -247,5 +248,37 @@ export const AuthService = {
 
         const hashedNewPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
         await UserModel.updateUser(user.User_ID, { Password: hashedNewPassword });
+    },
+
+    // 11. Verify Firebase Phone Auth Token
+    verifyFirebasePhone: async (firebaseToken: string) => {
+        if (!firebaseToken) throw new AppError("Firebase token is required", 400);
+
+        let decoded;
+        try {
+            decoded = await firebaseAdmin.auth().verifyIdToken(firebaseToken);
+        } catch {
+            throw new AppError("Invalid or expired Firebase token", 401);
+        }
+
+        const phoneNumber = decoded.phone_number;
+        if (!phoneNumber) throw new AppError("No phone number found in Firebase token", 400);
+
+        // แปลงเบอร์จาก +66 เป็น 0 สำหรับค้นหาใน DB
+        let localPhone = phoneNumber;
+        if (phoneNumber.startsWith("+66")) {
+            localPhone = "0" + phoneNumber.substring(3);
+        }
+
+        const user = await UserModel.findByPhone(localPhone);
+        if (!user || !user.User_ID) throw new AppError("No account found with this phone number. Please register first.", 404);
+
+        await UserModel.updateUser(user.User_ID, { Is_Phone_Verified: true, Verified_Date: new Date() });
+
+        const accessToken = generateAccessToken({ userID: user.User_ID, role: user.Role });
+        const refreshToken = generateRefreshToken({ userID: user.User_ID });
+        await redisClient.setEx(`refresh_token:${user.User_ID}`, REFRESH_TOKEN_TTL_SECONDS, refreshToken);
+
+        return { access_token: accessToken, refresh_token: refreshToken };
     },
 };

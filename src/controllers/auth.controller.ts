@@ -140,4 +140,22 @@ export const AuthController = {
             next(error);
         }
     },
+
+    // 9.ยืนยันเบอร์โทรด้วย Firebase Phone Auth
+    verifyPhone: async (req: AuthRequest, res: Response, next: NextFunction) => {
+        try {
+            const { firebaseToken } = req.body;
+            if (!firebaseToken) throw new AppError("Firebase token is required", 400);
+
+            const result = await AuthService.verifyFirebasePhone(firebaseToken);
+
+            res.status(200).json({
+                success: true,
+                message: "Phone verified successfully",
+                ...result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
 };
