@@ -5,7 +5,7 @@ export interface Product {
     Description: string;
     Price: number;
     Condition: string;
-    Category: string;
+    Category_ID: number;
     Status: 'available' | 'reserved' | 'sold';
     Quantity?: number;
     Image_URL: string;
@@ -19,10 +19,14 @@ export interface ProductWithSeller extends Product {
     SellerName: string;
     SellerEmail: string;
     SellerPhone_number?: string;
+    SellerAvatar?: string;
+    Category_Name?: string;
+    Category_Key?: string;
 }
 
 export interface ProductFilters {
     keyword?: string;
+    categoryId?: number;
     category?: string;
     condition?: string;
     minPrice?: number;
@@ -34,7 +38,7 @@ export interface ProductFilters {
     sortOrder?: 'asc' | 'desc';
 }
 
-export type UpdateProductData = Partial<Pick<Product, "Title" | "Description" | "Price" | "Condition" | "Category" | "Quantity" | "Image_URL" | "Status">>;
+export type UpdateProductData = Partial<Pick<Product, "Title" | "Description" | "Price" | "Condition" | "Category_ID" | "Quantity" | "Image_URL" | "Status">>;
 
 export const pickProductUpdateFields = (data: Partial<Product>): UpdateProductData => {
     const result: UpdateProductData = {};
@@ -42,7 +46,7 @@ export const pickProductUpdateFields = (data: Partial<Product>): UpdateProductDa
     if (data.Description !== undefined) result.Description = data.Description;
     if (data.Price !== undefined) result.Price = data.Price;
     if (data.Condition !== undefined) result.Condition = data.Condition;
-    if (data.Category !== undefined) result.Category = data.Category;
+    if (data.Category_ID !== undefined) result.Category_ID = data.Category_ID;
     if (data.Quantity !== undefined) result.Quantity = data.Quantity;
     if (data.Image_URL !== undefined) result.Image_URL = data.Image_URL;
     if (data.Status !== undefined) result.Status = data.Status;

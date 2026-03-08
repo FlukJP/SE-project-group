@@ -41,7 +41,7 @@ export const ProductModel = {
             AND p.Is_Banned = 0
         `;
 
-        const values: any[] = [];
+    const values: (string | number)[] = [];
 
         if (filters.category) {
             whereSql += ` AND p.Category = ?`;
@@ -121,7 +121,7 @@ export const ProductModel = {
             productData.Description,
             productData.Price,
             productData.Condition,
-            productData.Category,
+            productData.Category_ID,
             productData.Status || "available",
             productData.Quantity || 1,
             productData.Image_URL || null,

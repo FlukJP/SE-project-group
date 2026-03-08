@@ -4,12 +4,14 @@ export interface Chat {
     Participant_2: number;
     Chats_product_ID: number;
     Created_At?: Date;
+    Timestamp?: Date;
     Is_Deleted_By_P1?: boolean | number; 
     Is_Deleted_By_P2?: boolean | number;
 }
 
 export interface ChatRoomWithPartner extends Chat {
     PartnerName: string;
+    PartnerImage?: string;
     ProductTitle?: string;
     ProductImage?: string;
     LastMessage?: string;

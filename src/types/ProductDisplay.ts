@@ -9,13 +9,13 @@ export interface ProductDisplay {
   location: string;
   postedAt: string;
   description: string;
-  categoryKey: string;
+  categoryKey: string; // หรือจะเพิ่ม categoryName: string; ก็ได้ครับ
   condition: string;
   status: "available" | "reserved" | "sold";
   seller: {
     id: string;
     name: string;
-    avatarUrl?: string;
+    avatarUrl?: string; // 🌟 เพิ่มส่วนนี้
     phone?: string;
     email?: string;
   };
@@ -24,6 +24,7 @@ export interface ProductDisplay {
 export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
   let images: string[] = [];
   try {
+    // ตรวจสอบว่า Image_URL เป็น JSON string หรือไม่
     const parsed = JSON.parse(p.Image_URL);
     images = Array.isArray(parsed)
       ? parsed.map((url: string) =>
@@ -31,6 +32,7 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
         )
       : [];
   } catch {
+    // ถ้าไม่ใช่ JSON (เป็น string URL ตรงๆ)
     if (p.Image_URL) {
       images = [
         p.Image_URL.startsWith("http")
@@ -40,6 +42,7 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
     }
   }
 
+  // ดึงตำแหน่งจาก Description ด้วย Regex (ฉลาดมากครับ!)
   let location = "";
   const locMatch = p.Description?.match(/📍\s*พื้นที่:\s*(.+?)(?:\n|$)/);
   if (locMatch) {
@@ -59,18 +62,21 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
     location,
     postedAt: formatThaiRelativeTime(p.Created_at),
     description: cleanDescription,
-    categoryKey: p.Category,
+    // 🌟 ปรับให้ใช้ Category_Key หรือ Category_Name ที่ได้จากการ JOIN
+    categoryKey: p.Category_Key || String(p.Category_ID), 
     condition: p.Condition,
     status: p.Status,
     seller: {
       id: String(p.Seller_ID),
       name: p.SellerName || "ผู้ขาย",
+      avatarUrl: p.SellerAvatar,
       phone: p.SellerPhone_number,
       email: p.SellerEmail,
     },
   };
 }
 
+// ฟังก์ชันคำนวณเวลาภาษาไทย (ใช้งานได้ดีอยู่แล้วครับ)
 function formatThaiRelativeTime(date?: Date | string): string {
   if (!date) return "";
   const now = Date.now();

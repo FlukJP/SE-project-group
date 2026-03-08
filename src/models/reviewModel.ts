@@ -1,22 +1,6 @@
 import db from '@/src/lib/mysql';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
-
-export interface ReviewRow {
-    Review_ID: number;
-    Order_ID: number;
-    Reviewer_ID: number;
-    Seller_ID: number;
-    Rating: number;
-    Comment: string | null;
-    Created_at: string;
-    ReviewerName?: string;
-    ProductTitle?: string;
-}
-
-export interface SellerRating {
-    averageRating: number;
-    totalReviews: number;
-}
+import { ReviewRow, SellerRating } from '@/src/types/Review';
 
 export const ReviewModel = {
     // สร้างรีวิว

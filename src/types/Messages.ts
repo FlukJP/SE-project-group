@@ -10,4 +10,5 @@ export interface Message {
 
 export interface MessageWithSender extends Message {
     SenderName: string;
+    SenderImage?: string;
 }
