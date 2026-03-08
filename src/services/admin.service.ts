@@ -57,7 +57,7 @@ export const AdminService = {
         if (!product) throw new AppError("Product not found", 404);
         if (product.Is_Banned) throw new AppError("Product is already banned", 400);
 
-        const success = await ProductModel.updateProduct(productID, { Is_Banned: true } );
+        const success = await ProductModel.setBanStatus(productID, true);
         if (!success) throw new AppError("Failed to ban product. Please try again.", 500);
         return { message: `Product ID ${productID} has been banned.` };
     },
@@ -69,7 +69,7 @@ export const AdminService = {
         if (!product) throw new AppError("Product not found", 404);
         if (!product.Is_Banned) throw new AppError("Product is not banned", 400);
 
-        const success = await ProductModel.updateProduct(productID, { Is_Banned: false } );
+        const success = await ProductModel.setBanStatus(productID, false);
         if (!success) throw new AppError("Failed to unban product", 500);
         return { message: `Product ID ${productID} has been unbanned successfully.` };
     },

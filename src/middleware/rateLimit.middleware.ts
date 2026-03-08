@@ -18,8 +18,8 @@ const createLimiter = (windowMs: number, max: number, message: string) => {
     });
 };
 
-// Global Limiter
-export const globalLimiter = createLimiter( 15 * 60 * 1000, 100, "Too many requests from this IP, please try again after 15 minutes." );
+// Global Limiter (300 req/15min เหมาะกับ SPA ที่มี API call หลาย endpoint ต่อหน้า)
+export const globalLimiter = createLimiter( 15 * 60 * 1000, 300, "Too many requests from this IP, please try again after 15 minutes." );
 // Strict Limiter
 export const loginLimiter = createLimiter( 5 * 60 * 1000, 5, "Too many login attempts, please try again after 5 minutes." );
 // Signup Limiter

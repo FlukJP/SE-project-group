@@ -57,7 +57,7 @@ export const ReviewController = {
             if (!req.user) throw new AppError('Unauthorized', 401);
             const orderId = Number(req.params.orderId);
             if (!orderId || orderId <= 0) throw new AppError('Invalid order ID', 400);
-            const result = await ReviewService.checkReviewed(orderId);
+            const result = await ReviewService.checkReviewed(orderId, req.user.userID);
             res.status(200).json({ success: true, data: result });
         } catch (error) {
             next(error);

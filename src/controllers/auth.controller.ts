@@ -150,6 +150,7 @@ export const AuthController = {
             res.status(200).json({
                 success: true,
                 message: "OTP สำหรับยืนยันเบอร์โทรถูกส่งไปยังอีเมลของคุณแล้ว",
+                warning: "OTP ถูกส่งทางอีเมลแทน SMS เนื่องจากระบบยังไม่ได้เชื่อมต่อ SMS provider",
             });
         } catch (error) {
             next(error);

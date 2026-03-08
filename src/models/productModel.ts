@@ -35,41 +35,52 @@ export const ProductModel = {
     },
 
     // 3.ค้นหาสินค้า (Search Products)
-    searchProducts: async (filters: ProductFilters): Promise<ProductWithSeller[]> => {
-        let sql = `
-            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number 
-            FROM Product p
-            LEFT JOIN User u ON p.Seller_ID = u.User_ID
+    searchProducts: async (filters: ProductFilters): Promise<{ products: ProductWithSeller[]; total: number }> => {
+        let whereSql = `
             WHERE 1=1
             AND p.Is_Banned = 0
         `;
-        
+
         const values: any[] = [];
 
         if (filters.category) {
-            sql += ` AND p.Category = ?`;
+            whereSql += ` AND p.Category = ?`;
             values.push(filters.category);
         }
         if (filters.condition) {
-            sql += ` AND p.\`Condition\` = ?`;
+            whereSql += ` AND p.\`Condition\` = ?`;
             values.push(filters.condition);
         }
         if (filters.minPrice !== undefined) {
-            sql += ` AND p.Price >= ?`;
+            whereSql += ` AND p.Price >= ?`;
             values.push(filters.minPrice);
         }
         if (filters.maxPrice !== undefined) {
-            sql += ` AND p.Price <= ?`;
+            whereSql += ` AND p.Price <= ?`;
             values.push(filters.maxPrice);
         }
         if (filters.status) {
-            sql += ` AND p.Status = ?`;
+            whereSql += ` AND p.Status = ?`;
             values.push(filters.status);
         }
         if (filters.keyword) {
-            sql += ` AND (p.Title LIKE ? OR p.Description LIKE ?)`;
+            whereSql += ` AND (p.Title LIKE ? OR p.Description LIKE ?)`;
             values.push(`%${filters.keyword}%`, `%${filters.keyword}%`);
         }
+
+        // Count total matching rows
+        const countSql = `SELECT COUNT(*) AS total FROM Product p ${whereSql}`;
+        const [countRows] = await db.query<RowDataPacket[]>(countSql, values);
+        const total = countRows[0]?.total || 0;
+
+        // Build data query
+        let dataSql = `
+            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number
+            FROM Product p
+            LEFT JOIN User u ON p.Seller_ID = u.User_ID
+            ${whereSql}
+        `;
+
         if (filters.sortBy) {
             // Fix #21: SECURITY NOTE - sortBy is validated against a strict whitelist
             // before being interpolated into SQL. Do NOT remove this validation.
@@ -80,20 +91,20 @@ export const ProductModel = {
             }
             const sortField = filters.sortBy === 'Price' ? 'p.Price' : 'p.Created_at';
             const sortOrder = filters.sortOrder === 'asc' ? 'ASC' : 'DESC';
-            sql += ` ORDER BY ${sortField} ${sortOrder}`;
+            dataSql += ` ORDER BY ${sortField} ${sortOrder}`;
         } else {
-            sql += ` ORDER BY p.Created_at DESC`;
+            dataSql += ` ORDER BY p.Created_at DESC`;
         }
 
         const limit = filters.limit ? Number(filters.limit) : 20;
         const page = filters.page ? Number(filters.page) : 1;
         const offset = (page - 1) * limit;
 
-        sql += ` LIMIT ? OFFSET ?`;
-        values.push(limit, offset);
+        dataSql += ` LIMIT ? OFFSET ?`;
+        const dataValues = [...values, limit, offset];
 
-        const [rows] = await db.query<RowDataPacket[]>(sql, values);
-        return rows as ProductWithSeller[];
+        const [rows] = await db.query<RowDataPacket[]>(dataSql, dataValues);
+        return { products: rows as ProductWithSeller[], total };
     },
 
     // 4.สร้างสินค้าใหม่ (Create Product)
@@ -174,5 +185,12 @@ export const ProductModel = {
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as ProductWithSeller) : null;
+    },
+
+    // 9.Ban/Unban สินค้า (Admin only - dedicated method แยกจาก updateProduct)
+    setBanStatus: async (id: number, isBanned: boolean): Promise<boolean> => {
+        const sql = `UPDATE Product SET Is_Banned = ? WHERE Product_ID = ?`;
+        const [result] = await db.query<ResultSetHeader>(sql, [isBanned ? 1 : 0, id]);
+        return result.affectedRows > 0;
     }
 };

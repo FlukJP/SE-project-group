@@ -35,8 +35,8 @@ export const ChatModel = {
                 WHERE Sender_ID != ? AND Is_Read = 0
                 GROUP BY Chat_ID
             ) unread ON c.Chat_ID = unread.Chat_ID
-            WHERE (c.Participant_1 = ? AND (c.Is_Deleted_By_P1 = 0 OR c.Is_Deleted_By_P1 IS NULL))
-            OR (c.Participant_2 = ? AND (c.Is_Deleted_By_P2 = 0 OR c.Is_Deleted_By_P2 IS NULL))
+            WHERE ((c.Participant_1 = ? AND (c.Is_Deleted_By_P1 = 0 OR c.Is_Deleted_By_P1 IS NULL))
+               OR (c.Participant_2 = ? AND (c.Is_Deleted_By_P2 = 0 OR c.Is_Deleted_By_P2 IS NULL)))
             ORDER BY COALESCE(lm.\`Timestamp\`, c.Created_At) DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [userID, userID, userID, userID]);

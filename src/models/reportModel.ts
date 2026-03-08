@@ -6,8 +6,8 @@ export const ReportModel = {
     // 1.ดึงข้อมูล Report จาก ID (Detail one by one)
     findByID: async (id: number): Promise<Report | null> => {
         const sql = `
-            SELECT * FROM Report 
-            WHERE ReportID = ?
+            SELECT * FROM Report
+            WHERE Report_ID = ?
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as Report) : null;

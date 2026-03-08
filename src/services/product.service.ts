@@ -1,18 +1,24 @@
-import { Product , ProductFilters , UpdateProductData } from "@/src/types/Product";
+import { Product, ProductFilters, pickProductUpdateFields } from "@/src/types/Product";
 import { ProductModel } from "@/src/models/productModel";
 import { AppError } from "@/src/errors/AppError";
-import fsPromises from 'fs/promises';
-import path from 'path';
-import { pickFields } from "@/src/utils/objectUtils"
+import { CategoryService } from "@/src/services/category.service";
+import { cleanupImages } from "@/src/utils/uploadHelpers";
 
 export const ProductService = {
     // 1.Product list
-    getAllProducts: async (filters: ProductFilters = {} ) => {
-        return await ProductModel.searchProducts(filters);
+    getAllProducts: async (filters: ProductFilters = {}) => {
+        const result = await ProductModel.searchProducts(filters);
+
+        if (filters.category) {
+            CategoryService.recordPopularity(filters.category, 'search').catch(() => {});
+        }
+
+        return result;
     },
 
     // 2.Product by seller
     getProductsBySeller: async (sellerID: number) => {
+        if (!sellerID || sellerID <= 0) throw new AppError("Invalid seller ID", 400);
         return await ProductModel.findBySellerID(sellerID);
     },
 
@@ -21,16 +27,17 @@ export const ProductService = {
         const product = await ProductModel.findByID(productID);
         if (!product) throw new AppError("Product not found", 404);
         return product;
-    }, 
+    },
 
     // 4.Create product
-    createProduct: async (sellerID: number, productData: Product) => {
-        if (!productData.Title || !productData.Description || !productData.Price || !productData.Condition || !productData.Category || !productData.Image_URL || !productData.Quantity) throw new AppError("Missing required fields", 400);
+    createProduct: async (sellerID: number, productData: Omit<Product, 'Product_ID'>) => {
+        if (!productData.Title || !productData.Description || !productData.Price || !productData.Condition || !productData.Category || !productData.Image_URL) {
+            throw new AppError("Missing required fields", 400);
+        }
         if (productData.Price <= 0) throw new AppError("Price must be greater than 0", 400);
-        if (productData.Quantity <= 0) throw new AppError("Quantity must be greater than 0", 400);
+        if (productData.Quantity !== undefined && productData.Quantity <= 0) throw new AppError("Quantity must be greater than 0", 400);
         if (productData.Title.trim().length > 255) throw new AppError("Title must be less than 255 characters", 400);
         if (productData.Description.trim().length > 2000) throw new AppError("Description must be less than 2000 characters", 400);
-        if (productData.Image_URL.includes('..') || productData.Image_URL.startsWith('/')) throw new AppError("Invalid image URL", 400);
 
         // Validate Image_URL is valid JSON array
         try {
@@ -47,30 +54,22 @@ export const ProductService = {
             Condition: productData.Condition,
             Category: productData.Category,
             Image_URL: productData.Image_URL,
-            Quantity: productData.Quantity,
+            Quantity: productData.Quantity || 1,
             Seller_ID: sellerID,
             Status: 'available',
         };
         return await ProductModel.createProduct(newProduct as Product);
     },
 
-    // 5.Update product
-    updateProduct: async ( productID: number, sellerID: number, updateData: Partial<Product>) => {
+    // 5.Update product (with admin override support)
+    updateProduct: async (productID: number, userID: number, updateData: Partial<Product>, isAdmin: boolean = false) => {
         const product = await ProductModel.findByID(productID);
         if (!product) throw new AppError("Product not found", 404);
-        if (product.Seller_ID !== sellerID) throw new AppError("Unauthorized to update this product", 403);
-        const safeData = pickFields<Product, keyof UpdateProductData>(updateData, [
-            "Title",
-            "Description",
-            "Price",
-            "Condition",
-            "Category",
-            "Quantity",
-            "Image_URL",
-            "Status"
-        ]);
+        if (product.Seller_ID !== userID && !isAdmin) throw new AppError("Forbidden: You are not the owner of this product", 403);
 
+        const safeData = pickProductUpdateFields(updateData);
         if (Object.keys(safeData).length === 0) throw new AppError("No valid fields to update", 400);
+
         if (safeData.Price !== undefined && safeData.Price <= 0) throw new AppError("Price must be greater than 0", 400);
         if (safeData.Quantity !== undefined && safeData.Quantity <= 0) throw new AppError("Quantity must be greater than 0", 400);
         if (safeData.Title !== undefined) {
@@ -82,33 +81,19 @@ export const ProductService = {
             if (safeData.Description.length > 2000) throw new AppError("Description must be less than 2000 characters", 400);
         }
 
-        if (safeData.Image_URL && safeData.Image_URL !== product.Image_URL) {
-            if (safeData.Image_URL.includes('..') || safeData.Image_URL.startsWith('/')) throw new AppError("Invalid image URL", 400);
-            try {
-                const oldImagePath = path.join(process.cwd(), 'public', product.Image_URL);
-                await fsPromises.unlink(oldImagePath);
-            } catch (err: any) {
-                if (err.code !== 'ENOENT') console.error(`Failed to delete old image: ${product.Image_URL}`, err);
-            }
-        }
-        return await ProductModel.updateProduct(productID, safeData);
+        const updated = await ProductModel.updateProduct(productID, safeData);
+        if (!updated) throw new AppError("Failed to update product", 500);
+
+        return { updated, oldImageURL: product.Image_URL };
     },
 
-    // 6.Delete product
-    deleteProduct: async (productID: number, sellerID: number) => {
+    // 6.Delete product (with admin override support)
+    deleteProduct: async (productID: number, userID: number, isAdmin: boolean = false) => {
         const product = await ProductModel.findByID(productID);
         if (!product) throw new AppError("Product not found", 404);
-        if (product.Seller_ID !== sellerID) throw new AppError("Unauthorized to delete this product", 403);
-        if (product.Image_URL) {
-            if (!product.Image_URL.includes('..') && !product.Image_URL.startsWith('/')) {
-                try {
-                    const imagePath = path.join(process.cwd(), 'public', product.Image_URL);
-                    await fsPromises.unlink(imagePath);
-                } catch (err: any) {
-                    if (err.code !== 'ENOENT') console.error(`Failed to delete image for product ${productID}:`, err);
-                }
-            }
-        }
+        if (product.Seller_ID !== userID && !isAdmin) throw new AppError("Forbidden: You are not the owner of this product", 403);
+
+        if (product.Image_URL) cleanupImages(product.Image_URL);
         return await ProductModel.deleteProduct(productID);
     }
 };

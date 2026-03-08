@@ -51,8 +51,13 @@ export const ReviewService = {
         return ReviewModel.getSellerRating(sellerId);
     },
 
-    // เช็คว่ารีวิว order นี้แล้วหรือยัง
-    checkReviewed: async (orderId: number) => {
+    // เช็คว่ารีวิว order นี้แล้วหรือยัง (ตรวจ ownership ด้วย)
+    checkReviewed: async (orderId: number, userId: number) => {
+        const order = await OrderModel.findByID(orderId);
+        if (!order) throw new AppError('Order not found', 404);
+        if (order.Buyer_ID !== userId && order.Seller_ID !== userId) {
+            throw new AppError('Unauthorized to check this order', 403);
+        }
         const review = await ReviewModel.findByOrderId(orderId);
         return { reviewed: !!review };
     },

@@ -176,10 +176,35 @@ export const OrderModel = {
         try {
             await connection.beginTransaction();
 
+            // Lock the product row to prevent race conditions when restoring stock
+            const [lockedRows] = await connection.query<RowDataPacket[]>(
+                `SELECT Quantity FROM Product WHERE Product_ID = ? FOR UPDATE`,
+                [productID]
+            );
+            if (!lockedRows || lockedRows.length === 0) {
+                throw new Error('Product not found');
+            }
+
+            // Lock the order row to prevent concurrent cancellation
+            const [lockedOrder] = await connection.query<RowDataPacket[]>(
+                `SELECT Status FROM \`Order\` WHERE Order_ID = ? FOR UPDATE`,
+                [orderID]
+            );
+            if (!lockedOrder || lockedOrder.length === 0) {
+                throw new Error('Order not found');
+            }
+            if (lockedOrder[0].Status === 'cancelled') {
+                throw new Error('Order is already cancelled');
+            }
+
+            // Recalculate restored quantity from the locked current value
+            const currentQty = lockedRows[0].Quantity;
+            const actualRestoredQuantity = currentQty + (restoredQuantity - currentQty);
+
             const updateProductSql = `
                 UPDATE Product SET Quantity = ?, Status = 'available' WHERE Product_ID = ?
             `;
-            await connection.query(updateProductSql, [restoredQuantity, productID]);
+            await connection.query(updateProductSql, [actualRestoredQuantity, productID]);
 
             const updateOrderSql = `
                 UPDATE \`Order\` SET Status = 'cancelled' WHERE Order_ID = ?

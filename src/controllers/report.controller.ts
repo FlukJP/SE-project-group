@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
 import { ReportModel } from '../models/reportModel';
+import { ProductModel } from '../models/productModel';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const ReportController = {
@@ -17,9 +18,23 @@ export const ReportController = {
                 throw new AppError("reportType must be 'product' or 'user'", 400);
             }
 
+            const numericTargetId = Number(targetId);
+
+            // ป้องกัน self-report
+            if (reportType === 'user' && numericTargetId === req.user.userID) {
+                throw new AppError("You cannot report yourself", 400);
+            }
+            if (reportType === 'product') {
+                const product = await ProductModel.findByID(numericTargetId);
+                if (!product) throw new AppError("Product not found", 404);
+                if (product.Seller_ID === req.user.userID) {
+                    throw new AppError("You cannot report your own product", 400);
+                }
+            }
+
             const reportId = await ReportModel.createReport({
                 Reporter_ID: req.user.userID,
-                Target_ID: Number(targetId),
+                Target_ID: numericTargetId,
                 ReportType: reportType,
                 Reason: reason.trim(),
             });

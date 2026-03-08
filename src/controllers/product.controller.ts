@@ -2,10 +2,9 @@ import { Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
 import { deleteUploadedFile, cleanupImages } from '../utils/uploadHelpers';
 import { UploadFolderType } from '../types/upload';
-import { ProductModel } from '../models/productModel';
+import { ProductService } from '../services/product.service';
 import { AuthRequest } from '../middleware/auth.middleware';
-import { Product, pickProductUpdateFields } from '../types/Product';
-import { CategoryService } from '../services/category.service';
+import { Product } from '../types/Product';
 
 export const ProductController = {
     // 1.สร้างสินค้าใหม่ (Create)
@@ -50,7 +49,7 @@ export const ProductController = {
                 Image_URL: JSON.stringify(imageUrls),
             };
 
-            const insertId = await ProductModel.createProduct(newProductData as Product);
+            const insertId = await ProductService.createProduct(req.user.userID, newProductData);
 
             res.status(201).json({
                 success: true,
@@ -71,7 +70,7 @@ export const ProductController = {
     getAllProducts: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { q, category, minPrice, maxPrice, limit, page, sortBy, sortOrder } = req.query;
-            const products = await ProductModel.searchProducts({
+            const result = await ProductService.getAllProducts({
                 keyword: q as string,
                 category: category as string,
                 minPrice: minPrice ? Number(minPrice) : undefined,
@@ -82,11 +81,7 @@ export const ProductController = {
                 sortOrder: sortOrder as 'asc' | 'desc'
             });
 
-            if (category) {
-                CategoryService.recordPopularity(category as string, 'search').catch(() => {});
-            }
-
-            res.status(200).json({ success: true, data: products, meta: { page: page ? Number(page) : 1, limit: limit ? Number(limit) : 20, total: products.length } });
+            res.status(200).json({ success: true, data: result.products, meta: { page: page ? Number(page) : 1, limit: limit ? Number(limit) : 20, total: result.total } });
         } catch (error) {
             next(error);
         }
@@ -96,8 +91,7 @@ export const ProductController = {
     getProductByID: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const productId = Number(req.params.id);
-            const product = await ProductModel.findByID(productId);
-            if (!product) throw new AppError("Product not found", 404);
+            const product = await ProductService.getProductByID(productId);
 
             res.status(200).json({ success: true, data: product });
         } catch (error) {
@@ -109,9 +103,7 @@ export const ProductController = {
     getProductsBySeller: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const sellerId = Number(req.params.sellerId);
-            if (!sellerId || sellerId <= 0) throw new AppError("Invalid seller ID", 400);
-
-            const products = await ProductModel.findBySellerID(sellerId);
+            const products = await ProductService.getProductsBySeller(sellerId);
             res.status(200).json({ success: true, data: products });
         } catch (error) {
             next(error);
@@ -125,23 +117,20 @@ export const ProductController = {
             if (!req.user) throw new AppError("Unauthorized", 401);
 
             const productId = Number(req.params.id);
-            const product = await ProductModel.findByID(productId);
-            if (!product) throw new AppError("Product not found", 404);
-            if (product.Seller_ID !== req.user.userID && req.user.role !== 'admin') {
-                throw new AppError("Forbidden: You are not the owner of this product", 403);
-            }
+            const isAdmin = req.user.role === 'admin';
 
-            const updateData = pickProductUpdateFields(req.body);
-            let oldImagesToCleanup: string | undefined;
+            const updateData: Partial<Product> = { ...req.body };
             if (files && files.length > 0) {
-                oldImagesToCleanup = product.Image_URL;
                 const imageUrls = files.map(file => `/uploads/products/${file.filename}`);
                 updateData.Image_URL = JSON.stringify(imageUrls);
             }
-            if (Object.keys(updateData).length === 0) throw new AppError("No fields to update", 400);
-            const updated = await ProductModel.updateProduct(productId, updateData);
-            if (!updated) throw new AppError("Failed to update product", 500);
-            if (oldImagesToCleanup) cleanupImages(oldImagesToCleanup);
+
+            const result = await ProductService.updateProduct(productId, req.user.userID, updateData, isAdmin);
+
+            // Cleanup old images only after successful update
+            if (files && files.length > 0 && result.oldImageURL) {
+                cleanupImages(result.oldImageURL);
+            }
 
             res.status(200).json({ success: true, message: "Product updated successfully" });
         } catch (error) {
@@ -160,14 +149,9 @@ export const ProductController = {
             if (!req.user) throw new AppError("Unauthorized", 401);
 
             const productId = Number(req.params.id);
-            const product = await ProductModel.findByID(productId);
-            if (!product) throw new AppError("Product not found", 404);
-            if (product.Seller_ID !== req.user.userID && req.user.role !== 'admin') {
-                throw new AppError("Forbidden: You are not the owner of this product", 403);
-            }
+            const isAdmin = req.user.role === 'admin';
 
-            if (product.Image_URL) cleanupImages(product.Image_URL);
-            await ProductModel.deleteProduct(productId);
+            await ProductService.deleteProduct(productId, req.user.userID, isAdmin);
 
             res.status(200).json({ success: true, message: "Product deleted successfully" });
         } catch (error) {

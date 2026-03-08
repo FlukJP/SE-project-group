@@ -88,6 +88,7 @@ export const ChatController = {
             const chatId = Number(req.params.chatId);
             const { content, type } = req.body;
             if (!content?.trim()) throw new AppError("Message content is required", 400);
+            if (content.trim().length > 5000) throw new AppError("Message content must not exceed 5000 characters", 400);
 
             const messageType = type === 'image' ? 'image' : 'text';
             const messageId = await ChatService.sendMessage(chatId, req.user.userID, content.trim(), messageType);

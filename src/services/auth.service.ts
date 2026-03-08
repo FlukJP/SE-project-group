@@ -42,6 +42,9 @@ export const AuthService = {
         const existingUser = await UserModel.findByEmailSafe(userData.Email);
         if (existingUser) throw new AppError("Email already in use", 409);
 
+        const existingPhone = await UserModel.findByPhone(userData.Phone_number);
+        if (existingPhone) throw new AppError("Phone number already in use", 409);
+
         const newUser: User = {
             ...userData,
             Password: await bcrypt.hash(userData.Password, SALT_ROUNDS),
