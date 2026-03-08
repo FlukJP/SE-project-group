@@ -80,7 +80,7 @@ export const ProductModel = {
         // Build data query
         let dataSql = `
             SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
-                   c.name AS Category_Name, c.category_key AS Category_Key
+            c.name AS Category_Name, c.category_key AS Category_Key
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
             LEFT JOIN Category c ON p.Category_ID = c.Category_ID
