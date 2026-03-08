@@ -5,14 +5,7 @@ import { MessageModel } from "@/src/models/messageModel";
 import { AppError } from "@/src/errors/AppError";
 
 export const ChatService = {
-    // 1.Get chat room by user ID
-    getChatRoomByUserID: async (userID: number): Promise<Chat[]> => {
-        if (!userID) throw new AppError("User ID is required", 400);
-        const chatRooms = await ChatModel.findByUserID(userID);
-        return chatRooms || [];
-    },
-
-    // 2.Get chat room by ID
+    // 1.Get chat room by ID
     getChatRoomByID: async (chatID: number, userID: number): Promise<Chat | null> => {
         if (!chatID || !userID) throw new AppError("Chat ID and User ID are required", 400);
 
@@ -22,7 +15,7 @@ export const ChatService = {
         return chatRoom || null;
     },
 
-    // 3.Find or create chat room
+    // 2.Find or create chat room
     findOrCreateChatRoom: async (buyerID: number, sellerID: number, productID: number): Promise<Chat> => {
         if (!buyerID || !sellerID || !productID) throw new AppError("Buyer ID, Seller ID and Product ID are required", 400);
         if (buyerID === sellerID) throw new AppError("Cannot create chat room with yourself", 400);
@@ -42,7 +35,7 @@ export const ChatService = {
         return newChat;
     },
 
-    // 4.Delete chat (Soft Delete)
+    // 3.Delete chat (Soft Delete)
     deleteChatRoom: async (chatID: number, userID: number): Promise<boolean> => {
         if (!chatID || !userID) throw new AppError("Chat ID and User ID are required", 400);
 
@@ -53,7 +46,7 @@ export const ChatService = {
         else throw new AppError("Unauthorized to delete this chat room", 403);
     },
 
-    // 1.Get messages by chat room ID
+    // 4.Get messages by chat room ID
     getMessagesByChatID: async (chatID: number, userID: number, page:number) => {
         if (!chatID || !userID) throw new AppError("Chat ID and User ID are required", 400);
 
@@ -73,21 +66,21 @@ export const ChatService = {
         };
     },
 
-    // 2.Get chat inbox for user
+    // 5.Get chat inbox for user
     getChatInboxForUser: async (userID: number) => {
         if (!userID) throw new AppError("User ID is required", 400);
         const chatRooms = await ChatModel.findByUserID(userID);
         return chatRooms || [];
     },
 
-    // 3.Get unread messages count for user
+    // 6.Get unread messages count for user
     getUnreadMessagesCountForUser: async (userID: number) => {
         if (!userID) throw new AppError("User ID is required", 400);
         const unreadCount = await MessageModel.countUnreadByUserID(userID);
         return unreadCount;
     },
 
-    // 4.Send message
+    // 7.Send message
     sendMessage: async (chatID: number, senderID: number, content: string, type: 'text' | 'image') => {
         if (!chatID || !senderID || !content) throw new AppError("Chat ID, Sender ID and content are required", 400);
 
@@ -104,7 +97,7 @@ export const ChatService = {
         return createdMessage;
     },
 
-    // 5.Mark messages as read
+    // 8.Mark messages as read
     markMessagesAsRead: async (chatID: number, userID: number) => {
         if (!chatID || !userID) throw new AppError("Chat ID and User ID are required", 400);
 

@@ -10,6 +10,7 @@ import {
 } from "react";
 import type { User } from "@/src/types/User";
 import { authApi, userApi } from "@/src/lib/api";
+import { getSocket } from "@/src/lib/socket";
 
 interface AuthState {
   user: User | null;
@@ -58,6 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authApi.logout();
     } catch {
+    }
+    if (typeof window !== "undefined") {
+      const s = getSocket();
+      if (s.connected) s.disconnect();
     }
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");

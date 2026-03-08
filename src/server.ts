@@ -13,6 +13,7 @@ import { globalLimiter } from './middleware/rateLimit.middleware';
 import { connectRedis, disconnectRedis, isRedisAvailable } from './config/redis';
 import { ENV } from './config/env';
 import pool from './lib/mysql';
+import { ChatModel } from './models/chatModel';
 
 const app = express();
 const server = http.createServer(app);
@@ -52,8 +53,17 @@ io.on('connection', (socket) => {
     const socketUser = (socket as unknown as Record<string, unknown>).user as { userID: number } | undefined;
     console.log(`[Socket] connected: ${socket.id}, user: ${socketUser?.userID}`);
 
-    socket.on('join', (roomId: string) => {
-        socket.join(roomId);
+    socket.on('join', async (roomId: string) => {
+        if (!socketUser) return;
+        try {
+            const chat = await ChatModel.findByID(Number(roomId));
+            if (!chat || (socketUser.userID !== chat.Participant_1 && socketUser.userID !== chat.Participant_2)) {
+                return;
+            }
+            socket.join(roomId);
+        } catch {
+            // ignore DB errors silently
+        }
     });
 
     socket.on('leave', (roomId: string) => {
@@ -61,6 +71,11 @@ io.on('connection', (socket) => {
     });
 
     socket.on('sendMessage', (data: { roomId: string; message: unknown }) => {
+        if (!socketUser) return;
+
+        const msg = data.message as Record<string, unknown> | undefined;
+        if (!msg || msg.Sender_ID !== socketUser.userID) return;
+
         socket.to(data.roomId).emit('newMessage', data.message);
     });
 

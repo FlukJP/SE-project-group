@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { MessageWithSender } from "@/src/types/Messages";
 
 interface Props {
@@ -29,9 +30,20 @@ export default function MessageBubble({ message, isMine }: Props) {
             {message.SenderName}
           </div>
         )}
-        <p className="text-sm whitespace-pre-wrap break-words">
-          {message.Content}
-        </p>
+        {message.MessagesType === "image" ? (
+          <Image
+            src={message.Content}
+            alt="sent image"
+            width={300}
+            height={200}
+            className="rounded-lg max-w-full h-auto cursor-pointer"
+            onClick={() => window.open(message.Content, "_blank")}
+          />
+        ) : (
+          <p className="text-sm whitespace-pre-wrap break-words">
+            {message.Content}
+          </p>
+        )}
         <div
           className={`text-[10px] mt-1 text-right ${
             isMine ? "text-white/60" : "text-gray-400"
