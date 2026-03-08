@@ -12,12 +12,10 @@ type TabKey = "all" | "banned";
 const roleBadge = (role: string) => {
   const styles: Record<string, string> = {
     admin: "bg-purple-100 text-purple-700",
-    seller: "bg-blue-100 text-blue-700",
     customer: "bg-zinc-100 text-zinc-700",
   };
   const labels: Record<string, string> = {
     admin: "แอดมิน",
-    seller: "ผู้ขาย",
     customer: "ลูกค้า",
   };
   return (

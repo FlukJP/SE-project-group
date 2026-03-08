@@ -27,10 +27,9 @@ export const OrderModel = {
     // 3.ดึงข้อมูล Order จาก Seller ID (Seller Order List)
     findBySellerID: async (sellerID: number): Promise<Order[]> => {
         const sql = `
-            SELECT o.* FROM \`Order\` o
-            JOIN Product p ON o.Product_ID = p.Product_ID
-            WHERE p.Seller_ID = ?
-            ORDER BY o.Created_at DESC
+            SELECT * FROM \`Order\`
+            WHERE Seller_ID = ?
+            ORDER BY Created_at DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [sellerID]);
         return rows as Order[];
@@ -83,12 +82,13 @@ export const OrderModel = {
     // 8.สร้าง Order ใหม่ (Create Order)
     createOrder: async (orderData: Order): Promise<number> => {
         const sql = `
-            INSERT INTO \`Order\` (Product_ID, Buyer_ID, Quantity, Total_Price)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO \`Order\` (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price)
+            VALUES (?, ?, ?, ?, ?)
         `;
         const values = [
             orderData.Product_ID,
             orderData.Buyer_ID,
+            orderData.Seller_ID,
             orderData.Quantity,
             orderData.Total_Price
         ];

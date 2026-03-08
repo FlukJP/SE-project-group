@@ -28,8 +28,8 @@ export const OrderService = {
             Status: 'pending',
         };
         const remainingQuantity = currentQuantity - orderData.Quantity;
-        const newProductStatus = remainingQuantity === 0 ? 'Sold Out' : product.Status;
-        const orderID = await OrderModel.createOrderTransaction(newOrder, product.Product_ID!, remainingQuantity, newProductStatus as string);
+        const newProductStatus = remainingQuantity === 0 ? 'sold' : product.Status;
+        const orderID = await OrderModel.createOrderTransaction(newOrder, product.Product_ID!, remainingQuantity, newProductStatus!);
 
         if (product.Category) {
             CategoryService.recordPopularity(product.Category, 'purchase').catch(() => {});

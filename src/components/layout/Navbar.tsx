@@ -127,9 +127,6 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
                     <Link href="/chat" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
                       แชท
                     </Link>
-                    <Link href="/favorites" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
-                      รายการโปรด
-                    </Link>
 
                     {user?.Role === "admin" && (
                       <>

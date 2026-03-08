@@ -552,11 +552,6 @@ function Account({ email }: { email: string }) {
 
       <div className="space-y-4 max-w-xl">
         <div className="flex items-center justify-between">
-          <span>Facebook</span>
-          <button type="button" disabled className="border border-zinc-300 px-4 py-1.5 rounded-lg opacity-50 cursor-not-allowed">เชื่อมต่อ (เร็วๆ นี้)</button>
-        </div>
-
-        <div className="flex items-center justify-between">
           <span>Google</span>
           <button type="button" disabled className="border border-zinc-300 px-4 py-1.5 rounded-lg opacity-50 cursor-not-allowed">เชื่อมต่อ (เร็วๆ นี้)</button>
         </div>

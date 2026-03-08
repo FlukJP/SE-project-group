@@ -7,6 +7,7 @@ import adminRoutes from './admin.routes';
 import reportRoutes from './report.routes';
 import categoryRoutes from './category.routes';
 import reviewRoutes from './review.routes';
+import orderRoutes from './order.routes';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/admin', adminRoutes);
 router.use('/reports', reportRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/reviews', reviewRoutes);
+router.use('/orders', orderRoutes);
 
 export default router;
