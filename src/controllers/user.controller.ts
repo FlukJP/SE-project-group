@@ -26,9 +26,14 @@ export const UserController = {
             const userId = Number(req.params.id);
             if (!userId || userId <= 0) throw new AppError("Invalid user ID", 400);
 
-            const user = await UserModel.findByID(userId);
+            const user = await UserModel.findByIDSafe(userId);
             if (!user) throw new AppError("User not found", 404);
-            const { Password, Is_Banned, ...publicProfile } = user;
+            const publicProfile = {
+                User_ID: user.User_ID,
+                Username: user.Username,
+                RatingScore: user.RatingScore,
+                Avatar_URL: user.Avatar_URL,
+            };
 
             res.status(200).json({ success: true, data: publicProfile });
         } catch (error) {
@@ -64,7 +69,7 @@ export const UserController = {
             if (!file) throw new AppError("Image file is required", 400);
 
             const avatarUrl = `/uploads/users/${file.filename}`;
-            const currentUser = await UserModel.findByID(req.user.userID);
+            const currentUser = await UserModel.findByIDSafe(req.user.userID);
             if (currentUser?.Avatar_URL) {
                 const oldFilename = currentUser.Avatar_URL.split('/').pop();
                 if (oldFilename) deleteUploadedFile(oldFilename, UploadFolderType.USER);

@@ -30,7 +30,7 @@ export const authenticateJWT = async (req: AuthRequest, res: Response, next: Nex
             issuer: ENV.JWT_ISSUER,
             audience: ENV.JWT_AUDIENCE,
         }) as AuthPayload;
-        const user = await UserModel.findByID(decoded.userID);
+        const user = await UserModel.findByIDSafe(decoded.userID);
         if (!user) throw new AppError("User not found", 404);
         if (user.Is_Banned) throw new AppError("User is banned", 403);
         req.user = { userID: decoded.userID, role: user.Role  };
@@ -64,13 +64,13 @@ export const authorizeRoles = (roles: ('customer' | 'admin')[]) => {
 export const requireVerified = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         if (!req.user) throw new AppError("Unauthorized", 401);
-        const user = await UserModel.findByID(req.user.userID);
+        const user = await UserModel.findByIDSafe(req.user.userID);
         if (!user) throw new AppError("User not found", 404);
         if (!user.Is_Email_Verified) {
-            throw new AppError("กรุณายืนยันอีเมลผ่าน OTP ก่อนใช้งานฟีเจอร์นี้", 403);
+            throw new AppError("Please verify your email via OTP before using this feature", 403);
         }
         if (!user.Is_Phone_Verified) {
-            throw new AppError("กรุณายืนยันเบอร์โทรศัพท์ผ่าน OTP ก่อนใช้งานฟีเจอร์นี้", 403);
+            throw new AppError("Please verify your phone number via OTP before using this feature", 403);
         }
         next();
     } catch (err) {

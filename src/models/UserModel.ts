@@ -2,8 +2,16 @@ import db from '@/src/lib/mysql';
 import { User } from '@/src/types/User';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
+const ALLOWED_UPDATE_COLUMNS: ReadonlySet<string> = new Set([
+    'Username', 'Email', 'Password', 'Role', 'Phone_number',
+    'Is_Phone_Verified', 'Is_Email_Verified', 'Address',
+    'Verified_Date', 'RatingScore', 'Avatar_URL', 'Is_Banned'
+]);
+
+const USER_COLUMNS_WITHOUT_PASSWORD = 'User_ID, Username, Email, Role, Phone_number, Is_Phone_Verified, Is_Email_Verified, Address, Verified_Date, RatingScore, Avatar_URL, Is_Banned';
+
 export const UserModel = {
-    // 1.ดึงข้อมูล User จาก Email (Login/Check)
+    // 1.ดึงข้อมูล User จาก Email (Login/Check - includes Password for auth)
     findByEmail: async (email: string): Promise<User | null> => {
         const sql = `
             SELECT * FROM User
@@ -13,12 +21,26 @@ export const UserModel = {
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 2.ดึงข้อมูล User จาก ID (Profile/Identity)
+    // 1b.ดึงข้อมูล User จาก Email โดยไม่รวม Password (safe for non-auth use)
+    findByEmailSafe: async (email: string): Promise<User | null> => {
+        const sql = `SELECT ${USER_COLUMNS_WITHOUT_PASSWORD} FROM User WHERE Email = ?`;
+        const [rows] = await db.query<RowDataPacket[]>(sql, [email]);
+        return rows.length > 0 ? (rows[0] as User) : null;
+    },
+
+    // 2.ดึงข้อมูล User จาก ID (Profile/Identity - includes Password for auth)
     findByID: async (id: number): Promise<User | null> => {
         const sql = `
             SELECT * FROM User
             WHERE User_ID = ?
         `;
+        const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
+        return rows.length > 0 ? (rows[0] as User) : null;
+    },
+
+    // 2b.ดึงข้อมูล User จาก ID โดยไม่รวม Password (safe for non-auth use)
+    findByIDSafe: async (id: number): Promise<User | null> => {
+        const sql = `SELECT ${USER_COLUMNS_WITHOUT_PASSWORD} FROM User WHERE User_ID = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as User) : null;
     },
@@ -36,7 +58,7 @@ export const UserModel = {
 
     // 4.ดึงข้อมูล User จากเบอร์โทรศัพท์ (Phone number lookup)
     findByPhone: async (phone: string): Promise<User | null> => {
-        const sql = `SELECT * FROM User WHERE Phone_number = ?`;
+        const sql = `SELECT ${USER_COLUMNS_WITHOUT_PASSWORD} FROM User WHERE Phone_number = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [phone]);
         return rows.length > 0 ? (rows[0] as User) : null;
     },
@@ -76,10 +98,10 @@ export const UserModel = {
     // 7.Update ข้อมูล User (Edit Profile)
     updateUser: async (id: number, userData: Partial<User>): Promise<boolean> => {
         const keys = Object.keys(userData).filter(
-            (key) => userData[key as keyof User] !== undefined
+            (key) => userData[key as keyof User] !== undefined && ALLOWED_UPDATE_COLUMNS.has(key)
         );
         if (keys.length === 0) return false;
-        const setClause = keys.map((key) => `${key} = ?`).join(', ');
+        const setClause = keys.map((key) => `\`${key}\` = ?`).join(', ');
         const values = keys.map((key) => userData[key as keyof User]);
         const sql = `UPDATE User SET ${setClause} WHERE User_ID = ?`;
         const [result] = await db.query<ResultSetHeader>(sql, [...values, id]);

@@ -5,7 +5,7 @@ import { User, Role } from "@/src/types/User";
 import { UserModel } from "@/src/models/UserModel";
 import { AppError } from "@/src/errors/AppError";
 import { sendEmail } from '@/src/utils/emailSender';
-import { validateEmail, validatePassword, validatePhoneNumber } from '@/src/utils/validators';
+import { validateEmail, validatePassword, validatePhoneNumber, validateUsername } from '@/src/utils/validators';
 import { ENV } from "@/src/config/env";
 import redisClient, { connectRedis } from "@/src/config/redis";
 import { OTP_TTL_SECONDS, RATE_LIMIT_TTL_SECONDS, MAX_OTP_REQUESTS, MAX_OTP_ATTEMPTS, SALT_ROUNDS } from "@/src/config/constants";
@@ -33,12 +33,13 @@ const roleHierarchy: Record<Role, number> = {
 export const AuthService = {
     // 1.Register
     register: async (userData: User): Promise<number> => {
-        if (!userData.Email || !userData.Password || !userData.Phone_number) throw new AppError("Email, Password and Phone number are required", 400);
+        if (!userData.Username || !userData.Email || !userData.Password || !userData.Phone_number) throw new AppError("Username, Email, Password and Phone number are required", 400);
+        if (!validateUsername(userData.Username)) throw new AppError("Username must be 2-50 characters and contain only letters, numbers, spaces, underscores, or hyphens", 400);
         if (!validateEmail(userData.Email)) throw new AppError("Invalid email format", 400);
         if (!validatePassword(userData.Password)) throw new AppError("Password must be at least 8 characters long", 400);
         if (!validatePhoneNumber(userData.Phone_number)) throw new AppError("Phone number must be 10 digits", 400);
 
-        const existingUser = await UserModel.findByEmail(userData.Email);
+        const existingUser = await UserModel.findByEmailSafe(userData.Email);
         if (existingUser) throw new AppError("Email already in use", 409);
 
         const newUser: User = {
@@ -145,7 +146,7 @@ export const AuthService = {
         const storedRefreshToken = await redisClient.get(`refresh_token:${decoded.userID}`);
         if (!storedRefreshToken || storedRefreshToken !== token) throw new AppError("Invalid refresh token", 401);
 
-        const user = await UserModel.findByID(decoded.userID);
+        const user = await UserModel.findByIDSafe(decoded.userID);
         if (!user || !user.User_ID) throw new AppError("User not found", 404);
 
         const newAccessToken = generateAccessToken({ userID: user.User_ID, role: user.Role });
@@ -180,7 +181,7 @@ export const AuthService = {
     requestOTP: async (email: string): Promise<void> => {
         if (!validateEmail(email)) throw new AppError("Invalid email format", 400);
 
-        const user = await UserModel.findByEmail(email);
+        const user = await UserModel.findByEmailSafe(email);
         if (!user) throw new AppError("Email not found", 404);
 
         await checkRateLimit(`otp_request:${email}`, MAX_OTP_REQUESTS, RATE_LIMIT_TTL_SECONDS);
@@ -214,7 +215,7 @@ export const AuthService = {
         await redisClient.del(`otp:${email}`);
         await redisClient.del(`otp_attempt:${email}`);
 
-        const user = await UserModel.findByEmail(email);
+        const user = await UserModel.findByEmailSafe(email);
         if (!user || !user.User_ID) throw new AppError("User not found", 404);
 
         await UserModel.updateUser(user.User_ID!, { Is_Email_Verified: true, Verified_Date: new Date() });
@@ -245,40 +246,42 @@ export const AuthService = {
         await redisClient.del(`otp:${email}`);
         await redisClient.del(`otp_attempt:${email}`);
 
-        const user = await UserModel.findByEmail(email);
+        const user = await UserModel.findByEmailSafe(email);
         if (!user || !user.User_ID) throw new AppError("User not found", 404);
 
         const hashedNewPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
         await UserModel.updateUser(user.User_ID, { Password: hashedNewPassword });
     },
 
-    // 11. Request Phone OTP (ส่ง OTP ไปยังอีเมลที่ผูกบัญชี โดยระบุเบอร์โทร)
+    // 11. Request Phone OTP
+    // LIMITATION: OTP is sent via email instead of SMS because no SMS provider is configured.
+    // This does NOT verify actual phone ownership. To properly verify, integrate an SMS gateway
+    // (e.g., Twilio, Firebase Phone Auth) and send the OTP directly to the phone number.
     requestPhoneOTP: async (phone: string): Promise<void> => {
-        if (!validatePhoneNumber(phone)) throw new AppError("เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก", 400);
+        if (!validatePhoneNumber(phone)) throw new AppError("Phone number must be 10 digits", 400);
 
         const user = await UserModel.findByPhone(phone);
-        if (!user) throw new AppError("ไม่พบบัญชีที่ผูกกับเบอร์โทรนี้", 404);
-        if (!user.Is_Email_Verified) throw new AppError("กรุณายืนยันอีเมลก่อนยืนยันเบอร์โทรศัพท์", 400);
+        if (!user) throw new AppError("No account found for this phone number", 404);
+        if (!user.Is_Email_Verified) throw new AppError("Please verify your email before verifying phone number", 400);
 
         await checkRateLimit(`otp_request:phone:${phone}`, MAX_OTP_REQUESTS, RATE_LIMIT_TTL_SECONDS);
         const otp = crypto.randomInt(100000, 1000000).toString();
         const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
         await redisClient.setEx(`otp:phone:${phone}`, OTP_TTL_SECONDS, hashedOtp);
 
-        // ส่ง OTP ทางอีเมลแทน SMS (ไม่ต้องมี SMS provider)
         await sendEmail(
             user.Email,
-            "รหัส OTP ยืนยันเบอร์โทรศัพท์",
-            `รหัส OTP สำหรับยืนยันเบอร์โทรศัพท์ ${phone} คือ ${otp}\nรหัสจะหมดอายุใน ${OTP_TTL_SECONDS / 60} นาที`
+            "Phone Verification OTP (sent via email)",
+            `Your OTP to verify phone number ${phone} is ${otp}\nThis code will expire in ${OTP_TTL_SECONDS / 60} minutes.`
         );
     },
 
     // 12. Verify Phone OTP
     verifyPhoneOTP: async (phone: string, otp: string) => {
-        if (!validatePhoneNumber(phone)) throw new AppError("เบอร์โทรศัพท์ไม่ถูกต้อง", 400);
+        if (!validatePhoneNumber(phone)) throw new AppError("Invalid phone number", 400);
 
         const storedOtp = await redisClient.get(`otp:phone:${phone}`);
-        if (!storedOtp) throw new AppError("OTP หมดอายุหรือไม่พบ", 400);
+        if (!storedOtp) throw new AppError("OTP expired or not found", 400);
 
         const hashedInput = crypto.createHash("sha256").update(otp).digest("hex");
         const a = Buffer.from(hashedInput);
@@ -287,14 +290,14 @@ export const AuthService = {
 
         if (!isValid) {
             await checkRateLimit(`otp_attempt:phone:${phone}`, MAX_OTP_ATTEMPTS, RATE_LIMIT_TTL_SECONDS);
-            throw new AppError("รหัส OTP ไม่ถูกต้อง", 400);
+            throw new AppError("Invalid OTP", 400);
         }
 
         await redisClient.del(`otp:phone:${phone}`);
         await redisClient.del(`otp_attempt:phone:${phone}`);
 
         const user = await UserModel.findByPhone(phone);
-        if (!user || !user.User_ID) throw new AppError("ไม่พบผู้ใช้", 404);
+        if (!user || !user.User_ID) throw new AppError("User not found", 404);
 
         await UserModel.updateUser(user.User_ID, { Is_Phone_Verified: true, Verified_Date: new Date() });
 

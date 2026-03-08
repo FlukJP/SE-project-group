@@ -5,12 +5,11 @@ import "dotenv/config";
 import { validatePhoneNumber } from '@/src/utils/validators';
 
 export const UserService = {
-    // 1.Profile 
+    // 1.Profile
     getProfile: async (params: { userID: number }): Promise<Omit<User, "Password">> => {
-        const user = await UserModel.findByID(params.userID);
+        const user = await UserModel.findByIDSafe(params.userID);
         if (!user) throw new AppError("User not found", 404);
-        const { Password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
+        return user;
     },
 
     // 2.Update profile
@@ -19,7 +18,7 @@ export const UserService = {
         if (Object.keys(safeData).length === 0) throw new AppError("No valid fields to update", 400);
         if (safeData.Phone_number && !validatePhoneNumber(safeData.Phone_number)) throw new AppError("Phone number must be 10 digits", 400);
 
-        const existingUser = await UserModel.findByID(params.userID);
+        const existingUser = await UserModel.findByIDSafe(params.userID);
         if (!existingUser) throw new AppError("User not found", 404);
         const updatePayload: UpdateUserData & { Is_Phone_Verified?: boolean; Verified_Date?: Date } = safeData;
 

@@ -98,7 +98,7 @@ export const ProductModel = {
 
     // 4.สร้างสินค้าใหม่ (Create Product)
     createProduct: async (productData: Product): Promise<number> => {
-        const seller = await UserModel.findByID(productData.Seller_ID);
+        const seller = await UserModel.findByIDSafe(productData.Seller_ID);
         if (!seller) throw new AppError("Seller not found", 404);
         const sql = `
             INSERT INTO Product (Seller_ID, Title, Description, Price, \`Condition\`, Category, Status, Quantity, Image_URL)

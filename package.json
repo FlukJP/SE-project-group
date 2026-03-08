@@ -8,7 +8,8 @@
     "dev:server": "nodemon --exec \"ts-node -r tsconfig-paths/register --project tsconfig.server.json\" src/server.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -51,6 +52,7 @@
     "nodemon": "^3.1.11",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.18"
   }
 }

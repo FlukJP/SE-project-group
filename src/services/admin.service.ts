@@ -21,7 +21,7 @@ export const AdminService = {
     // 3.Ban user
     banUser: async (targetUserID: number) => {
         if (!targetUserID) throw new AppError("Target User ID is required", 400);
-        const user = await UserModel.findByID(targetUserID);
+        const user = await UserModel.findByIDSafe(targetUserID);
         if (!user) throw new AppError("User not found", 404);
         if (user.Is_Banned) throw new AppError("User is already banned", 400);
         if (user.Role === 'admin') throw new AppError("Cannot ban an admin user", 403);
@@ -34,7 +34,7 @@ export const AdminService = {
     // 4.Unban user
     unbanUser: async (targetUserID: number) => {
         if (!targetUserID) throw new AppError("Target User ID is required", 400);
-        const user = await UserModel.findByID(targetUserID);
+        const user = await UserModel.findByIDSafe(targetUserID);
         if (!user) throw new AppError("User not found", 404);
         if (!user.Is_Banned) throw new AppError("User is not banned", 400);
 
