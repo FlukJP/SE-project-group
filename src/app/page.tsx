@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/src/components/layout/Navbar";
@@ -16,7 +16,7 @@ import { useAuth } from "@/src/contexts/AuthContext";
 
 export default function HomePage() {
   const router = useRouter();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [query, setQuery] = useState("");
   const [province, setProvince] = useState("");
   const [showLogin, setShowLogin] = useState(false);
@@ -40,6 +40,11 @@ export default function HomePage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const visibleFeatured = useMemo(() => {
+    if (!user?.User_ID) return featured;
+    return featured.filter((p) => p.seller.id !== String(user.User_ID));
+  }, [featured, user]);
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,11 +94,11 @@ export default function HomePage() {
           <>
             <CategoriesSection categories={categories} />
 
-            {featured.length > 0 ? (
+            {visibleFeatured.length > 0 ? (
               <FeaturedSection
                 title="ประกาศแนะนำ"
                 subtitle="ประกาศล่าสุด"
-                products={featured}
+                products={visibleFeatured}
               />
             ) : (
               <div className="text-center text-zinc-500 py-12">ยังไม่มีประกาศในขณะนี้</div>

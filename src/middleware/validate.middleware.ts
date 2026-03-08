@@ -172,7 +172,7 @@ export const createReportSchema: Schema = {
 // Chat
 export const createChatSchema: Schema = {
     productId:    { required: true, type: 'number', min: 1 },
-    participantId: { required: true, type: 'number', min: 1 },
+    sellerId: { required: true, type: 'number', min: 1 },
 };
 
 export const sendMessageSchema: Schema = {

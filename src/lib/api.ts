@@ -110,6 +110,16 @@ export const productApi = {
       "/products",
       { method: "POST", body: formData }
     ),
+  update: (id: string | number, formData: FormData) =>
+    apiFetch<{ success: boolean; message: string }>(
+      `/products/${id}`,
+      { method: "PUT", body: formData }
+    ),
+  deleteById: (id: string | number) =>
+    apiFetch<{ success: boolean; message: string }>(
+      `/products/${id}`,
+      { method: "DELETE" }
+    ),
 };
 
 export const authApi = {
@@ -155,6 +165,8 @@ export const authApi = {
 export const userApi = {
   getMe: () =>
     apiFetch<{ success: boolean; data: User }>("/users/me"),
+  getById: (id: number | string) =>
+    apiFetch<{ success: boolean; data: User }>(`/users/${id}`),
   updateMe: (data: Record<string, unknown>) =>
     apiFetch<{ success: boolean }>("/users/me", {
       method: "PUT",
@@ -307,6 +319,37 @@ export const chatApi = {
 
   markAsRead: (chatId: number) =>
     apiFetch<{ success: boolean; message: string }>(`/chats/${chatId}/read`, {
+      method: "PATCH",
+    }),
+};
+
+export interface OrderWithDetails {
+  Order_ID: number;
+  Product_ID: number;
+  Buyer_ID: number;
+  Seller_ID: number;
+  OrderDate?: string;
+  Quantity: number;
+  Total_Price: number;
+  Status: "pending" | "paid" | "completed" | "cancelled";
+  Title?: string;
+  BuyerName?: string;
+  SellerName?: string;
+  Image_URL?: string;
+}
+
+export const orderApi = {
+  getMyBuyerOrders: () =>
+    apiFetch<{ success: boolean; data: OrderWithDetails[] }>("/orders/buyer/my"),
+  getMySellerOrders: () =>
+    apiFetch<{ success: boolean; data: OrderWithDetails[] }>("/orders/seller/my"),
+  updateStatus: (orderId: number, status: "paid" | "completed") =>
+    apiFetch<{ success: boolean; message: string }>(`/orders/${orderId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
+  cancel: (orderId: number) =>
+    apiFetch<{ success: boolean; message: string }>(`/orders/${orderId}/cancel`, {
       method: "PATCH",
     }),
 };

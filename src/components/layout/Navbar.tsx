@@ -118,8 +118,8 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
                     <Link href="/profile?tab=review" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
                       รีวิวของฉัน
                     </Link>
-                    <Link href="/profile?tab=manageProfile" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
-                      โปรไฟล์ของฉัน
+                    <Link href="/my-products" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
+                      สินค้าของฉัน
                     </Link>
                     <Link href="/history" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
                       ประวัติการใช้งาน

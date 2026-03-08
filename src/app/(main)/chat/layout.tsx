@@ -14,13 +14,16 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
   const [activeTab, setActiveTab] = useState("all");
   const [rooms, setRooms] = useState<ChatRoomWithPartner[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
+  const [roomsError, setRoomsError] = useState<string | null>(null);
 
   const refreshRooms = useCallback(async () => {
     try {
       const res = await chatApi.getRooms();
       setRooms(res.data);
+      setRoomsError(null);
     } catch (err) {
-      console.error("Failed to fetch chat rooms:", err);
+      const message = err instanceof Error ? err.message : "โหลดห้องแชทไม่สำเร็จ";
+      setRoomsError(message);
     } finally {
       setIsLoadingRooms(false);
     }
@@ -95,6 +98,10 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
             {isLoadingRooms ? (
               <div className="flex items-center justify-center py-8 text-sm text-gray-400">
                 กำลังโหลด...
+              </div>
+            ) : roomsError ? (
+              <div className="flex items-center justify-center py-8 px-4 text-sm text-red-500 text-center">
+                {roomsError}
               </div>
             ) : (
               <ChatRoomList rooms={rooms} activeTab={activeTab} />

@@ -9,7 +9,8 @@ export interface ProductDisplay {
   location: string;
   postedAt: string;
   description: string;
-  categoryKey: string; // หรือจะเพิ่ม categoryName: string; ก็ได้ครับ
+  categoryKey: string;
+  categoryName: string;
   condition: string;
   status: "available" | "reserved" | "sold";
   seller: {
@@ -62,8 +63,8 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
     location,
     postedAt: formatThaiRelativeTime(p.Created_at),
     description: cleanDescription,
-    // 🌟 ปรับให้ใช้ Category_Key หรือ Category_Name ที่ได้จากการ JOIN
-    categoryKey: p.Category_Key || String(p.Category_ID), 
+    categoryKey: p.Category_Key || String(p.Category_ID),
+    categoryName: p.Category_Name || p.Category_Key || "",
     condition: p.Condition,
     status: p.Status,
     seller: {

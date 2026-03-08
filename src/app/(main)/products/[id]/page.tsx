@@ -130,9 +130,15 @@ export default function ProductDetailPage() {
 
           <div className="flex-1">
             <h1 className="text-2xl font-extrabold mb-2">{product.title}</h1>
-            <div className="text-sm text-zinc-500 mb-4">
-              {product.categoryKey}
-            </div>
+            {product.categoryKey && (
+              <Link
+                href={`/search?cat=${product.categoryKey}`}
+                className="inline-flex items-center gap-1.5 text-sm bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1 mb-4 hover:bg-emerald-100 transition"
+              >
+                <span>🏷️</span>
+                {product.categoryName || product.categoryKey}
+              </Link>
+            )}
 
             <div className="text-3xl font-bold text-emerald-700 mb-4">
               {(product.price ?? 0).toLocaleString()} ฿
@@ -151,7 +157,7 @@ export default function ProductDetailPage() {
             )}
 
             <div className="border-t border-zinc-200 pt-6">
-              <div className="flex items-center gap-4 mb-4">
+              <Link href={`/users/${product.seller.id}`} className="flex items-center gap-4 mb-4 hover:opacity-80 transition-opacity">
                 <div className="h-12 w-12 rounded-full bg-zinc-200 overflow-hidden">
                   {product.seller.avatarUrl ? (
                     <img
@@ -164,7 +170,7 @@ export default function ProductDetailPage() {
                   )}
                 </div>
                 <div>
-                  <div className="font-semibold">{product.seller.name}</div>
+                  <div className="font-semibold hover:text-emerald-700 transition-colors">{product.seller.name}</div>
                   <div className="text-sm text-zinc-500">ผู้ขาย</div>
                   {sellerRating && sellerRating.totalReviews > 0 && (
                     <div className="flex items-center gap-1 mt-0.5">
@@ -180,7 +186,7 @@ export default function ProductDetailPage() {
                     </div>
                   )}
                 </div>
-              </div>
+              </Link>
               <div className="flex gap-3">
                 {isSelfProduct ? (
                   <span className="flex-1 text-center bg-zinc-300 text-zinc-500 px-4 py-3 rounded-lg font-semibold cursor-not-allowed">

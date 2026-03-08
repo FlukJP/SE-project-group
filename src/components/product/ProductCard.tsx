@@ -54,7 +54,9 @@ export default function ProductCard({
           <span className="text-[11px] text-zinc-500">{timeAgo}</span>
         </div>
 
-        <div className="mt-2 text-xs text-zinc-500">📍 {product.location}</div>
+        <div className="mt-2 text-xs text-zinc-500 truncate">
+          {product.location ? `📍 ${product.location}` : <span className="text-zinc-400">📍 ไม่ระบุพื้นที่</span>}
+        </div>
       </div>
     </Link>
   );
