@@ -3,6 +3,7 @@ import { AppError } from '../errors/AppError';
 import { deleteUploadedFile, cleanupImages } from '../utils/uploadHelpers';
 import { UploadFolderType } from '../types/upload';
 import { ProductService } from '../services/product.service';
+import { CategoryService } from '../services/category.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { Product } from '../types/Product';
 
@@ -37,13 +38,15 @@ export const ProductController = {
 
             const fullDescription = `${description ? description.trim() : ''}\n\n📍 พื้นที่: ${province.trim()} (${district.trim()})\n📞 ติดต่อ: ${phone.trim()}`;
 
+            const category = await CategoryService.getByKey(categoryKey.trim());
+
             const newProductData: Omit<Product, 'Product_ID'> = {
                 Seller_ID: req.user.userID,
                 Title: title.trim(),
                 Description: fullDescription,
                 Price: numPrice,
                 Condition: condition?.trim() || "มือสอง",
-                Category: categoryKey.trim(),
+                Category_ID: category.Category_ID,
                 Status: "available",
                 Quantity: numQuantity,
                 Image_URL: JSON.stringify(imageUrls),

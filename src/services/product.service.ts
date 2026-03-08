@@ -31,7 +31,7 @@ export const ProductService = {
 
     // 4.Create product
     createProduct: async (sellerID: number, productData: Omit<Product, 'Product_ID'>) => {
-        if (!productData.Title || !productData.Description || !productData.Price || !productData.Condition || !productData.Category || !productData.Image_URL) {
+        if (!productData.Title || !productData.Description || !productData.Price || !productData.Condition || !productData.Category_ID || !productData.Image_URL) {
             throw new AppError("Missing required fields", 400);
         }
         if (productData.Price <= 0) throw new AppError("Price must be greater than 0", 400);
@@ -52,7 +52,7 @@ export const ProductService = {
             Description: productData.Description.trim(),
             Price: productData.Price,
             Condition: productData.Condition,
-            Category: productData.Category,
+            Category_ID: productData.Category_ID,
             Image_URL: productData.Image_URL,
             Quantity: productData.Quantity || 1,
             Seller_ID: sellerID,

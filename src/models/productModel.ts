@@ -9,9 +9,11 @@ export const ProductModel = {
     findByID: async (id: number): Promise<ProductWithSeller | null> => {
         if (!id || id <= 0) throw new AppError("Invalid product ID", 400);
         const sql = `
-            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number
+            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
+                   c.name AS Category_Name, c.category_key AS Category_Key
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
+            LEFT JOIN Category c ON p.Category_ID = c.Category_ID
             WHERE p.Product_ID = ?
             AND p.Is_Banned = 0
         `;
@@ -23,10 +25,12 @@ export const ProductModel = {
     findBySellerID: async (sellerID: number): Promise<ProductWithSeller[]> => {
         if (!sellerID || sellerID <= 0) throw new AppError("Invalid seller ID", 400);
         const sql = `
-            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number
+            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
+                   c.name AS Category_Name, c.category_key AS Category_Key
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
-            WHERE p.Seller_ID = ? 
+            LEFT JOIN Category c ON p.Category_ID = c.Category_ID
+            WHERE p.Seller_ID = ?
             AND p.Is_Banned = 0
             ORDER BY p.Created_at DESC
         `;
@@ -44,7 +48,7 @@ export const ProductModel = {
     const values: (string | number)[] = [];
 
         if (filters.category) {
-            whereSql += ` AND p.Category = ?`;
+            whereSql += ` AND c.category_key = ?`;
             values.push(filters.category);
         }
         if (filters.condition) {
@@ -69,15 +73,17 @@ export const ProductModel = {
         }
 
         // Count total matching rows
-        const countSql = `SELECT COUNT(*) AS total FROM Product p ${whereSql}`;
+        const countSql = `SELECT COUNT(*) AS total FROM Product p LEFT JOIN Category c ON p.Category_ID = c.Category_ID ${whereSql}`;
         const [countRows] = await db.query<RowDataPacket[]>(countSql, values);
         const total = countRows[0]?.total || 0;
 
         // Build data query
         let dataSql = `
-            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number
+            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
+                   c.name AS Category_Name, c.category_key AS Category_Key
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
+            LEFT JOIN Category c ON p.Category_ID = c.Category_ID
             ${whereSql}
         `;
 
@@ -112,7 +118,7 @@ export const ProductModel = {
         const seller = await UserModel.findByIDSafe(productData.Seller_ID);
         if (!seller) throw new AppError("Seller not found", 404);
         const sql = `
-            INSERT INTO Product (Seller_ID, Title, Description, Price, \`Condition\`, Category, Status, Quantity, Image_URL)
+            INSERT INTO Product (Seller_ID, Title, Description, Price, \`Condition\`, Category_ID, Status, Quantity, Image_URL)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
@@ -132,7 +138,7 @@ export const ProductModel = {
 
     // 5.Update ข้อมูลสินค้า (Edit Product)
     updateProduct: async ( id: number, productData: Partial<Product> ): Promise<boolean> => {
-        const ALLOWED_FIELDS = ['Title', 'Description', 'Price', 'Condition', 'Category', 'Status', 'Quantity', 'Image_URL'];
+        const ALLOWED_FIELDS = ['Title', 'Description', 'Price', 'Condition', 'Category_ID', 'Status', 'Quantity', 'Image_URL'];
         const keys = Object.keys(productData).filter(
             (key) => productData[key as keyof Product] !== undefined
                 && key !== 'Product_ID'
@@ -163,9 +169,11 @@ export const ProductModel = {
     // 7.ดึงข้อมูลสินค้าที่โดนBan (Admin List)
     findBannedProducts: async (offset: number, limit: number): Promise<ProductWithSeller[]> => {
         const sql = `
-            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number
+            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
+                   c.name AS Category_Name, c.category_key AS Category_Key
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
+            LEFT JOIN Category c ON p.Category_ID = c.Category_ID
             WHERE p.Is_Banned = 1
             ORDER BY p.Created_at DESC
             LIMIT ? OFFSET ?
@@ -178,9 +186,11 @@ export const ProductModel = {
     findByIDIncludingBanned: async (id: number): Promise<ProductWithSeller | null> => {
         if (!id || id <= 0) throw new AppError("Invalid product ID", 400);
         const sql = `
-            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number
+            SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
+                   c.name AS Category_Name, c.category_key AS Category_Key
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
+            LEFT JOIN Category c ON p.Category_ID = c.Category_ID
             WHERE p.Product_ID = ?
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);

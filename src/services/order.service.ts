@@ -31,8 +31,8 @@ export const OrderService = {
         const newProductStatus = remainingQuantity === 0 ? 'sold' : product.Status;
         const orderID = await OrderModel.createOrderTransaction(newOrder, product.Product_ID!, remainingQuantity, newProductStatus!);
 
-        if (product.Category) {
-            CategoryService.recordPopularity(product.Category, 'purchase').catch(() => {});
+        if (product.Category_Key) {
+            CategoryService.recordPopularity(product.Category_Key, 'purchase').catch(() => {});
         }
 
         return orderID;
