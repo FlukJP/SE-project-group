@@ -34,8 +34,8 @@ export const ReportController = {
 
             const reportId = await ReportModel.createReport({
                 Reporter_ID: req.user.userID,
-                Target_ID: numericTargetId,
-                ReportType: reportType,
+                Reported_User_ID: reportType === 'user' ? numericTargetId : null,
+                Reported_Product_ID: reportType === 'product' ? numericTargetId : null,
                 Reason: reason.trim(),
             });
 

@@ -36,13 +36,13 @@ export const ReportModel = {
     // 4.สร้าง Report ใหม่(Report)
     createReport: async (reportData: Report): Promise<number> => {
         const sql = `
-            INSERT INTO Report (Reporter_ID, Target_ID, ReportType, Reason)
+            INSERT INTO Report (Reporter_ID, Reported_User_ID, Reported_Product_ID, Reason)
             VALUES (?, ?, ?, ?)
         `;
         const values = [
             reportData.Reporter_ID,
-            reportData.Target_ID,
-            reportData.ReportType,
+            reportData.Reported_User_ID ?? null,
+            reportData.Reported_Product_ID ?? null,
             reportData.Reason
         ];
         const [result] = await db.query<ResultSetHeader>(sql, values);
