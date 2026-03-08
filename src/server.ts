@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
 import path from 'path';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
@@ -86,10 +88,20 @@ io.on('connection', (socket) => {
 
 app.set('io', io);
 
+// Security headers
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow /uploads to be loaded cross-origin
+}));
+
+// CORS allowlist
 app.use(cors({
     origin: CLIENT_URLS,
     credentials: true,
 }));
+
+// Gzip/Brotli compression
+app.use(compression());
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(globalLimiter);
