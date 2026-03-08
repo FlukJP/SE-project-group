@@ -48,10 +48,12 @@ export default function MyProductsPage() {
 
   const [sellerOrders, setSellerOrders] = useState<OrderWithDetails[]>([]);
   const [sellerOrdersLoading, setSellerOrdersLoading] = useState(true);
-  const [orderUpdating, setOrderUpdating] = useState<number | null>(null);
+  // Bug 6 fix: separate updating state for each tab
+  const [sellerOrderUpdating, setSellerOrderUpdating] = useState<number | null>(null);
 
   const [buyerOrders, setBuyerOrders] = useState<OrderWithDetails[]>([]);
   const [buyerOrdersLoading, setBuyerOrdersLoading] = useState(true);
+  const [buyerOrderUpdating, setBuyerOrderUpdating] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user?.User_ID) return;
@@ -62,7 +64,9 @@ export default function MyProductsPage() {
       .finally(() => setProductsLoading(false));
   }, [user?.User_ID]);
 
+  // Bug 5 fix: guard with user?.User_ID, re-run when user loads
   useEffect(() => {
+    if (!user?.User_ID) return;
     orderApi
       .getMySellerOrders()
       .then((res) => setSellerOrders(res.data))
@@ -74,7 +78,7 @@ export default function MyProductsPage() {
       .then((res) => setBuyerOrders(res.data))
       .catch(() => setBuyerOrders([]))
       .finally(() => setBuyerOrdersLoading(false));
-  }, []);
+  }, [user?.User_ID]);
 
   const handleStatusChange = async (productId: string, newStatus: string) => {
     setStatusUpdating(productId);
@@ -109,26 +113,39 @@ export default function MyProductsPage() {
     }
   };
 
-  const handleOrderStatusUpdate = async (
-    orderId: number,
-    status: "paid" | "completed"
-  ) => {
-    setOrderUpdating(orderId);
+  // Bug 2 fix: seller can only do paid→completed
+  const handleSellerOrderUpdate = async (orderId: number) => {
+    setSellerOrderUpdating(orderId);
     try {
-      await orderApi.updateStatus(orderId, status);
+      await orderApi.updateStatus(orderId, "completed");
       setSellerOrders((prev) =>
-        prev.map((o) => (o.Order_ID === orderId ? { ...o, Status: status } : o))
+        prev.map((o) => (o.Order_ID === orderId ? { ...o, Status: "completed" } : o))
       );
     } catch (err) {
       alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
-      setOrderUpdating(null);
+      setSellerOrderUpdating(null);
+    }
+  };
+
+  // Bug 2 fix: buyer does pending→paid
+  const handleBuyerPayOrder = async (orderId: number) => {
+    setBuyerOrderUpdating(orderId);
+    try {
+      await orderApi.updateStatus(orderId, "paid");
+      setBuyerOrders((prev) =>
+        prev.map((o) => (o.Order_ID === orderId ? { ...o, Status: "paid" } : o))
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+    } finally {
+      setBuyerOrderUpdating(null);
     }
   };
 
   const handleCancelOrder = async (orderId: number) => {
     if (!confirm("ยืนยันการยกเลิกคำสั่งซื้อ?")) return;
-    setOrderUpdating(orderId);
+    setBuyerOrderUpdating(orderId);
     try {
       await orderApi.cancel(orderId);
       setBuyerOrders((prev) =>
@@ -139,7 +156,7 @@ export default function MyProductsPage() {
     } catch (err) {
       alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
-      setOrderUpdating(null);
+      setBuyerOrderUpdating(null);
     }
   };
 
@@ -273,6 +290,7 @@ export default function MyProductsPage() {
                           {STATUS_LABEL[p.status]}
                         </span>
                         <select
+                          title="เปลี่ยนสถานะสินค้า"
                           value={p.status}
                           disabled={statusUpdating === p.id}
                           onChange={(e) => handleStatusChange(p.id, e.target.value)}
@@ -321,13 +339,11 @@ export default function MyProductsPage() {
               ) : (
                 <div className="space-y-3">
                   {sellerOrders.map((order) => (
-                    <OrderCard
+                    <SellerOrderCard
                       key={order.Order_ID}
                       order={order}
-                      mode="seller"
-                      onUpdateStatus={handleOrderStatusUpdate}
-                      onCancel={handleCancelOrder}
-                      updating={orderUpdating === order.Order_ID}
+                      onConfirmShip={handleSellerOrderUpdate}
+                      updating={sellerOrderUpdating === order.Order_ID}
                     />
                   ))}
                 </div>
@@ -348,13 +364,12 @@ export default function MyProductsPage() {
               ) : (
                 <div className="space-y-3">
                   {buyerOrders.map((order) => (
-                    <OrderCard
+                    <BuyerOrderCard
                       key={order.Order_ID}
                       order={order}
-                      mode="buyer"
-                      onUpdateStatus={handleOrderStatusUpdate}
+                      onPay={handleBuyerPayOrder}
                       onCancel={handleCancelOrder}
-                      updating={orderUpdating === order.Order_ID}
+                      updating={buyerOrderUpdating === order.Order_ID}
                     />
                   ))}
                 </div>
@@ -367,112 +382,138 @@ export default function MyProductsPage() {
   );
 }
 
-function OrderCard({
+// Bug 3 fix: use Created_at instead of OrderDate
+function formatOrderDate(order: OrderWithDetails): string {
+  const raw = order.Created_at || order.OrderDate;
+  if (!raw) return "-";
+  return new Date(raw).toLocaleDateString("th-TH", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function OrderImage({ imageUrl }: { imageUrl: string | null }) {
+  return (
+    <div className="w-16 h-16 rounded-lg overflow-hidden bg-zinc-100 shrink-0">
+      {imageUrl ? (
+        <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+      ) : (
+        <div className="flex items-center justify-center h-full text-zinc-300 text-xl">📷</div>
+      )}
+    </div>
+  );
+}
+
+function resolveImageUrl(imageUrlJson: string | undefined): string | null {
+  if (!imageUrlJson) return null;
+  try {
+    const parsed = JSON.parse(imageUrlJson);
+    const first = Array.isArray(parsed) ? parsed[0] : null;
+    if (!first) return null;
+    return first.startsWith("http") ? first : `${API_BASE}${first}`;
+  } catch {
+    return imageUrlJson.startsWith("http") ? imageUrlJson : `${API_BASE}${imageUrlJson}`;
+  }
+}
+
+// Bug 2 fix: seller tab — only shows "ยืนยันส่งสินค้า" for paid orders
+function SellerOrderCard({
   order,
-  mode,
-  onUpdateStatus,
-  onCancel,
+  onConfirmShip,
   updating,
 }: {
   order: OrderWithDetails;
-  mode: "seller" | "buyer";
-  onUpdateStatus: (id: number, status: "paid" | "completed") => Promise<void>;
-  onCancel: (id: number) => Promise<void>;
+  onConfirmShip: (id: number) => Promise<void>;
   updating: boolean;
 }) {
-  const imageUrls = (() => {
-    if (!order.Image_URL) return [];
-    try {
-      const parsed = JSON.parse(order.Image_URL);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return order.Image_URL ? [order.Image_URL] : [];
-    }
-  })();
-  const imageUrl = imageUrls[0]
-    ? imageUrls[0].startsWith("http")
-      ? imageUrls[0]
-      : `${API_BASE}${imageUrls[0]}`
-    : null;
-
-  const orderDate = order.OrderDate
-    ? new Date(order.OrderDate).toLocaleDateString("th-TH", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    : "-";
+  const imageUrl = resolveImageUrl(order.Image_URL);
 
   return (
     <div className="bg-white border border-zinc-200 rounded-xl p-4 flex items-center gap-4">
-      {/* Image */}
-      <div className="w-16 h-16 rounded-lg overflow-hidden bg-zinc-100 shrink-0">
-        {imageUrl ? (
-          <img src={imageUrl} alt={order.Title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="flex items-center justify-center h-full text-zinc-300 text-xl">📷</div>
-        )}
-      </div>
-
-      {/* Info */}
+      <OrderImage imageUrl={imageUrl} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold text-zinc-800 truncate">
           {order.Title || `สินค้า #${order.Product_ID}`}
         </div>
-        <div className="text-xs text-zinc-500 mt-0.5">
-          {mode === "seller" ? `ผู้ซื้อ: ${order.BuyerName || "-"}` : `ผู้ขาย: ${order.SellerName || "-"}`}
-        </div>
+        <div className="text-xs text-zinc-500 mt-0.5">ผู้ซื้อ: {order.BuyerName || "-"}</div>
         <div className="text-xs text-zinc-400 mt-0.5">
-          {orderDate} · {order.Quantity} ชิ้น · {order.Total_Price.toLocaleString()} ฿
+          {formatOrderDate(order)} · {order.Quantity} ชิ้น · {order.Total_Price.toLocaleString()} ฿
         </div>
       </div>
-
-      {/* Status + actions */}
       <div className="flex flex-col items-end gap-2 shrink-0">
-        <span
-          className={`text-xs font-semibold px-2 py-1 rounded-full ${ORDER_STATUS_COLOR[order.Status]}`}
-        >
+        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${ORDER_STATUS_COLOR[order.Status]}`}>
           {ORDER_STATUS_LABEL[order.Status]}
         </span>
-
-        {/* Seller actions */}
-        {mode === "seller" && order.Status === "pending" && (
+        {order.Status === "paid" && (
           <button
             type="button"
             disabled={updating}
-            onClick={() => onUpdateStatus(order.Order_ID, "paid")}
-            className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-          >
-            {updating ? "..." : "ยืนยันชำระเงิน"}
-          </button>
-        )}
-        {mode === "seller" && order.Status === "paid" && (
-          <button
-            type="button"
-            disabled={updating}
-            onClick={() => onUpdateStatus(order.Order_ID, "completed")}
+            onClick={() => onConfirmShip(order.Order_ID)}
             className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
           >
             {updating ? "..." : "ยืนยันส่งสินค้า"}
           </button>
         )}
+        <Link href={`/products/${order.Product_ID}`} className="text-xs text-emerald-600 hover:underline">
+          ดูสินค้า
+        </Link>
+      </div>
+    </div>
+  );
+}
 
-        {/* Buyer actions */}
-        {mode === "buyer" && order.Status === "pending" && (
-          <button
-            type="button"
-            disabled={updating}
-            onClick={() => onCancel(order.Order_ID)}
-            className="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg font-semibold hover:bg-red-100 transition disabled:opacity-50"
-          >
-            {updating ? "..." : "ยกเลิก"}
-          </button>
+// Bug 2 fix: buyer tab — "ยืนยันชำระเงิน" (pending→paid) + "ยกเลิก" for pending
+function BuyerOrderCard({
+  order,
+  onPay,
+  onCancel,
+  updating,
+}: {
+  order: OrderWithDetails;
+  onPay: (id: number) => Promise<void>;
+  onCancel: (id: number) => Promise<void>;
+  updating: boolean;
+}) {
+  const imageUrl = resolveImageUrl(order.Image_URL);
+
+  return (
+    <div className="bg-white border border-zinc-200 rounded-xl p-4 flex items-center gap-4">
+      <OrderImage imageUrl={imageUrl} />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-zinc-800 truncate">
+          {order.Title || `สินค้า #${order.Product_ID}`}
+        </div>
+        <div className="text-xs text-zinc-500 mt-0.5">ผู้ขาย: {order.SellerName || "-"}</div>
+        <div className="text-xs text-zinc-400 mt-0.5">
+          {formatOrderDate(order)} · {order.Quantity} ชิ้น · {order.Total_Price.toLocaleString()} ฿
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-2 shrink-0">
+        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${ORDER_STATUS_COLOR[order.Status]}`}>
+          {ORDER_STATUS_LABEL[order.Status]}
+        </span>
+        {order.Status === "pending" && (
+          <>
+            <button
+              type="button"
+              disabled={updating}
+              onClick={() => onPay(order.Order_ID)}
+              className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              {updating ? "..." : "ยืนยันชำระเงิน"}
+            </button>
+            <button
+              type="button"
+              disabled={updating}
+              onClick={() => onCancel(order.Order_ID)}
+              className="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg font-semibold hover:bg-red-100 transition disabled:opacity-50"
+            >
+              {updating ? "..." : "ยกเลิก"}
+            </button>
+          </>
         )}
-
-        <Link
-          href={`/products/${order.Product_ID}`}
-          className="text-xs text-emerald-600 hover:underline"
-        >
+        <Link href={`/products/${order.Product_ID}`} className="text-xs text-emerald-600 hover:underline">
           ดูสินค้า
         </Link>
       </div>

@@ -329,6 +329,7 @@ export interface OrderWithDetails {
   Buyer_ID: number;
   Seller_ID: number;
   OrderDate?: string;
+  Created_at?: string;
   Quantity: number;
   Total_Price: number;
   Status: "pending" | "paid" | "completed" | "cancelled";

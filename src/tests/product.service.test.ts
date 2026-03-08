@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProductService } from '@/src/services/product.service';
 import { ProductModel } from '@/src/models/productModel';
-import { AppError } from '@/src/errors/AppError';
+import type { ProductWithSeller } from '@/src/types/Product';
 
 vi.mock('@/src/models/productModel');
 vi.mock('@/src/services/category.service', () => ({
@@ -14,7 +14,7 @@ vi.mock('@/src/utils/uploadHelpers', () => ({
     deleteUploadedFile: vi.fn(),
 }));
 
-const sampleProduct = {
+const sampleProduct: ProductWithSeller = {
     Product_ID: 1,
     Seller_ID: 10,
     Title: 'Test Product',
@@ -26,6 +26,8 @@ const sampleProduct = {
     Quantity: 5,
     Image_URL: '["img1.jpg"]',
     Is_Banned: false,
+    SellerName: 'Test Seller',
+    SellerEmail: 'seller@test.com',
 };
 
 describe('ProductService', () => {
@@ -36,7 +38,7 @@ describe('ProductService', () => {
     // ===== getProductByID =====
     describe('getProductByID', () => {
         it('should return product when found', async () => {
-            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct as any);
+            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct);
             const result = await ProductService.getProductByID(1);
             expect(result).toEqual(sampleProduct);
         });
@@ -55,7 +57,7 @@ describe('ProductService', () => {
         });
 
         it('should return products for valid seller', async () => {
-            vi.mocked(ProductModel.findBySellerID).mockResolvedValue([sampleProduct] as any);
+            vi.mocked(ProductModel.findBySellerID).mockResolvedValue([sampleProduct]);
             const result = await ProductService.getProductsBySeller(10);
             expect(result).toHaveLength(1);
         });
@@ -155,12 +157,12 @@ describe('ProductService', () => {
         });
 
         it('should throw 403 when user is not the owner and not admin', async () => {
-            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct as any);
+            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct);
             await expect(ProductService.updateProduct(1, 999, { Title: 'New' }, false)).rejects.toThrow('Forbidden');
         });
 
         it('should allow admin to update any product', async () => {
-            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct as any);
+            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct);
             vi.mocked(ProductModel.updateProduct).mockResolvedValue(true);
 
             const result = await ProductService.updateProduct(1, 999, { Title: 'Admin Update' }, true);
@@ -168,7 +170,7 @@ describe('ProductService', () => {
         });
 
         it('should throw when price is zero', async () => {
-            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct as any);
+            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct);
             await expect(ProductService.updateProduct(1, 10, { Price: 0 })).rejects.toThrow('Price must be greater than 0');
         });
     });
@@ -181,12 +183,12 @@ describe('ProductService', () => {
         });
 
         it('should throw 403 when user is not owner and not admin', async () => {
-            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct as any);
+            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct);
             await expect(ProductService.deleteProduct(1, 999, false)).rejects.toThrow('Forbidden');
         });
 
         it('should delete successfully for the owner', async () => {
-            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct as any);
+            vi.mocked(ProductModel.findByID).mockResolvedValue(sampleProduct);
             vi.mocked(ProductModel.deleteProduct).mockResolvedValue(true);
 
             const result = await ProductService.deleteProduct(1, 10);

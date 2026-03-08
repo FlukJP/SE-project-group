@@ -252,6 +252,7 @@ export default function EditProductPage() {
                 หมวดหมู่ *
               </label>
               <select
+                title="เลือกหมวดหมู่"
                 value={categoryKey}
                 onChange={(e) => setCategoryKey(e.target.value)}
                 className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300"
@@ -303,6 +304,7 @@ export default function EditProductPage() {
                 สภาพสินค้า
               </label>
               <select
+                title="เลือกสภาพสินค้า"
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
                 className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300"
@@ -334,10 +336,12 @@ export default function EditProductPage() {
             {/* Province / District */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-zinc-700 mb-1">
+                <label htmlFor="province-select" className="block text-sm font-semibold text-zinc-700 mb-1">
                   จังหวัด *
                 </label>
                 <select
+                  id="province-select"
+                  title="เลือกจังหวัด"
                   value={province}
                   onChange={(e) => {
                     setProvince(e.target.value);
@@ -361,6 +365,7 @@ export default function EditProductPage() {
                   อำเภอ/เขต *
                 </label>
                 <select
+                  title="เลือกอำเภอ/เขต"
                   value={district}
                   disabled={!province}
                   onChange={(e) => setDistrict(e.target.value)}

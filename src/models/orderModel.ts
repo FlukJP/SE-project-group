@@ -16,9 +16,16 @@ export const OrderModel = {
     // 2.ดึงข้อมูล Order จาก Buyer ID (Buyer Order List)
     findByBuyerID: async (buyerID: number): Promise<Order[]> => {
         const sql = `
-            SELECT * FROM \`Order\`
-            WHERE Buyer_ID = ?
-            ORDER BY Created_at DESC
+            SELECT o.*,
+                   p.Title, p.Image_URL,
+                   buyer.Username  AS BuyerName,
+                   seller.Username AS SellerName
+            FROM \`Order\` o
+            LEFT JOIN Product p      ON o.Product_ID = p.Product_ID
+            LEFT JOIN User   buyer   ON o.Buyer_ID   = buyer.User_ID
+            LEFT JOIN User   seller  ON o.Seller_ID  = seller.User_ID
+            WHERE o.Buyer_ID = ?
+            ORDER BY o.Created_at DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [buyerID]);
         return rows as Order[];
@@ -27,9 +34,16 @@ export const OrderModel = {
     // 3.ดึงข้อมูล Order จาก Seller ID (Seller Order List)
     findBySellerID: async (sellerID: number): Promise<Order[]> => {
         const sql = `
-            SELECT * FROM \`Order\`
-            WHERE Seller_ID = ?
-            ORDER BY Created_at DESC
+            SELECT o.*,
+                   p.Title, p.Image_URL,
+                   buyer.Username  AS BuyerName,
+                   seller.Username AS SellerName
+            FROM \`Order\` o
+            LEFT JOIN Product p      ON o.Product_ID = p.Product_ID
+            LEFT JOIN User   buyer   ON o.Buyer_ID   = buyer.User_ID
+            LEFT JOIN User   seller  ON o.Seller_ID  = seller.User_ID
+            WHERE o.Seller_ID = ?
+            ORDER BY o.Created_at DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [sellerID]);
         return rows as Order[];
