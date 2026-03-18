@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import DataTable from "@/src/components/admin/DataTable";
 import ConfirmDialog from "@/src/components/admin/ConfirmDialog";
 import { adminApi } from "@/src/lib/api";
+import { useError } from "@/src/contexts/ErrorContext";
 import type { User } from "@/src/types/User";
 import { cn } from "@/src/components/ui";
 
@@ -36,6 +37,7 @@ export default function AdminUsersPage() {
     action: "ban" | "unban";
   } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const { showError } = useError();
 
   const fetchData = useCallback(() => {
     setLoading(true);
@@ -70,7 +72,7 @@ export default function AdminUsersPage() {
       }
       fetchData();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      showError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
       setActionLoading(false);
       setConfirmTarget(null);

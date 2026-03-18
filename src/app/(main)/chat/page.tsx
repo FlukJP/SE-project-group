@@ -5,12 +5,14 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useChatLayout } from "@/src/contexts/ChatLayoutContext";
 import { chatApi } from "@/src/lib/api";
+import { useError } from "@/src/contexts/ErrorContext";
 
 function ChatPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
   const { refreshRooms } = useChatLayout();
+  const { showError } = useError();
   const isCreatingRef = useRef(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
@@ -35,7 +37,7 @@ function ChatPageInner() {
         router.replace(`/chat/${res.data.Chat_ID}`);
       })
       .catch((err) => {
-        console.error("Failed to create chat room:", err);
+        showError(err instanceof Error ? err.message : "ไม่สามารถเปิดแชทได้");
         setError("ไม่สามารถเปิดแชทได้");
         isCreatingRef.current = false;
         setIsCreating(false);

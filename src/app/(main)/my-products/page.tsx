@@ -7,6 +7,7 @@ import Navbar from "@/src/components/layout/Navbar";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { productApi, orderApi, API_BASE, type OrderWithDetails } from "@/src/lib/api";
 import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
+import { useError } from "@/src/contexts/ErrorContext";
 
 type Tab = "products" | "selling" | "buying";
 
@@ -39,6 +40,7 @@ const ORDER_STATUS_COLOR: Record<string, string> = {
 export default function MyProductsPage() {
   const router = useRouter();
   const { user, isLoggedIn, isLoading } = useAuth();
+  const { showError } = useError();
   const [activeTab, setActiveTab] = useState<Tab>("products");
 
   const [products, setProducts] = useState<ProductDisplay[]>([]);
@@ -94,7 +96,7 @@ export default function MyProductsPage() {
         )
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      showError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
       setStatusUpdating(null);
     }
@@ -107,7 +109,7 @@ export default function MyProductsPage() {
       await productApi.deleteById(productId);
       setProducts((prev) => prev.filter((p) => p.id !== productId));
     } catch (err) {
-      alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      showError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
       setDeleting(null);
     }
@@ -122,7 +124,7 @@ export default function MyProductsPage() {
         prev.map((o) => (o.Order_ID === orderId ? { ...o, Status: "completed" } : o))
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      showError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
       setSellerOrderUpdating(null);
     }
@@ -137,7 +139,7 @@ export default function MyProductsPage() {
         prev.map((o) => (o.Order_ID === orderId ? { ...o, Status: "paid" } : o))
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      showError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
       setBuyerOrderUpdating(null);
     }
@@ -154,7 +156,7 @@ export default function MyProductsPage() {
         )
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      showError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
       setBuyerOrderUpdating(null);
     }

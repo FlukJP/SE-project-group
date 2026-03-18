@@ -10,7 +10,7 @@ export const ProductModel = {
         if (!id || id <= 0) throw new AppError("Invalid product ID", 400);
         const sql = `
             SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
-                   c.name AS Category_Name, c.category_key AS Category_Key
+                   u.Avatar_URL AS SellerAvatar, c.name AS Category_Name, c.category_key AS Category_Key
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
             LEFT JOIN Category c ON p.Category_ID = c.Category_ID
@@ -26,7 +26,7 @@ export const ProductModel = {
         if (!sellerID || sellerID <= 0) throw new AppError("Invalid seller ID", 400);
         const sql = `
             SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
-                   c.name AS Category_Name, c.category_key AS Category_Key
+                   u.Avatar_URL AS SellerAvatar, c.name AS Category_Name, c.category_key AS Category_Key
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
             LEFT JOIN Category c ON p.Category_ID = c.Category_ID
@@ -80,7 +80,7 @@ export const ProductModel = {
         // Build data query
         let dataSql = `
             SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
-            c.name AS Category_Name, c.category_key AS Category_Key
+            u.Avatar_URL AS SellerAvatar, c.name AS Category_Name, c.category_key AS Category_Key
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
             LEFT JOIN Category c ON p.Category_ID = c.Category_ID
@@ -170,7 +170,7 @@ export const ProductModel = {
     findBannedProducts: async (offset: number, limit: number): Promise<ProductWithSeller[]> => {
         const sql = `
             SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
-                   c.name AS Category_Name, c.category_key AS Category_Key
+                   u.Avatar_URL AS SellerAvatar, c.name AS Category_Name, c.category_key AS Category_Key
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
             LEFT JOIN Category c ON p.Category_ID = c.Category_ID
@@ -187,7 +187,7 @@ export const ProductModel = {
         if (!id || id <= 0) throw new AppError("Invalid product ID", 400);
         const sql = `
             SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
-                   c.name AS Category_Name, c.category_key AS Category_Key
+                   u.Avatar_URL AS SellerAvatar, c.name AS Category_Name, c.category_key AS Category_Key
             FROM Product p
             LEFT JOIN User u ON p.Seller_ID = u.User_ID
             LEFT JOIN Category c ON p.Category_ID = c.Category_ID

@@ -6,6 +6,7 @@ import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { productApi, categoryApi, API_BASE, type CategoryData } from "@/src/lib/api";
+import { useError } from "@/src/contexts/ErrorContext";
 import type { ProductWithSeller } from "@/src/types/Product";
 import { PROVINCES } from "@/src/data/provinces";
 
@@ -28,6 +29,7 @@ export default function EditProductPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user, isLoggedIn, isLoading: authLoading } = useAuth();
+  const { showError } = useError();
 
   const [product, setProduct] = useState<ProductWithSeller | null>(null);
   const [categories, setCategories] = useState<CategoryData[]>([]);
@@ -51,7 +53,6 @@ export default function EditProductPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   useEffect(() => {
@@ -143,7 +144,6 @@ export default function EditProductPage() {
     e.preventDefault();
     if (submitting || !validate()) return;
     setSubmitting(true);
-    setSubmitError("");
 
     try {
       const fd = new FormData();
@@ -167,7 +167,7 @@ export default function EditProductPage() {
       setSubmitSuccess(true);
       setTimeout(() => router.push("/my-products"), 1500);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      showError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
       setSubmitting(false);
     }
@@ -471,12 +471,6 @@ export default function EditProductPage() {
               )}
               {errors.images && <p className="text-red-600 text-xs mt-1">{errors.images}</p>}
             </div>
-
-            {submitError && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
-                {submitError}
-              </div>
-            )}
 
             <div className="flex gap-3 pt-2">
               <button

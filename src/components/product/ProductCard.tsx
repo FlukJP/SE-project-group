@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ProductDisplay } from "@/src/types/ProductDisplay";
@@ -16,6 +19,7 @@ export default function ProductCard({
   const image = product.images[0] || "";
   const timeAgo = product.postedAt;
   const priceStr = `${(product.price ?? 0).toLocaleString()} ฿`;
+  const [imgError, setImgError] = useState(false);
 
   return (
     <Link
@@ -23,7 +27,7 @@ export default function ProductCard({
       className="group bg-white rounded-2xl overflow-hidden border border-zinc-200 hover:shadow-lg transition"
     >
       <div className="relative h-44">
-        {image ? (
+        {image && !imgError ? (
           <Image
             src={image}
             alt={product.title}
@@ -31,6 +35,7 @@ export default function ProductCard({
             className="object-cover group-hover:scale-[1.03] transition"
             sizes="(max-width: 1024px) 100vw, 25vw"
             priority={false}
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="flex items-center justify-center h-full bg-zinc-100 text-zinc-300 text-4xl">

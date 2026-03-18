@@ -6,11 +6,13 @@ import Navbar from "@/src/components/layout/Navbar";
 import ChatRoomList from "@/src/components/chat/ChatRoomList";
 import { ChatLayoutContext } from "@/src/contexts/ChatLayoutContext";
 import { chatApi } from "@/src/lib/api";
+import { useError } from "@/src/contexts/ErrorContext";
 import { socket } from "@/src/lib/socket";
 import type { ChatRoomWithPartner } from "@/src/types/Chat";
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useAuth();
+  const { showError } = useError();
   const [activeTab, setActiveTab] = useState("all");
   const [rooms, setRooms] = useState<ChatRoomWithPartner[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
@@ -23,6 +25,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
       setRoomsError(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : "โหลดห้องแชทไม่สำเร็จ";
+      showError(message);
       setRoomsError(message);
     } finally {
       setIsLoadingRooms(false);

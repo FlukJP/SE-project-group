@@ -13,6 +13,20 @@
             "name": "Marketplace DB",
             "username": "root",
             "database": "DataBase_SE_project"
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "mysqlforprojectmarket-marketkmutnb06.a.aivencloud.com",
+            "port": 12920,
+            "driver": "MySQL",
+            "name": "AivenDBmarket",
+            "username": "avnadmin",
+            "database": "defaultdb"
         }
     ]
 }

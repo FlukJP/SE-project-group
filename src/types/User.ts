@@ -14,7 +14,6 @@ export interface User {
     RatingScore?: number;
     Avatar_URL?: string;
     Is_Banned?: boolean | number;
-    Created_at?: Date | string;
 }
 
 export type UpdateUserData = Partial<Pick<User, "Username" | "Phone_number" | "Address" | "Avatar_URL">>;

@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import Footer from "@/src/components/layout/Footer";
 import { AuthProvider } from "@/src/contexts/AuthContext";
+import { ErrorProvider } from "@/src/contexts/ErrorContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         className={`${geistSans.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
+          <ErrorProvider>
+            {children}
+          </ErrorProvider>
         </AuthProvider>
         <Footer />
       </body>

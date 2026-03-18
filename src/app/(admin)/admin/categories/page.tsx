@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { categoryApi, type CategoryData } from "@/src/lib/api";
+import { useError } from "@/src/contexts/ErrorContext";
 import ConfirmDialog from "@/src/components/admin/ConfirmDialog";
 import CategoryFormModal from "@/src/components/admin/CategoryFormModal";
 
@@ -14,6 +15,7 @@ export default function AdminCategoriesPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<CategoryData | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const { showError } = useError();
 
   const fetchCategories = () => {
     setLoading(true);
@@ -59,7 +61,7 @@ export default function AdminCategoriesPage() {
       await categoryApi.delete(deleteTarget.Category_ID);
       fetchCategories();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      showError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
       setDeleting(false);
       setDeleteTarget(null);

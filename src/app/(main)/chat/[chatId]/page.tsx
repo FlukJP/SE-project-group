@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useChatLayout } from "@/src/contexts/ChatLayoutContext";
 import { chatApi } from "@/src/lib/api";
+import { useError } from "@/src/contexts/ErrorContext";
 import { socket } from "@/src/lib/socket";
 import type { MessageWithSender } from "@/src/types/Messages";
 import MessageBubble from "@/src/components/chat/MessageBubble";
@@ -14,6 +15,7 @@ export default function ChatConversationPage() {
   const { chatId } = useParams<{ chatId: string }>();
   const { user } = useAuth();
   const { rooms } = useChatLayout();
+  const { showError } = useError();
 
   const [messages, setMessages] = useState<MessageWithSender[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -171,7 +173,7 @@ export default function ChatConversationPage() {
         message: newMsg,
       });
     } catch (err) {
-      console.error("Failed to send message:", err);
+      showError(err instanceof Error ? err.message : "ส่งข้อความไม่สำเร็จ");
     } finally {
       setIsSending(false);
     }

@@ -50,6 +50,9 @@ function SearchPageContent() {
   const [results, setResults] = useState<ProductDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const PAGE_SIZE = 20;
 
   // Categories
   const [categories, setCategories] = useState<CategoryData[]>([]);
@@ -145,6 +148,11 @@ function SearchPageContent() {
     selectedCats.length > 0,
   ].filter(Boolean).length;
 
+  // Reset to page 1 whenever any filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedQuery, province, selectedCats, sort, minPrice, maxPrice]);
+
   // Apply client-side filters
   const filteredResults = useMemo(() => {
     let list = [...results];
@@ -167,6 +175,12 @@ function SearchPageContent() {
     else if (sort === "price_desc") list.sort((a, b) => b.price - a.price);
     return list;
   }, [results, sort, minPrice, maxPrice, selectedCats, user]);
+
+  const totalPages = Math.ceil(filteredResults.length / PAGE_SIZE);
+  const pagedResults = filteredResults.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
 
   // Header title
   const headerTitle = useMemo(() => {
@@ -414,11 +428,40 @@ function SearchPageContent() {
               </button>
             </div>
           ) : filteredResults.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredResults.map((product) => (
-                <ProductCard key={product.id} product={product} badgeText="" />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {pagedResults.map((product) => (
+                  <ProductCard key={product.id} product={product} badgeText="" />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((p) => p - 1)}
+                    className="px-4 py-2 rounded-lg border border-zinc-300 text-sm font-semibold text-zinc-700 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    ← ก่อนหน้า
+                  </button>
+
+                  <span className="text-sm text-zinc-600 px-2">
+                    หน้า {currentPage} / {totalPages}
+                  </span>
+
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    className="px-4 py-2 rounded-lg border border-zinc-300 text-sm font-semibold text-zinc-700 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    ถัดไป →
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-16">
               <div className="text-4xl mb-3">🔍</div>

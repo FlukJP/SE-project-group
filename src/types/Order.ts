@@ -4,7 +4,6 @@ export interface Order {
     Buyer_ID: number;
     Seller_ID: number;
     OrderDate?: Date;
-    Created_at?: Date | string;
     Quantity: number;
     Total_Price: number;
     Status: 'pending' | 'paid' | 'completed' | 'cancelled';
