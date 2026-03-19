@@ -1,12 +1,11 @@
 import { ReviewModel } from '../models/reviewModel';
 import { OrderModel } from '../models/orderModel';
-import { UserModel } from '../models/UserModel';
 import { AppError } from '../errors/AppError';
 import db from '@/src/lib/mysql';
 import { ResultSetHeader } from 'mysql2';
 
 export const ReviewService = {
-    // สร้างรีวิวและอัพเดท RatingScore ของผู้ขาย
+    // 1.Create reviews and update seller rating scores.
     create: async (reviewerId: number, data: { orderId: number; rating: number; comment?: string }) => {
         if (!data.orderId || !data.rating) throw new AppError('orderId and rating are required', 400);
         if (data.rating < 1 || data.rating > 5) throw new AppError('Rating must be between 1 and 5', 400);
@@ -36,22 +35,22 @@ export const ReviewService = {
         return ReviewModel.findById(reviewId);
     },
 
-    // ดึงรีวิวที่ user เขียน
+    // 2.Get reviews written by the user
     getMyReviews: async (userId: number) => {
         return ReviewModel.findByReviewerId(userId);
     },
 
-    // ดึงรีวิวของผู้ขาย
+    // 3.Get reviews for a seller
     getReviewsForSeller: async (sellerId: number) => {
         return ReviewModel.findBySellerId(sellerId);
     },
 
-    // ดึงคะแนนรวมผู้ขาย
+    // 4.Get seller's overall rating
     getSellerRating: async (sellerId: number) => {
         return ReviewModel.getSellerRating(sellerId);
     },
 
-    // เช็คว่ารีวิว order นี้แล้วหรือยัง (ตรวจ ownership ด้วย)
+    // 5.Check if the order has been reviewed (also checks ownership)
     checkReviewed: async (orderId: number, userId: number) => {
         const order = await OrderModel.findByID(orderId);
         if (!order) throw new AppError('Order not found', 404);

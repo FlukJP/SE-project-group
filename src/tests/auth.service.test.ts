@@ -73,7 +73,7 @@ describe('AuthService', () => {
             vi.mocked(UserModel.findByEmailSafe).mockResolvedValue({
                 User_ID: 1, Username: 'Existing', Email: 'test@email.com', Role: 'customer',
                 Is_Banned: false, Is_Email_Verified: false, Is_Phone_Verified: false,
-            } as any);
+            });
 
             await expect(
                 AuthService.register({ Username: 'New User', Email: 'test@email.com', Password: '12345678', Phone_number: '0812345678', Role: 'customer' })
@@ -84,7 +84,7 @@ describe('AuthService', () => {
             vi.mocked(UserModel.findByEmailSafe).mockResolvedValue(null);
             vi.mocked(UserModel.findByPhone).mockResolvedValue({
                 User_ID: 2, Username: 'Existing', Email: 'other@email.com', Role: 'customer',
-            } as any);
+            });
 
             await expect(
                 AuthService.register({ Username: 'New User', Email: 'new@email.com', Password: '12345678', Phone_number: '0812345678', Role: 'customer' })

@@ -3,7 +3,7 @@ import { Report } from '@/src/types/Report';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export const ReportModel = {
-    // 1.ดึงข้อมูล Report จาก ID (Detail one by one)
+    // 1.Get report details (Detail one by one)
     findByID: async (id: number): Promise<Report | null> => {
         const sql = `
             SELECT * FROM Report
@@ -13,7 +13,7 @@ export const ReportModel = {
         return rows.length > 0 ? (rows[0] as Report) : null;
     },
 
-    // 2.ดึงข้อมูล Report ทั้งหมด (Admin List)
+    // 2.Get all reports (Admin List)
     findAll: async (offset: number, limit: number): Promise<Report[]> => {
         const sql = `
             SELECT * FROM Report
@@ -23,7 +23,7 @@ export const ReportModel = {
         return rows as Report[];
     },
 
-    // 3.ดึงข้อมูลแต่ละ User Report ID ออกมา (User Report List)
+    // 3.Get reports by User ID (User Report List)
     findReportsByUserID: async (userID: number): Promise<Report[]> => {
         const sql = `
             SELECT * FROM Report
@@ -33,7 +33,7 @@ export const ReportModel = {
         return rows as Report[];
     },
 
-    // 4.สร้าง Report ใหม่(Report)
+    // 4.Create a new report (Report)
     createReport: async (reportData: Report): Promise<number> => {
         const sql = `
             INSERT INTO Report (Reporter_ID, Reported_User_ID, Reported_Product_ID, Reason)

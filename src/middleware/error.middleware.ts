@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
+import { AuthRequest } from './auth.middleware';
 
 // Map well-known status codes to a short error code string
 const STATUS_CODE_MAP: Record<number, string> = {
@@ -13,7 +14,7 @@ const STATUS_CODE_MAP: Record<number, string> = {
     500: 'INTERNAL_ERROR',
 };
 
-export const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction) => {
+export const errorHandler = (err: any, req: AuthRequest, res: Response, _next: NextFunction) => {
     let statusCode = 500;
     let message = 'Internal Server Error';
 
@@ -44,7 +45,7 @@ export const errorHandler = (err: any, req: Request, res: Response, _next: NextF
         path: req.path,
         statusCode,
         message: err.message,
-        userId: (req as any).user?.userID,
+        userId: req.user?.userID,
     };
     console.error(logData);
     if (statusCode === 500) console.error(err);

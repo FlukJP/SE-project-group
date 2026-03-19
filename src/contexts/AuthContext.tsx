@@ -26,20 +26,20 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      setIsLoading(false);
-      return;
-    }
+    if (typeof window === "undefined") return;
     const token = localStorage.getItem("access_token");
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
-    userApi
-      .getMe()
+    if (!token) return;
+
+    // ใช้ Promise.resolve() เพื่อให้ setIsLoading(true) อยู่ใน async callback
+    // ไม่ใช่ synchronous ใน effect body (ป้องกัน hydration mismatch + ESLint)
+    Promise.resolve()
+      .then(() => {
+        setIsLoading(true);
+        return userApi.getMe();
+      })
       .then((res) => setUser(res.data))
       .catch(() => {
         localStorage.removeItem("access_token");

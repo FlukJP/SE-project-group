@@ -4,6 +4,7 @@ import { CategoryService } from '../services/category.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const CategoryController = {
+    // 1.Get All Categories
     getAll: async (_req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const categories = await CategoryService.getAll();
@@ -13,6 +14,7 @@ export const CategoryController = {
         }
     },
 
+    // 2.Get Popular
     getPopular: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const limit = Number(req.query.limit) || 10;
@@ -23,6 +25,7 @@ export const CategoryController = {
         }
     },
 
+    // 3.Create Category
     create: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { category_key, name, emoji, sort_order } = req.body;
@@ -33,6 +36,7 @@ export const CategoryController = {
         }
     },
 
+    // 4.Update Category
     update: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const id = Number(req.params.id);
@@ -45,6 +49,7 @@ export const CategoryController = {
         }
     },
 
+    // 5.Delete Category
     delete: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const id = Number(req.params.id);

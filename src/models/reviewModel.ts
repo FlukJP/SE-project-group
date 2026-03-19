@@ -3,7 +3,7 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { ReviewRow, SellerRating } from '@/src/types/Review';
 
 export const ReviewModel = {
-    // สร้างรีวิว
+    // 1.Create a new review
     create: async (data: { orderId: number; reviewerId: number; sellerId: number; rating: number; comment?: string }): Promise<number> => {
         const sql = `INSERT INTO Review (Order_ID, Reviewer_ID, Seller_ID, Rating, Comment) VALUES (?, ?, ?, ?, ?)`;
         const [result] = await db.query<ResultSetHeader>(sql, [
@@ -16,14 +16,14 @@ export const ReviewModel = {
         return result.insertId;
     },
 
-    // ดึงรีวิว by ID
+    // 2.Get review by ID
     findById: async (id: number): Promise<ReviewRow | null> => {
         const sql = `SELECT * FROM Review WHERE Review_ID = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as ReviewRow) : null;
     },
 
-    // ดึงรีวิวที่ user เขียน (รีวิวของฉัน)
+    // 3.Get reviews by Reviewer ID (My Reviews)
     findByReviewerId: async (reviewerId: number): Promise<ReviewRow[]> => {
         const sql = `
             SELECT r.*, u.Username AS ReviewerName, p.Title AS ProductTitle
@@ -38,7 +38,7 @@ export const ReviewModel = {
         return rows as ReviewRow[];
     },
 
-    // ดึงรีวิวของผู้ขาย
+    // 4.Get reviews by Seller ID (Seller Reviews)
     findBySellerId: async (sellerId: number): Promise<ReviewRow[]> => {
         const sql = `
             SELECT r.*, u.Username AS ReviewerName, p.Title AS ProductTitle
@@ -53,14 +53,14 @@ export const ReviewModel = {
         return rows as ReviewRow[];
     },
 
-    // เช็คว่ารีวิว order นี้แล้วหรือยัง
+    // 5.Check if the order has been reviewed
     findByOrderId: async (orderId: number): Promise<ReviewRow | null> => {
         const sql = `SELECT * FROM Review WHERE Order_ID = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [orderId]);
         return rows.length > 0 ? (rows[0] as ReviewRow) : null;
     },
 
-    // คำนวณคะแนนเฉลี่ยของผู้ขาย
+    // 6.Calculate the average rating of a seller
     getSellerRating: async (sellerId: number): Promise<SellerRating> => {
         const sql = `
             SELECT

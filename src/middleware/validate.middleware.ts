@@ -2,9 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
 import { validateEmail, validatePassword, validatePhoneNumber, validateUsername } from '../utils/validators';
 
-// ---------------------------------------------------------------------------
 // Generic schema types
-// ---------------------------------------------------------------------------
 type FieldRule = {
     required?: boolean;
     type?: 'string' | 'number' | 'boolean';
@@ -16,9 +14,7 @@ type FieldRule = {
 
 type Schema = Record<string, FieldRule>;
 
-// ---------------------------------------------------------------------------
 // Validate middleware factory — validates req.body against a schema
-// ---------------------------------------------------------------------------
 export function validateBody(schema: Schema) {
     return (req: Request, _res: Response, next: NextFunction) => {
         const errors: string[] = [];
@@ -66,9 +62,7 @@ export function validateBody(schema: Schema) {
     };
 }
 
-// ---------------------------------------------------------------------------
 // Validate params middleware factory
-// ---------------------------------------------------------------------------
 export function validateParams(schema: Schema) {
     return (req: Request, _res: Response, next: NextFunction) => {
         const errors: string[] = [];
@@ -95,9 +89,7 @@ export function validateParams(schema: Schema) {
     };
 }
 
-// ---------------------------------------------------------------------------
 // Pre-built schemas for each domain
-// ---------------------------------------------------------------------------
 
 // Auth
 export const registerSchema: Schema = {

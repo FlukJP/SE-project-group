@@ -22,7 +22,7 @@ describe('pickUpdateFields', () => {
             Password: 'newpassword',
             Role: 'admin',
             Is_Banned: false,
-        } as any);
+        });
         expect(result).toEqual({ Username: 'newname' });
         expect(result).not.toHaveProperty('Email');
         expect(result).not.toHaveProperty('Password');
@@ -34,7 +34,7 @@ describe('pickUpdateFields', () => {
         const result = pickUpdateFields({
             Email: 'hack@evil.com',
             Role: 'admin',
-        } as any);
+        });
         expect(result).toEqual({});
     });
 

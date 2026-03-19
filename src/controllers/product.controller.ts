@@ -8,7 +8,7 @@ import { AuthRequest } from '../middleware/auth.middleware';
 import { Product } from '../types/Product';
 
 export const ProductController = {
-    // 1.สร้างสินค้าใหม่ (Create)
+    // 1.Create product
     createProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
         const files = req.files as Express.Multer.File[] | undefined;
         try {
@@ -36,7 +36,7 @@ export const ProductController = {
             }
             const imageUrls = orderedFiles.map(file => `/uploads/products/${file.filename}`);
 
-            const fullDescription = `${description ? description.trim() : ''}\n\n📍 พื้นที่: ${province.trim()} (${district.trim()})\n📞 ติดต่อ: ${phone.trim()}`;
+            const fullDescription = description ? description.trim() : '';
 
             const category = await CategoryService.getByKey(categoryKey.trim());
 
@@ -44,6 +44,7 @@ export const ProductController = {
                 Seller_ID: req.user.userID,
                 Title: title.trim(),
                 Description: fullDescription,
+                Location: `${province.trim()} (${district.trim()})`,
                 Price: numPrice,
                 Condition: condition?.trim() || "มือสอง",
                 Category_ID: category.Category_ID,
@@ -69,7 +70,7 @@ export const ProductController = {
         }
     },
 
-    // 2.ค้นหาสินค้า (Search/List)
+    // 2.Search/List Products
     getAllProducts: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { q, category, minPrice, maxPrice, limit, page, sortBy, sortOrder } = req.query;
@@ -90,7 +91,7 @@ export const ProductController = {
         }
     },
 
-    // 3.ดูรายละเอียดสินค้า (Get by ID)
+    // 3.Get Product by ID 
     getProductByID: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const productId = Number(req.params.id);
@@ -102,7 +103,7 @@ export const ProductController = {
         }
     },
 
-    // 4.ดูสินค้าของผู้ขาย (Get by Seller)
+    // 4.Get Products by Seller
     getProductsBySeller: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const sellerId = Number(req.params.sellerId);
@@ -113,7 +114,7 @@ export const ProductController = {
         }
     },
 
-    // 5.แก้ไขสินค้า (Update)
+    // 5.Update Product
     updateProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
         const files = req.files as Express.Multer.File[] | undefined;
         try {
@@ -130,10 +131,7 @@ export const ProductController = {
 
             const result = await ProductService.updateProduct(productId, req.user.userID, updateData, isAdmin);
 
-            // Cleanup old images only after successful update
-            if (files && files.length > 0 && result.oldImageURL) {
-                cleanupImages(result.oldImageURL);
-            }
+            if (files && files.length > 0 && result.oldImageURL) cleanupImages(result.oldImageURL);
 
             res.status(200).json({ success: true, message: "Product updated successfully" });
         } catch (error) {
@@ -146,7 +144,7 @@ export const ProductController = {
         }
     },
 
-    // 6.ลบสินค้า (Delete)
+    // 6.Delete Product
     deleteProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);

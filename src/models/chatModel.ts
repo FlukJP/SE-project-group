@@ -3,7 +3,7 @@ import { Chat, ChatRoomWithPartner } from "@/src/types/Chat";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 export const ChatModel = {
-    // 1.ดึงข้อมูลรายการห้องแชทของ User (Chat List for User)
+    // 1.User's Chat Room List with partner info, last message, and unread count
     findByUserID: async(userID: number): Promise<ChatRoomWithPartner[]> => {
         const sql = `
             SELECT c.*,
@@ -43,7 +43,7 @@ export const ChatModel = {
         return rows as ChatRoomWithPartner[];
     },
 
-    // 2.ตรวจสอบการเปิดแชทระหว่างผู้ใช้สองคน (Check if chat exists between two users)
+    // 2.Check if chat exists between two users
     findExistingChat: async (p1: number, p2: number, productID: number): Promise<Chat | null> => {
         const sql = `
             SELECT * FROM Chat
@@ -54,7 +54,7 @@ export const ChatModel = {
         return rows.length > 0 ? (rows[0] as Chat) : null;
     },
 
-    // 3.ดึงข้อมูลแชท 1ห้อง (Chat Room Detail)
+    // 3.Get chat room details by ID
     findByID: async (chatID: number): Promise<Chat | null> => {
         const sql = `
             SELECT * FROM Chat
@@ -64,7 +64,7 @@ export const ChatModel = {
         return rows.length > 0 ? (rows[0] as Chat) : null;
     },
 
-    // 4.สร้างแชทใหม่ (Create new chat)
+    // 4.Create a new chat
     createChatRoom: async (chatData: Chat): Promise<number> => {
         const sql = `
             INSERT INTO Chat (Participant_1, Participant_2, Chats_product_ID)
@@ -79,7 +79,7 @@ export const ChatModel = {
         return result.insertId;
     },
     
-    // 5.ลบแชททิ้ง (Delete chat)
+    // 5.Hide chat for a participant (soft delete)
     hideChatForParticipant: async (chatID: number, participantRole: 'P1' | 'P2'): Promise<boolean> => {
         const fieldToUpdate = participantRole === 'P1' ? 'Is_Deleted_By_P1' : 'Is_Deleted_By_P2';
 

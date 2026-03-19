@@ -11,7 +11,7 @@ const ALLOWED_UPDATE_COLUMNS: ReadonlySet<string> = new Set([
 const USER_COLUMNS_WITHOUT_PASSWORD = 'User_ID, Username, Email, Role, Phone_number, Is_Phone_Verified, Is_Email_Verified, Address, Verified_Date, RatingScore, Avatar_URL, Is_Banned';
 
 export const UserModel = {
-    // 1.ดึงข้อมูล User จาก Email (Login/Check - includes Password for auth)
+    // 1.Get User  (Login/Check - includes Password for auth)
     findByEmail: async (email: string): Promise<User | null> => {
         const sql = `
             SELECT * FROM User
@@ -21,14 +21,14 @@ export const UserModel = {
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 1b.ดึงข้อมูล User จาก Email โดยไม่รวม Password (safe for non-auth use)
+    // 1b.Get User by Email without Password (safe for non-auth use)
     findByEmailSafe: async (email: string): Promise<User | null> => {
         const sql = `SELECT ${USER_COLUMNS_WITHOUT_PASSWORD} FROM User WHERE Email = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [email]);
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 2.ดึงข้อมูล User จาก ID (Profile/Identity - includes Password for auth)
+    // 2.Get User by ID (Profile/Identity - includes Password for auth)
     findByID: async (id: number): Promise<User | null> => {
         const sql = `
             SELECT * FROM User
@@ -38,14 +38,14 @@ export const UserModel = {
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 2b.ดึงข้อมูล User จาก ID โดยไม่รวม Password (safe for non-auth use)
+    // 2b.Get User by ID without Password (safe for non-auth use)
     findByIDSafe: async (id: number): Promise<User | null> => {
         const sql = `SELECT ${USER_COLUMNS_WITHOUT_PASSWORD} FROM User WHERE User_ID = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 3.ดึงรายชื่อ User ทั้งหมด (Admin List)
+    // 3.Get all Users (Admin List)
     findAll: async (offset: number, limit: number): Promise<User[]> => {
         const sql = `
             SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore
@@ -56,14 +56,14 @@ export const UserModel = {
         return rows as User[];
     },
 
-    // 4.ดึงข้อมูล User จากเบอร์โทรศัพท์ (Phone number lookup)
+    // 4.Get User by Phone number (Phone number lookup)
     findByPhone: async (phone: string): Promise<User | null> => {
         const sql = `SELECT ${USER_COLUMNS_WITHOUT_PASSWORD} FROM User WHERE Phone_number = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [phone]);
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 5.ดึงข้อมูล User ที่โดนBan (Admin List)
+    // 5.Get banned Users (Admin List)
     findBannedUsers: async (offset: number, limit: number): Promise<User[]> => {
         const sql = `
             SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore
@@ -75,7 +75,7 @@ export const UserModel = {
         return rows as User[];
     },
 
-    // 6.สร้าง User ใหม่ (Register)
+    // 6.Create a new User (Register)
     createUser: async (userData: User): Promise<number> => {
         const sql = `
             INSERT INTO User (Username, Email, Password, Role, Phone_number, Address, Verified_Date, RatingScore)
@@ -95,7 +95,7 @@ export const UserModel = {
         return result.insertId;
     },
 
-    // 7.Update ข้อมูล User (Edit Profile)
+    // 7.Update User (Edit Profile)
     updateUser: async (id: number, userData: Partial<User>): Promise<boolean> => {
         const keys = Object.keys(userData).filter(
             (key) => userData[key as keyof User] !== undefined && ALLOWED_UPDATE_COLUMNS.has(key)
@@ -108,7 +108,7 @@ export const UserModel = {
         return result.affectedRows > 0;
     },
 
-    // 8.ลบ User (Ban/Close Account)
+    // 8.Delete User (Ban/Close Account)
     delete: async (id: number): Promise<boolean> => {
         const sql = 'DELETE FROM User WHERE User_ID = ?';
         const [result] = await db.query<ResultSetHeader>(sql, [id]);

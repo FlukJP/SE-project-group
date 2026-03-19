@@ -1,94 +1,18 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+export { API_BASE, ApiError, apiFetch } from "./apiClient";
+import { apiFetch } from "./apiClient";
+
 import type { ProductWithSeller, Product } from "@/src/types/Product";
 import type { User } from "@/src/types/User";
 import type { Report } from "@/src/types/Report";
 import type { ChatRoomWithPartner, Chat } from "@/src/types/Chat";
 import type { MessageWithSender } from "@/src/types/Messages";
+import type { CategoryData, PopularCategoryData } from "@/src/types/Category";
+import type { ReviewData, SellerRatingData } from "@/src/types/Review";
+import type { OrderWithDetails } from "@/src/types/Order";
 
-export class ApiError extends Error {
-  status: number;
-  constructor(message: string, status: number) {
-    super(message);
-    this.status = status;
-  }
-}
-
-// Fix #11: Shared refresh promise to prevent concurrent token refresh race condition
-let refreshPromise: Promise<string | null> | null = null;
-
-async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = localStorage.getItem("refresh_token");
-  if (!refreshToken) return null;
-
-  try {
-    const refreshRes = await fetch(`${API_BASE}/api/auth/refresh-token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-    const refreshJson = await refreshRes.json();
-    if (refreshRes.ok && refreshJson.success) {
-      localStorage.setItem("access_token", refreshJson.access_token);
-      return refreshJson.access_token;
-    }
-  } catch {}
-
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-  return null;
-}
-
-export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-
-  const headers: Record<string, string> = {
-    ...(options.headers as Record<string, string>),
-  };
-
-  if (!(options.body instanceof FormData)) {
-    headers["Content-Type"] = "application/json";
-  }
-
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  let res = await fetch(`${API_BASE}/api${path}`, {
-    ...options,
-    headers,
-  });
-
-  // Attempt token refresh on 401 (with shared lock to prevent race condition)
-  if (res.status === 401 && typeof window !== "undefined") {
-    if (!refreshPromise) {
-      refreshPromise = refreshAccessToken().finally(() => {
-        refreshPromise = null;
-      });
-    }
-    const newToken = await refreshPromise;
-    if (newToken) {
-      headers["Authorization"] = `Bearer ${newToken}`;
-      res = await fetch(`${API_BASE}/api${path}`, { ...options, headers });
-    }
-  }
-
-  let json: Record<string, unknown>;
-  try {
-    json = await res.json();
-  } catch {
-    throw new ApiError(
-      `Server error (${res.status}): Invalid response format`,
-      res.status
-    );
-  }
-
-  if (!res.ok || !json.success) {
-    throw new ApiError((json?.message as string) || `Request failed (${res.status})`, res.status);
-  }
-
-  return json as T;
-}
+export type { CategoryData, PopularCategoryData };
+export type { ReviewData, SellerRatingData };
+export type { OrderWithDetails };
 
 export const productApi = {
   list: (params?: Record<string, string>) => {
@@ -174,22 +98,6 @@ export const userApi = {
     }),
 };
 
-export interface CategoryData {
-  Category_ID: number;
-  category_key: string;
-  name: string;
-  emoji: string;
-  is_active: boolean;
-  sort_order: number;
-}
-
-export interface PopularCategoryData {
-  category_key: string;
-  name: string;
-  emoji: string;
-  score: number;
-}
-
 export const categoryApi = {
   list: () =>
     apiFetch<{ success: boolean; data: CategoryData[] }>("/categories"),
@@ -210,23 +118,6 @@ export const categoryApi = {
       method: "DELETE",
     }),
 };
-
-export interface ReviewData {
-  Review_ID: number;
-  Order_ID: number;
-  Reviewer_ID: number;
-  Seller_ID: number;
-  Rating: number;
-  Comment: string | null;
-  Created_at: string;
-  ReviewerName?: string;
-  ProductTitle?: string;
-}
-
-export interface SellerRatingData {
-  averageRating: number;
-  totalReviews: number;
-}
 
 export const reviewApi = {
   getMyReviews: () =>
@@ -286,58 +177,35 @@ export const adminApi = {
 export const chatApi = {
   getRooms: () =>
     apiFetch<{ success: boolean; data: ChatRoomWithPartner[] }>("/chats"),
-
   getUnreadCount: () =>
     apiFetch<{ success: boolean; unreadCount: number }>("/chats/unread"),
-
   findOrCreateRoom: (sellerId: number, productId: number) =>
     apiFetch<{ success: boolean; data: Chat }>("/chats", {
       method: "POST",
       body: JSON.stringify({ sellerId, productId }),
     }),
-
   getRoomById: (chatId: number) =>
     apiFetch<{ success: boolean; data: Chat }>(`/chats/${chatId}`),
-
   deleteRoom: (chatId: number) =>
     apiFetch<{ success: boolean; message: string }>(`/chats/${chatId}`, {
       method: "DELETE",
     }),
-
   getMessages: (chatId: number, page = 1) =>
     apiFetch<{
       success: boolean;
       data: MessageWithSender[];
       pagination: { page: number; limit: number; hasMore: boolean };
     }>(`/chats/${chatId}/messages?page=${page}`),
-
   sendMessage: (chatId: number, content: string, type: "text" | "image" = "text") =>
     apiFetch<{ success: boolean; message: string; messageId: number }>(
       `/chats/${chatId}/messages`,
       { method: "POST", body: JSON.stringify({ content, type }) }
     ),
-
   markAsRead: (chatId: number) =>
     apiFetch<{ success: boolean; message: string }>(`/chats/${chatId}/read`, {
       method: "PATCH",
     }),
 };
-
-export interface OrderWithDetails {
-  Order_ID: number;
-  Product_ID: number;
-  Buyer_ID: number;
-  Seller_ID: number;
-  OrderDate?: string;
-  Created_at?: string;
-  Quantity: number;
-  Total_Price: number;
-  Status: "pending" | "paid" | "completed" | "cancelled";
-  Title?: string;
-  BuyerName?: string;
-  SellerName?: string;
-  Image_URL?: string;
-}
 
 export const orderApi = {
   getMyBuyerOrders: () =>

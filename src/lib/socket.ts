@@ -2,7 +2,6 @@ import { io, Socket } from 'socket.io-client';
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-// Fix #10: Lazy initialization to prevent SSR issues
 let _socket: Socket | null = null;
 
 export function getSocket(): Socket {

@@ -3,7 +3,7 @@ import { Message, MessageWithSender } from "@/src/types/Messages";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 export const MessageModel = {
-    // 1.ดึงข้อมูลจาก Chat ID (Chat Message List)
+    // 1.Chat messages by Chat ID with pagination (Chat Room Messages)
     findByChatID: async (chatID: number, limit: number = 50, offset: number = 0): Promise<MessageWithSender[]> =>{
         const sql = `
         SELECT * FROM (
@@ -20,7 +20,7 @@ export const MessageModel = {
     return rows as MessageWithSender[];
     },
 
-    // 2.สร้างข้อความใหม่ (Create Message)
+    // 2.Create Message
     createMessageTransaction: async (message: Message): Promise<number> => {
         const connection = await db.getConnection();
         try {
@@ -54,7 +54,7 @@ export const MessageModel = {
         finally { connection.release(); }
     },
 
-    // 3.นับข้อความที่ยังไม่อ่านใน Chat (Unread Message Count)
+    // 3.Count unread messages in a chat (Unread Message Count)
     countUnreadByUserID: async (userID: number): Promise<number> => {
         const sql = `
             SELECT COUNT(*) AS UnreadCount
@@ -69,7 +69,7 @@ export const MessageModel = {
         return rows[0]?.UnreadCount || 0;
     },
 
-    // 4.อัพเดทสถานะข้อความเป็น "read" (Mark as Read)
+    // 4.Mark messages as read
     updateReadStatus: async (chatID: number, receiverID: number): Promise<void> => {
         const sql = `
             UPDATE Message

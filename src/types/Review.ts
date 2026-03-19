@@ -14,3 +14,7 @@ export interface SellerRating {
     averageRating: number;
     totalReviews: number;
 }
+
+// Client-side aliases
+export type ReviewData = ReviewRow;
+export type SellerRatingData = SellerRating;

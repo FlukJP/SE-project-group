@@ -16,7 +16,7 @@ export interface ProductDisplay {
   seller: {
     id: string;
     name: string;
-    avatarUrl?: string; // 🌟 เพิ่มส่วนนี้
+    avatarUrl?: string;
     phone?: string;
     email?: string;
   };
@@ -25,7 +25,6 @@ export interface ProductDisplay {
 export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
   let images: string[] = [];
   try {
-    // ตรวจสอบว่า Image_URL เป็น JSON string หรือไม่
     const parsed = JSON.parse(p.Image_URL);
     images = Array.isArray(parsed)
       ? parsed.map((url: string) =>
@@ -33,7 +32,6 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
         )
       : [];
   } catch {
-    // ถ้าไม่ใช่ JSON (เป็น string URL ตรงๆ)
     if (p.Image_URL) {
       images = [
         p.Image_URL.startsWith("http")
@@ -43,11 +41,11 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
     }
   }
 
-  // ดึงตำแหน่งจาก Description ด้วย Regex (ฉลาดมากครับ!)
-  let location = "";
-  const locMatch = p.Description?.match(/📍\s*พื้นที่:\s*(.+?)(?:\n|$)/);
-  if (locMatch) {
-    location = locMatch[1].trim();
+  // Use dedicated Location column; fallback to regex for legacy products
+  let location = p.Location?.trim() || "";
+  if (!location) {
+    const locMatch = p.Description?.match(/📍\s*พื้นที่:\s*(.+?)(?:\n|$)/);
+    if (locMatch) location = locMatch[1].trim();
   }
 
   const cleanDescription =
@@ -77,7 +75,7 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
   };
 }
 
-// ฟังก์ชันคำนวณเวลาภาษาไทย (ใช้งานได้ดีอยู่แล้วครับ)
+// Function to calculate relative time in Thai language
 function formatThaiRelativeTime(date?: Date | string): string {
   if (!date) return "";
   const now = Date.now();

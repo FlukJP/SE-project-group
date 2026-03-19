@@ -4,7 +4,7 @@ import { AdminService } from '../services/admin.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const AdminController = {
-    // 1.ดูรายการผู้ใช้ทั้งหมด (Get All Users)
+    // 1.Get All Users
     getAllUsers: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;
@@ -18,7 +18,7 @@ export const AdminController = {
         }
     },
 
-    // 2.ดูรายการผู้ใช้ที่โดน Ban (Get Banned Users)
+    // 2.Get Banned Users
     getBannedUsers: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;
@@ -32,7 +32,7 @@ export const AdminController = {
         }
     },
 
-    // 3.Ban ผู้ใช้ (Ban User)
+    // 3.Ban User
     banUser: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const userId = Number(req.params.userId);
@@ -46,7 +46,7 @@ export const AdminController = {
         }
     },
 
-    // 4.Unban ผู้ใช้ (Unban User)
+    // 4.Unban User
     unbanUser: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const userId = Number(req.params.userId);
@@ -60,7 +60,7 @@ export const AdminController = {
         }
     },
 
-    // 5.ดูรายการสินค้าที่โดน Ban (Get Banned Products)
+    // 5.Get Banned Products
     getBannedProducts: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;
@@ -74,7 +74,7 @@ export const AdminController = {
         }
     },
 
-    // 6.Ban สินค้า (Ban Product)
+    // 6.Ban Product
     banProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const productId = Number(req.params.productId);
@@ -88,7 +88,7 @@ export const AdminController = {
         }
     },
 
-    // 7.Unban สินค้า (Unban Product)
+    // 7.Unban Product
     unbanProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const productId = Number(req.params.productId);
@@ -102,7 +102,7 @@ export const AdminController = {
         }
     },
 
-    // 8.ดูรายงานทั้งหมด (Get All Reports)
+    // 8.Get All Reports
     getAllReports: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;

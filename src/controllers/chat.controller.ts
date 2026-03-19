@@ -4,7 +4,7 @@ import { ChatService } from '../services/chat.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const ChatController = {
-    // 1.ดูรายการแชททั้งหมดของตัวเอง (Inbox)
+    // 1.View all of your chat history (Inbox)
     getChatRooms: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -17,7 +17,7 @@ export const ChatController = {
         }
     },
 
-    // 2.ดูรายละเอียดห้องแชท (Get Chat Room by ID)
+    // 2.View Chat Room by ID
     getChatRoomByID: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -31,7 +31,7 @@ export const ChatController = {
         }
     },
 
-    // 3.สร้างหรือเปิดห้องแชท (Find or Create)
+    // 3.Find or Create Chat Room
     findOrCreateChatRoom: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -51,7 +51,7 @@ export const ChatController = {
         }
     },
 
-    // 4.ลบห้องแชท - Soft Delete (Hide)
+    // 4.Delete Chat Room - Soft Delete (Hide)
     deleteChatRoom: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -65,7 +65,7 @@ export const ChatController = {
         }
     },
 
-    // 5.ดูข้อความในห้องแชท (Get Messages - paginated)
+    // 5.View Messages in Chat Room (Get Messages - paginated)
     getMessages: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -80,7 +80,7 @@ export const ChatController = {
         }
     },
 
-    // 6.ส่งข้อความ (Send Message)
+    // 6.Send Message
     sendMessage: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -103,7 +103,7 @@ export const ChatController = {
         }
     },
 
-    // 7.อ่านข้อความแล้ว (Mark as Read)
+    // 7.Mark Messages as Read
     markAsRead: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -117,7 +117,7 @@ export const ChatController = {
         }
     },
 
-    // 8.นับข้อความที่ยังไม่อ่าน (Unread Count)
+    // 8.Get Unread Messages Count
     getUnreadCount: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);

@@ -7,7 +7,7 @@ import { deleteUploadedFile } from '../utils/uploadHelpers';
 import { UploadFolderType } from '../types/upload';
 
 export const UserController = {
-    // 1.ดูโปรไฟล์ตัวเอง (Get My Profile)
+    // 1.Get My Profile
     getProfile: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -20,7 +20,7 @@ export const UserController = {
         }
     },
 
-    // 2.ดูโปรไฟล์คนอื่น (Get User by ID - public)
+    // 2.Get User by ID - public profile
     getUserByID: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const userId = Number(req.params.id);
@@ -41,7 +41,7 @@ export const UserController = {
         }
     },
 
-    // 3.แก้ไขโปรไฟล์ (Update Profile)
+    // 3.Update Profile
     updateProfile: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -60,7 +60,7 @@ export const UserController = {
         }
     },
 
-    // 4.อัปโหลดรูปโปรไฟล์ (Upload Avatar)
+    // 4.Upload Avatar
     uploadAvatar: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);

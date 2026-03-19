@@ -16,7 +16,7 @@ export type BaseCategory = {
 
 export type CreateCategory = Pick<BaseCategory, "id" | "key" | "name" | "emoji">;
 
-// แปลง CategoryData จาก API -> Category สำหรับ homepage/search navigation
+// Convert CategoryData from API -> Category for homepage/search navigation
 export function toCategory(c: CategoryData): Category {
   return {
     id: c.Category_ID,
@@ -26,7 +26,7 @@ export function toCategory(c: CategoryData): Category {
   };
 }
 
-// แปลง PopularCategoryData -> Category สำหรับ homepage
+// Convert PopularCategoryData -> Category for homepage
 export function toPopularCategory(c: PopularCategoryData): Category {
   return {
     name: c.name,
@@ -35,7 +35,7 @@ export function toPopularCategory(c: PopularCategoryData): Category {
   };
 }
 
-// แปลง CategoryData จาก API -> CreateCategory สำหรับ create product form
+// Convert CategoryData from API -> CreateCategory for creating product forms.
 export function toCreateCategory(c: CategoryData): CreateCategory {
   return {
     id: c.Category_ID,

@@ -3,7 +3,7 @@ import { Order } from '@/src/types/Order';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export const OrderModel = {
-    // 1.ดึงข้อมูล Order จาก ID (Detail one by one)
+    // 1.Detail one by one
     findByID: async (id: number): Promise<Order | null> => {
         const sql = `
             SELECT * FROM \`Order\`
@@ -13,13 +13,13 @@ export const OrderModel = {
         return rows.length > 0 ? (rows[0] as Order) : null;
     },
 
-    // 2.ดึงข้อมูล Order จาก Buyer ID (Buyer Order List)
+    // 2.Get orders by Buyer ID (Buyer Order List)
     findByBuyerID: async (buyerID: number): Promise<Order[]> => {
         const sql = `
             SELECT o.*,
-                   p.Title, p.Image_URL,
-                   buyer.Username  AS BuyerName,
-                   seller.Username AS SellerName
+                p.Title, p.Image_URL,
+                buyer.Username  AS BuyerName,
+                seller.Username AS SellerName
             FROM \`Order\` o
             LEFT JOIN Product p      ON o.Product_ID = p.Product_ID
             LEFT JOIN User   buyer   ON o.Buyer_ID   = buyer.User_ID
@@ -31,13 +31,13 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 3.ดึงข้อมูล Order จาก Seller ID (Seller Order List)
+    // 3.Get orders by Seller ID (Seller Order List)
     findBySellerID: async (sellerID: number): Promise<Order[]> => {
         const sql = `
             SELECT o.*,
-                   p.Title, p.Image_URL,
-                   buyer.Username  AS BuyerName,
-                   seller.Username AS SellerName
+                p.Title, p.Image_URL,
+                buyer.Username  AS BuyerName,
+                seller.Username AS SellerName
             FROM \`Order\` o
             LEFT JOIN Product p      ON o.Product_ID = p.Product_ID
             LEFT JOIN User   buyer   ON o.Buyer_ID   = buyer.User_ID
@@ -49,7 +49,7 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 4.ดึงข้อมูล Order จาก Product ID (Product Order List)
+    // 4.Get orders by Product ID (Product Order List)
     findByProductID: async (productID: number): Promise<Order[]> => {
         const sql = `
             SELECT * FROM \`Order\`
@@ -60,7 +60,7 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 5.ดึงข้อมูล Order จาก Product Title (Search by Product Title)
+    // 5.Search orders by Product Title
     findByProductTitle: async (title: string): Promise<Order[]> => {
         const sql = `
             SELECT o.* FROM \`Order\` o
@@ -72,7 +72,7 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 6.ดึงข้อมูล Order จาก Status (Search by Order Status)
+    // 6.Search orders by Status
     findByStatus: async (status: string): Promise<Order[]> => {
         const sql = `
             SELECT * FROM \`Order\`
@@ -83,7 +83,7 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 7.ดึงข้อมูล Order ทั้งหมด (All Order List)
+    // 7.Get all orders (All Order List)
     findAll: async (): Promise<Order[]> => {
         const sql = `
             SELECT * FROM \`Order\`
@@ -93,7 +93,7 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 8.สร้าง Order ใหม่ (Create Order)
+    // 8.Create Order
     createOrder: async (orderData: Order): Promise<number> => {
         const sql = `
             INSERT INTO \`Order\` (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price)
@@ -110,7 +110,7 @@ export const OrderModel = {
         return result.insertId;
     },
 
-    // 9.Update ข้อมูล Order (Update Order Status)
+    // 9.Update Order Status
     updateOrder: async (orderID: number, status: string): Promise<boolean> => {
         const sql = `
             UPDATE \`Order\`
@@ -121,7 +121,7 @@ export const OrderModel = {
         return result.affectedRows > 0;
     },
 
-    // 10.ยกเลิก Order (Cancel Order)
+    // 10.Cancel Order
     cancelOrder: async (orderID: number): Promise<boolean> => {
         const sql = `
             UPDATE \`Order\`
@@ -143,13 +143,9 @@ export const OrderModel = {
                 `SELECT Quantity FROM Product WHERE Product_ID = ? FOR UPDATE`,
                 [productID]
             );
-            if (!lockedRows || lockedRows.length === 0) {
-                throw new Error('Product not found');
-            }
+            if (!lockedRows || lockedRows.length === 0) throw new Error('Product not found');
             const currentQty = lockedRows[0].Quantity;
-            if (currentQty < newOrder.Quantity) {
-                throw new Error('Insufficient stock');
-            }
+            if (currentQty < newOrder.Quantity) throw new Error('Insufficient stock');
 
             const insertOrderSQL = `
             INSERT INTO \`Order\` (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price, Status)
@@ -195,21 +191,15 @@ export const OrderModel = {
                 `SELECT Quantity FROM Product WHERE Product_ID = ? FOR UPDATE`,
                 [productID]
             );
-            if (!lockedRows || lockedRows.length === 0) {
-                throw new Error('Product not found');
-            }
+            if (!lockedRows || lockedRows.length === 0) throw new Error('Product not found');
 
             // Lock the order row to prevent concurrent cancellation
             const [lockedOrder] = await connection.query<RowDataPacket[]>(
                 `SELECT Status FROM \`Order\` WHERE Order_ID = ? FOR UPDATE`,
                 [orderID]
             );
-            if (!lockedOrder || lockedOrder.length === 0) {
-                throw new Error('Order not found');
-            }
-            if (lockedOrder[0].Status === 'cancelled') {
-                throw new Error('Order is already cancelled');
-            }
+            if (!lockedOrder || lockedOrder.length === 0) throw new Error('Order not found');
+            if (lockedOrder[0].Status === 'cancelled') throw new Error('Order is already cancelled');
 
             // Recalculate restored quantity from the locked current value
             const currentQty = lockedRows[0].Quantity;

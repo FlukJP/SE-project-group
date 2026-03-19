@@ -82,8 +82,6 @@ export const AuthService = {
             }
             throw new AppError("Invalid email or password", 401);
         }
-
-        // Fix #13: Clear login attempts counter on successful login
         await redisClient.del(`login_attempts:${params.email}`);
 
         const accessToken = generateAccessToken({ userID: user.User_ID, role: user.Role });
@@ -257,9 +255,6 @@ export const AuthService = {
     },
 
     // 11. Request Phone OTP
-    // LIMITATION: OTP is sent via email instead of SMS because no SMS provider is configured.
-    // This does NOT verify actual phone ownership. To properly verify, integrate an SMS gateway
-    // (e.g., Twilio, Firebase Phone Auth) and send the OTP directly to the phone number.
     requestPhoneOTP: async (phone: string): Promise<void> => {
         if (!validatePhoneNumber(phone)) throw new AppError("Phone number must be 10 digits", 400);
 

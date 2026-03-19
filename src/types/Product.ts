@@ -3,6 +3,7 @@ export interface Product {
     Seller_ID: number;
     Title: string;
     Description: string;
+    Location?: string;
     Price: number;
     Condition: string;
     Category_ID: number;
@@ -38,12 +39,13 @@ export interface ProductFilters {
     sortOrder?: 'asc' | 'desc';
 }
 
-export type UpdateProductData = Partial<Pick<Product, "Title" | "Description" | "Price" | "Condition" | "Category_ID" | "Quantity" | "Image_URL" | "Status">>;
+export type UpdateProductData = Partial<Pick<Product, "Title" | "Description" | "Location" | "Price" | "Condition" | "Category_ID" | "Quantity" | "Image_URL" | "Status">>;
 
 export const pickProductUpdateFields = (data: Partial<Product>): UpdateProductData => {
     const result: UpdateProductData = {};
     if (data.Title !== undefined) result.Title = data.Title;
     if (data.Description !== undefined) result.Description = data.Description;
+    if (data.Location !== undefined) result.Location = data.Location;
     if (data.Price !== undefined) result.Price = data.Price;
     if (data.Condition !== undefined) result.Condition = data.Condition;
     if (data.Category_ID !== undefined) result.Category_ID = data.Category_ID;

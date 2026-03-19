@@ -5,7 +5,7 @@ import { ProductModel } from '../models/productModel';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const ReportController = {
-    // 1.สร้างรายงาน (Create Report)
+    // 1.Create Report
     createReport: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -49,7 +49,7 @@ export const ReportController = {
         }
     },
 
-    // 2.ดูรายงานของตัวเอง (Get My Reports)
+    // 2.Get My Reports
     getMyReports: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);

@@ -4,7 +4,7 @@ import { ReviewService } from '../services/review.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const ReviewController = {
-    // POST /reviews — สร้างรีวิว
+    // 1.Create Review
     create: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -16,7 +16,7 @@ export const ReviewController = {
         }
     },
 
-    // GET /reviews/my — รีวิวที่ฉันเขียน
+    // 2.Get My Reviews
     getMyReviews: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -27,7 +27,7 @@ export const ReviewController = {
         }
     },
 
-    // GET /reviews/seller/:sellerId — รีวิวของผู้ขาย
+    // 3.Get Reviews for Seller
     getReviewsForSeller: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const sellerId = Number(req.params.sellerId);
@@ -39,7 +39,7 @@ export const ReviewController = {
         }
     },
 
-    // GET /reviews/seller/:sellerId/rating — คะแนนรวมผู้ขาย
+    // 4.Get Seller Rating
     getSellerRating: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const sellerId = Number(req.params.sellerId);
@@ -51,7 +51,7 @@ export const ReviewController = {
         }
     },
 
-    // GET /reviews/check/:orderId — เช็คว่ารีวิวแล้วหรือยัง
+    // 5.Check if Reviewed
     checkReviewed: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);

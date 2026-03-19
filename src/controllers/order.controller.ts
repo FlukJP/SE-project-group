@@ -4,7 +4,7 @@ import { OrderService } from '../services/order.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const OrderController = {
-    // 1.สร้าง Order ใหม่ (Create Order)
+    // 1.Create new order
     create: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -21,7 +21,7 @@ export const OrderController = {
         }
     },
 
-    // 2.ดู Order ตาม ID (Get Order by ID)
+    // 2.Get Order by ID
     getByID: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -37,7 +37,7 @@ export const OrderController = {
         }
     },
 
-    // 3.ดู Orders ที่ฉันซื้อ (Get My Buyer Orders)
+    // 3.Get My Buyer Orders
     getMyBuyerOrders: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -50,7 +50,7 @@ export const OrderController = {
         }
     },
 
-    // 4.ดู Orders ที่ลูกค้าสั่งสินค้าของฉัน (Get My Seller Orders)
+    // 4.Get My Seller Orders
     getMySellerOrders: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -63,7 +63,7 @@ export const OrderController = {
         }
     },
 
-    // 5.อัปเดตสถานะ Order (Update Order Status)
+    // 5.Update Order Status
     updateStatus: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -84,7 +84,7 @@ export const OrderController = {
         }
     },
 
-    // 6.ยกเลิก Order (Cancel Order)
+    // 6.Cancel Order
     cancel: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);

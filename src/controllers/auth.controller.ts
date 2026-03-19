@@ -4,7 +4,7 @@ import { AuthRequest } from '../middleware/auth.middleware';
 import { AppError } from '../errors/AppError';
 
 export const AuthController = {
-    // 1.สมัครสมาชิก (Register)
+    // 1.Register
     register: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { username, email, password, phone } = req.body;
@@ -27,7 +27,7 @@ export const AuthController = {
         }
     },
 
-    // 2.เข้าสู่ระบบ (Login)
+    // 2.Login
     login: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { email, password } = req.body;
@@ -43,7 +43,7 @@ export const AuthController = {
         }
     },
 
-    // 3.ออกจากระบบ (Logout)
+    // 3.Logout
     logout: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const authHeader = req.headers.authorization;
@@ -61,7 +61,7 @@ export const AuthController = {
         }
     },
 
-    // 4.Refresh token
+    // 4.Refresh Token
     refreshToken: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { refresh_token } = req.body;
@@ -78,7 +78,7 @@ export const AuthController = {
         }
     },
 
-    // 5.เปลี่ยนรหัสผ่าน (Change Password)
+    // 5.Change Password
     changePassword: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -95,7 +95,7 @@ export const AuthController = {
         }
     },
 
-    // 6.ขอ OTP (Request OTP)
+    // 6.Request OTP
     requestOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { email } = req.body;
@@ -110,7 +110,7 @@ export const AuthController = {
         }
     },
 
-    // 7.ยืนยัน OTP (Verify OTP)
+    // 7.Verify OTP
     verifyOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { email, otp } = req.body;
@@ -126,7 +126,7 @@ export const AuthController = {
         }
     },
 
-    // 8.รีเซ็ตรหัสผ่านด้วย OTP (Reset Password)
+    // 8.Reset Password
     resetPassword: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { email, otp, newPassword } = req.body;
@@ -141,7 +141,7 @@ export const AuthController = {
         }
     },
 
-    // 9. ขอ OTP ยืนยันเบอร์โทร (Request Phone OTP)
+    // 9.Request Phone OTP
     requestPhoneOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { phone } = req.body;
@@ -157,7 +157,7 @@ export const AuthController = {
         }
     },
 
-    // 10. ยืนยัน OTP เบอร์โทร (Verify Phone OTP)
+    // 10. Verify Phone OTP
     verifyPhoneOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { phone, otp } = req.body;
