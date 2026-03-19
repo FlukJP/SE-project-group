@@ -56,10 +56,7 @@ export default function ReviewPage() {
   const [totalReviews, setTotalReviews] = useState(0);
 
   useEffect(() => {
-    if (!isLoggedIn || !user?.User_ID) {
-      setLoading(false);
-      return;
-    }
+    if (!isLoggedIn || !user?.User_ID) return;
     Promise.all([
       reviewApi.getReviewsForSeller(user.User_ID).then((r) => r.data),
       reviewApi.getSellerRating(user.User_ID).then((r) => r.data),
@@ -101,7 +98,7 @@ export default function ReviewPage() {
                   </div>
                   <StarRating rating={Math.round(averageRating)} />
                   <div className="text-xs text-zinc-500 mt-1">
-                    {totalReviews} รีวิว
+                    {Number(totalReviews).toLocaleString()} รีวิว
                   </div>
                 </div>
                 <div className="flex-1 text-sm text-zinc-600">

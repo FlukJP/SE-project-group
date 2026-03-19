@@ -127,7 +127,7 @@ export default function PublicProfilePage() {
                 <div className="p-3">
                   <div className="text-sm font-semibold text-zinc-800 truncate">{p.title}</div>
                   <div className="text-sm font-bold text-emerald-700 mt-1">
-                    {p.price.toLocaleString()} ฿
+                    {Number(p.price).toLocaleString()} ฿
                   </div>
                   <div className="text-xs text-zinc-400 mt-1">
                     {p.status === "available" ? "กำลังขาย" : p.status === "reserved" ? "จอง" : "ขายแล้ว"}

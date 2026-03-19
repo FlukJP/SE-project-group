@@ -440,7 +440,7 @@ function SellerOrderCard({
         </div>
         <div className="text-xs text-zinc-500 mt-0.5">ผู้ซื้อ: {order.BuyerName || "-"}</div>
         <div className="text-xs text-zinc-400 mt-0.5">
-          {formatOrderDate(order)} · {order.Quantity} ชิ้น · {order.Total_Price.toLocaleString()} ฿
+          {formatOrderDate(order)} · {order.Quantity} ชิ้น · {Number(order.Total_Price).toLocaleString()} ฿
         </div>
       </div>
       <div className="flex flex-col items-end gap-2 shrink-0">
@@ -488,7 +488,7 @@ function BuyerOrderCard({
         </div>
         <div className="text-xs text-zinc-500 mt-0.5">ผู้ขาย: {order.SellerName || "-"}</div>
         <div className="text-xs text-zinc-400 mt-0.5">
-          {formatOrderDate(order)} · {order.Quantity} ชิ้น · {order.Total_Price.toLocaleString()} ฿
+          {formatOrderDate(order)} · {order.Quantity} ชิ้น · {Number(order.Total_Price).toLocaleString()} ฿
         </div>
       </div>
       <div className="flex flex-col items-end gap-2 shrink-0">

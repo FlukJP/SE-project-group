@@ -2,7 +2,13 @@ const nextConfig = {
   reactStrictMode: true,
 
   images: {
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+      },
       {
         protocol: "https",
         hostname: "images.unsplash.com",

@@ -7,6 +7,7 @@ import ProductCard from "@/src/components/product/ProductCard";
 import { productApi, categoryApi, type CategoryData } from "@/src/lib/api";
 import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { PROVINCES } from "@/src/data/provinces";
 
 type SortOption = "newest" | "price_asc" | "price_desc";
 
@@ -38,6 +39,7 @@ function SearchPageContent() {
 
   const q = searchParams.get("q") || "";
   const province = searchParams.get("province") || "";
+  const district = searchParams.get("district") || "";
 
   // Multi-category: parse comma-separated "cat" param
   const selectedCats = useMemo(() => {
@@ -48,11 +50,9 @@ function SearchPageContent() {
   const [query, setQuery] = useState(q);
   const [debouncedQuery, setDebouncedQuery] = useState(q);
   const [results, setResults] = useState<ProductDisplay[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const PAGE_SIZE = 20;
 
   // Categories
   const [categories, setCategories] = useState<CategoryData[]>([]);
@@ -89,32 +89,40 @@ function SearchPageContent() {
   useEffect(() => {
     setLoading(true);
     setError("");
-    const params: Record<string, string> = { limit: "200" };
+    const params: Record<string, string> = { limit: "9999" };
     if (debouncedQuery.trim()) params.q = debouncedQuery.trim();
     if (province) params.province = province;
+    if (district) params.district = district;
 
     productApi
       .list(params)
-      .then((res) => setResults(res.data.map(toProductDisplay)))
+      .then((res) => {
+        setResults(res.data.map(toProductDisplay));
+        setTotal(res.meta.total);
+      })
       .catch((err) => {
         setResults([]);
+        setTotal(0);
         setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการค้นหา");
       })
       .finally(() => setLoading(false));
-  }, [debouncedQuery, province]);
+  }, [debouncedQuery, province, district]);
 
   // Build URL with updated params
-  const buildUrl = (overrides: { q?: string; cats?: string[] }) => {
+  const buildUrl = (overrides: { q?: string; cats?: string[]; province?: string; district?: string }) => {
     const params = new URLSearchParams();
     const newQ = overrides.q !== undefined ? overrides.q : query.trim();
     const newCats = overrides.cats !== undefined ? overrides.cats : selectedCats;
+    const newProvince = overrides.province !== undefined ? overrides.province : province;
+    const newDistrict = overrides.district !== undefined ? overrides.district : (overrides.province !== undefined ? "" : district);
     if (newQ) params.set("q", newQ);
-    if (province) params.set("province", province);
+    if (newProvince) params.set("province", newProvince);
+    if (newDistrict && newProvince) params.set("district", newDistrict);
     if (newCats.length > 0) params.set("cat", newCats.join(","));
     return `/search?${params.toString()}`;
   };
 
-  const navigate = (overrides: { q?: string; cats?: string[] }) => {
+  const navigate = (overrides: { q?: string; cats?: string[]; province?: string; district?: string }) => {
     router.push(buildUrl(overrides));
   };
 
@@ -135,23 +143,20 @@ function SearchPageContent() {
     setSort("newest");
     setMinPrice("");
     setMaxPrice("");
-    navigate({ cats: [] });
+    navigate({ cats: [], province: "", district: "" });
   };
 
   const hasActiveFilter =
-    sort !== "newest" || minPrice !== "" || maxPrice !== "" || selectedCats.length > 0;
+    sort !== "newest" || minPrice !== "" || maxPrice !== "" || selectedCats.length > 0 || province !== "" || district !== "";
 
   const filterCount = [
     sort !== "newest",
     minPrice !== "",
     maxPrice !== "",
     selectedCats.length > 0,
+    province !== "",
+    district !== "",
   ].filter(Boolean).length;
-
-  // Reset to page 1 whenever any filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedQuery, province, selectedCats, sort, minPrice, maxPrice]);
 
   // Apply client-side filters
   const filteredResults = useMemo(() => {
@@ -175,12 +180,6 @@ function SearchPageContent() {
     else if (sort === "price_desc") list.sort((a, b) => b.price - a.price);
     return list;
   }, [results, sort, minPrice, maxPrice, selectedCats, user]);
-
-  const totalPages = Math.ceil(filteredResults.length / PAGE_SIZE);
-  const pagedResults = filteredResults.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
 
   // Header title
   const headerTitle = useMemo(() => {
@@ -240,7 +239,7 @@ function SearchPageContent() {
                 <span className="text-zinc-500 font-normal"> · &quot;{debouncedQuery}&quot;</span>
               )}
               <span className="text-sm font-normal text-zinc-500 ml-2">
-                ({filteredResults.length} รายการ)
+                ({Number(total).toLocaleString()} รายการ)
               </span>
             </h1>
 
@@ -268,6 +267,37 @@ function SearchPageContent() {
           {/* Filter panel */}
           {showFilter && (
             <div className="bg-white border border-zinc-200 rounded-2xl p-5 mb-5 shadow-sm space-y-5">
+
+              {/* Province / District */}
+              <div>
+                <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">พื้นที่</div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <select
+                    aria-label="เลือกจังหวัด"
+                    value={province}
+                    onChange={(e) => navigate({ province: e.target.value, district: "" })}
+                    className="flex-1 border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  >
+                    <option value="">ทุกจังหวัด</option>
+                    {PROVINCES.map((p) => (
+                      <option key={p.name} value={p.name}>{p.name}</option>
+                    ))}
+                  </select>
+                  {province && (
+                    <select
+                      aria-label="เลือกอำเภอ"
+                      value={district}
+                      onChange={(e) => navigate({ district: e.target.value })}
+                      className="flex-1 border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                    >
+                      <option value="">ทุกอำเภอ</option>
+                      {PROVINCES.find((p) => p.name === province)?.districts.map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
 
               {/* Category — multi-select */}
               {categories.length > 0 && (
@@ -376,6 +406,19 @@ function SearchPageContent() {
           {/* Active filter chips */}
           {hasActiveFilter && !showFilter && (
             <div className="flex flex-wrap gap-2 mb-4">
+              {/* Province / District chip */}
+              {province && (
+                <span className="flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                  📍 {province}{district && ` · ${district}`}
+                  <button
+                    type="button"
+                    onClick={() => navigate({ province: "", district: "" })}
+                    className="hover:text-emerald-900 ml-1"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
               {/* One chip per selected category */}
               {selectedCats.map((key) => {
                 const cat = categories.find((c) => c.category_key === key);
@@ -428,40 +471,11 @@ function SearchPageContent() {
               </button>
             </div>
           ) : filteredResults.length > 0 ? (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {pagedResults.map((product) => (
-                  <ProductCard key={product.id} product={product} badgeText="" />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-8">
-                  <button
-                    type="button"
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((p) => p - 1)}
-                    className="px-4 py-2 rounded-lg border border-zinc-300 text-sm font-semibold text-zinc-700 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                  >
-                    ← ก่อนหน้า
-                  </button>
-
-                  <span className="text-sm text-zinc-600 px-2">
-                    หน้า {currentPage} / {totalPages}
-                  </span>
-
-                  <button
-                    type="button"
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    className="px-4 py-2 rounded-lg border border-zinc-300 text-sm font-semibold text-zinc-700 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                  >
-                    ถัดไป →
-                  </button>
-                </div>
-              )}
-            </>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredResults.map((product) => (
+                <ProductCard key={product.id} product={product} badgeText="" />
+              ))}
+            </div>
           ) : (
             <div className="text-center py-16">
               <div className="text-4xl mb-3">🔍</div>

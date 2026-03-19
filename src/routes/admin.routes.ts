@@ -6,6 +6,8 @@ const router = Router();
 
 router.use(authenticateJWT, authorizeRoles(['admin']));
 
+router.get('/stats', AdminController.getStats);
+
 router.get('/users', AdminController.getAllUsers);
 router.get('/users/banned', AdminController.getBannedUsers);
 router.patch('/users/:userId/ban', AdminController.banUser);

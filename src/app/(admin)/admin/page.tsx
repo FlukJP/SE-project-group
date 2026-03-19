@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import StatCard from "@/src/components/admin/StatCard";
-import { adminApi, categoryApi, productApi } from "@/src/lib/api";
+import { adminApi } from "@/src/lib/api";
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({
@@ -16,22 +16,16 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      adminApi.getUsers(1, 100),
-      productApi.list({ limit: "100" }),
-      adminApi.getReports(1, 100),
-      categoryApi.list(),
-      adminApi.getBannedUsers(1, 100),
-      adminApi.getBannedProducts(1, 100),
-    ])
-      .then(([users, products, reports, categories, bannedUsers, bannedProducts]) => {
+    adminApi.getStats()
+      .then((res) => {
+        const d = res.data;
         setStats({
-          totalUsers: users.data.length,
-          totalProducts: products.data.length,
-          totalReports: reports.data.length,
-          totalCategories: categories.data.length,
-          bannedUsers: bannedUsers.data.length,
-          bannedProducts: bannedProducts.data.length,
+          totalUsers: d.totalUsers,
+          totalProducts: d.totalProducts,
+          totalReports: d.totalReports,
+          totalCategories: d.totalCategories,
+          bannedUsers: d.bannedUsers,
+          bannedProducts: d.bannedProducts,
         });
       })
       .catch(() => {})

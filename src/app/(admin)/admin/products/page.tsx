@@ -118,7 +118,7 @@ export default function AdminProductsPage() {
       key: "price",
       header: "ราคา",
       render: (p: ProductWithSeller) => (
-        <span>{p.Price.toLocaleString()} ฿</span>
+        <span>{Number(p.Price).toLocaleString()} ฿</span>
       ),
     },
     {

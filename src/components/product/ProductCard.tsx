@@ -18,7 +18,7 @@ export default function ProductCard({
   const to = href ?? `/products/${product.id}`;
   const image = product.images[0] || "";
   const timeAgo = product.postedAt;
-  const priceStr = `${(product.price ?? 0).toLocaleString()} ฿`;
+  const priceStr = `${Number(product.price ?? 0).toLocaleString()} ฿`;
   const [imgError, setImgError] = useState(false);
 
   return (

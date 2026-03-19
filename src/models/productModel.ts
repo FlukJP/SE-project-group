@@ -67,6 +67,14 @@ export const ProductModel = {
             whereSql += ` AND p.Status = ?`;
             values.push(filters.status);
         }
+        if (filters.province) {
+            whereSql += ` AND p.Province = ?`;
+            values.push(filters.province);
+        }
+        if (filters.district) {
+            whereSql += ` AND p.District = ?`;
+            values.push(filters.district);
+        }
         if (filters.keyword) {
             whereSql += ` AND (p.Title LIKE ? OR p.Description LIKE ?)`;
             values.push(`%${filters.keyword}%`, `%${filters.keyword}%`);
@@ -118,14 +126,15 @@ export const ProductModel = {
         const seller = await UserModel.findByIDSafe(productData.Seller_ID);
         if (!seller) throw new AppError("Seller not found", 404);
         const sql = `
-            INSERT INTO Product (Seller_ID, Title, Description, Location, Price, \`Condition\`, Category_ID, Status, Quantity, Image_URL)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO Product (Seller_ID, Title, Description, Province, District, Price, \`Condition\`, Category_ID, Status, Quantity, Image_URL)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const values = [
             productData.Seller_ID,
             productData.Title,
             productData.Description,
-            productData.Location || null,
+            productData.Province || null,
+            productData.District || null,
             productData.Price,
             productData.Condition,
             productData.Category_ID,
@@ -139,7 +148,7 @@ export const ProductModel = {
 
     // 5.Update ข้อมูลสินค้า (Edit Product)
     updateProduct: async ( id: number, productData: Partial<Product> ): Promise<boolean> => {
-        const ALLOWED_FIELDS = ['Title', 'Description', 'Location', 'Price', 'Condition', 'Category_ID', 'Status', 'Quantity', 'Image_URL'];
+        const ALLOWED_FIELDS = ['Title', 'Description', 'Province', 'District', 'Price', 'Condition', 'Category_ID', 'Status', 'Quantity', 'Image_URL'];
         const keys = Object.keys(productData).filter(
             (key) => productData[key as keyof Product] !== undefined
                 && key !== 'Product_ID'

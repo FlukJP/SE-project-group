@@ -17,7 +17,7 @@ export type { OrderWithDetails };
 export const productApi = {
   list: (params?: Record<string, string>) => {
     const qs = params ? `?${new URLSearchParams(params)}` : "";
-    return apiFetch<{ success: boolean; data: ProductWithSeller[] }>(
+    return apiFetch<{ success: boolean; data: ProductWithSeller[]; meta: { page: number; limit: number; total: number } }>(
       `/products${qs}`
     );
   },
@@ -136,6 +136,12 @@ export const reviewApi = {
 };
 
 export const adminApi = {
+  getStats: () =>
+    apiFetch<{ success: boolean; data: {
+      totalUsers: number; bannedUsers: number;
+      totalProducts: number; bannedProducts: number;
+      totalReports: number; totalCategories: number;
+    } }>("/admin/stats"),
   getUsers: (page = 1, limit = 20) =>
     apiFetch<{ success: boolean; data: User[]; pagination: { page: number; limit: number } }>(
       `/admin/users?page=${page}&limit=${limit}`

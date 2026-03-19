@@ -6,6 +6,8 @@ export interface ProductDisplay {
   title: string;
   price: number;
   images: string[];
+  province: string;
+  district: string;
   location: string;
   postedAt: string;
   description: string;
@@ -41,8 +43,10 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
     }
   }
 
-  // Use dedicated Location column; fallback to regex for legacy products
-  let location = p.Location?.trim() || "";
+  // Build province/district from dedicated columns; fallback to legacy regex in Description
+  const province = p.Province?.trim() || "";
+  const district = p.District?.trim() || "";
+  let location = province && district ? `${province} (${district})` : province || district;
   if (!location) {
     const locMatch = p.Description?.match(/📍\s*พื้นที่:\s*(.+?)(?:\n|$)/);
     if (locMatch) location = locMatch[1].trim();
@@ -58,6 +62,8 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
     title: p.Title,
     price: p.Price,
     images,
+    province,
+    district,
     location,
     postedAt: formatThaiRelativeTime(p.Created_at),
     description: cleanDescription,

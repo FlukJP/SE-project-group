@@ -88,6 +88,7 @@ export const AuthService = {
         const refreshToken = generateRefreshToken({ userID: user.User_ID });
         await redisClient.setEx(`refresh_token:${user.User_ID}`, REFRESH_TOKEN_TTL_SECONDS, refreshToken);
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { Password, ...userWithoutPassword } = user;
         return { access_token: accessToken, refresh_token: refreshToken, user: userWithoutPassword };
     },
@@ -100,7 +101,7 @@ export const AuthService = {
             decoded = jwt.verify(token, ENV.JWT_SECRET as string, {
                 issuer: ENV.JWT_ISSUER, audience: ENV.JWT_AUDIENCE, ignoreExpiration: true
             }) as TokenPayload;
-        } catch (error) {
+        } catch {
             throw new AppError("Invalid token signature", 400);
         }
 
@@ -119,7 +120,7 @@ export const AuthService = {
             const decoded = jwt.verify(token, ENV.JWT_SECRET, { issuer: ENV.JWT_ISSUER, audience: ENV.JWT_AUDIENCE }) as TokenPayload;
             return { userID: decoded.userID, role: decoded.role };
         }
-        catch (err) {
+        catch {
             throw new AppError("Invalid or expired token", 401);
         }
     },

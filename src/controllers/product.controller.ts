@@ -44,7 +44,8 @@ export const ProductController = {
                 Seller_ID: req.user.userID,
                 Title: title.trim(),
                 Description: fullDescription,
-                Location: `${province.trim()} (${district.trim()})`,
+                Province: province.trim(),
+                District: district.trim(),
                 Price: numPrice,
                 Condition: condition?.trim() || "มือสอง",
                 Category_ID: category.Category_ID,
@@ -73,7 +74,7 @@ export const ProductController = {
     // 2.Search/List Products
     getAllProducts: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
-            const { q, category, minPrice, maxPrice, limit, page, sortBy, sortOrder } = req.query;
+            const { q, category, minPrice, maxPrice, limit, page, sortBy, sortOrder, province, district } = req.query;
             const result = await ProductService.getAllProducts({
                 keyword: q as string,
                 category: category as string,
@@ -82,7 +83,9 @@ export const ProductController = {
                 limit: limit ? Number(limit) : 20,
                 page: page ? Number(page) : 1,
                 sortBy: (sortBy === 'Price' || sortBy === 'Created_at') ? sortBy : undefined,
-                sortOrder: sortOrder as 'asc' | 'desc'
+                sortOrder: sortOrder as 'asc' | 'desc',
+                province: province as string | undefined,
+                district: district as string | undefined,
             });
 
             res.status(200).json({ success: true, data: result.products, meta: { page: page ? Number(page) : 1, limit: limit ? Number(limit) : 20, total: result.total } });
@@ -124,6 +127,9 @@ export const ProductController = {
             const isAdmin = req.user.role === 'admin';
 
             const updateData: Partial<Product> = { ...req.body };
+            // Map lowercase form fields to the correct Product field names
+            if (req.body.province) updateData.Province = String(req.body.province).trim();
+            if (req.body.district) updateData.District = String(req.body.district).trim();
             if (files && files.length > 0) {
                 const imageUrls = files.map(file => `/uploads/products/${file.filename}`);
                 updateData.Image_URL = JSON.stringify(imageUrls);

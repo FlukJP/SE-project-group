@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
@@ -9,6 +9,7 @@ import { userApi, productApi, reviewApi, type ReviewData, API_BASE } from "@/src
 import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 import EmailOTP from "@/src/components/auth/EmailOTP";
 import PhoneOTP from "@/src/components/auth/PhoneOTP";
+import { startTransition } from "react";
 
 type TabKey = "profile" | "autoReply" | "review" | "manageProfile" | "account";
 
@@ -44,10 +45,12 @@ function ProfilePageContent() {
 
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
 
-  useEffect(() => {
-    const tabFromUrl = searchParams.get("tab");
-    if (isTabKey(tabFromUrl)) setActiveTab(tabFromUrl);
-  }, [searchParams]);
+useEffect(() => {
+  const tabFromUrl = searchParams.get("tab");
+  if (isTabKey(tabFromUrl)) {
+    startTransition(() => setActiveTab(tabFromUrl)); // ไม่ synchronous แล้ว
+  }
+}, [searchParams]);
 
   const changeTab = (tab: TabKey) => {
     setActiveTab(tab);
@@ -478,10 +481,12 @@ function MyReview() {
 function ManageProfile() {
   const { user } = useAuth();
   const [products, setProducts] = useState<ProductDisplay[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user?.User_ID) { setLoading(false); return; }
+    if (!user?.User_ID)  return;
+
+    startTransition(() => setLoading(true));
     productApi
       .getBySeller(user.User_ID)
       .then((res) => setProducts(res.data.map(toProductDisplay)))
@@ -524,7 +529,7 @@ function ManageProfile() {
               </div>
               <div className="p-3">
                 <div className="text-sm font-semibold text-zinc-800 truncate">{p.title}</div>
-                <div className="text-sm font-bold text-emerald-700 mt-1">{p.price.toLocaleString()} ฿</div>
+                <div className="text-sm font-bold text-emerald-700 mt-1">{Number(p.price).toLocaleString()} ฿</div>
                 <div className="text-xs text-zinc-400 mt-1">
                   {p.status === "available" ? "กำลังขาย" : p.status === "reserved" ? "จอง" : "ขายแล้ว"}
                 </div>

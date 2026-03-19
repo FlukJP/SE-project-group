@@ -1,3 +1,5 @@
+import db from "@/src/lib/mysql";
+import { RowDataPacket } from "mysql2";
 import { UserModel } from "../models/UserModel";
 import { ReportModel } from "../models/reportModel";
 import { ProductModel } from "../models/productModel";
@@ -79,5 +81,28 @@ export const AdminService = {
         const offset = (page - 1) * limit;
         const reports = await ReportModel.findAll(offset, limit);
         return reports;
+    },
+
+    // 8.Get dashboard stats (real COUNT queries)
+    getStats: async () => {
+        const sql = `
+            SELECT
+                (SELECT COUNT(*) FROM User WHERE Is_Banned = 0) AS totalUsers,
+                (SELECT COUNT(*) FROM User WHERE Is_Banned = 1) AS bannedUsers,
+                (SELECT COUNT(*) FROM Product WHERE Is_Banned = 0) AS totalProducts,
+                (SELECT COUNT(*) FROM Product WHERE Is_Banned = 1) AS bannedProducts,
+                (SELECT COUNT(*) FROM Report) AS totalReports,
+                (SELECT COUNT(*) FROM Category) AS totalCategories
+        `;
+        const [rows] = await db.query<RowDataPacket[]>(sql);
+        const row = rows[0];
+        return {
+            totalUsers: Number(row.totalUsers),
+            bannedUsers: Number(row.bannedUsers),
+            totalProducts: Number(row.totalProducts),
+            bannedProducts: Number(row.bannedProducts),
+            totalReports: Number(row.totalReports),
+            totalCategories: Number(row.totalCategories),
+        };
     }
 };

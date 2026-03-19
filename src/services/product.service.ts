@@ -50,6 +50,8 @@ export const ProductService = {
         const newProduct: Product = {
             Title: productData.Title.trim(),
             Description: productData.Description.trim(),
+            Province: productData.Province?.trim() || undefined,
+            District: productData.District?.trim() || undefined,
             Price: productData.Price,
             Condition: productData.Condition,
             Category_ID: productData.Category_ID,

@@ -115,4 +115,14 @@ export const AdminController = {
             next(error);
         }
     },
+
+    // 9.Get Dashboard Stats
+    getStats: async (req: AuthRequest, res: Response, next: NextFunction) => {
+        try {
+            const stats = await AdminService.getStats();
+            res.status(200).json({ success: true, data: stats });
+        } catch (error) {
+            next(error);
+        }
+    },
 };

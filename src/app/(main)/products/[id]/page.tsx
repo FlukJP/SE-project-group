@@ -141,7 +141,7 @@ export default function ProductDetailPage() {
             )}
 
             <div className="text-3xl font-bold text-emerald-700 mb-4">
-              {(product.price ?? 0).toLocaleString()} ฿
+              {Number(product.price ?? 0).toLocaleString()} ฿
             </div>
 
             <div className="flex items-center gap-4 text-xs text-zinc-500 mb-6">
