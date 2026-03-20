@@ -10,9 +10,9 @@ export const AdminController = {
             const page = req.query.page ? Number(req.query.page) : 1;
             const limit = req.query.limit ? Number(req.query.limit) : 20;
 
-            const users = await AdminService.getAllUsers(page, limit);
+            const { data: users, total } = await AdminService.getAllUsers(page, limit);
 
-            res.status(200).json({ success: true, data: users, pagination: { page, limit } });
+            res.status(200).json({ success: true, data: users, pagination: { page, limit, total } });
         } catch (error) {
             next(error);
         }
@@ -24,9 +24,9 @@ export const AdminController = {
             const page = req.query.page ? Number(req.query.page) : 1;
             const limit = req.query.limit ? Number(req.query.limit) : 20;
 
-            const users = await AdminService.getBannedUsers(page, limit);
+            const { data: users, total } = await AdminService.getBannedUsers(page, limit);
 
-            res.status(200).json({ success: true, data: users, pagination: { page, limit } });
+            res.status(200).json({ success: true, data: users, pagination: { page, limit, total } });
         } catch (error) {
             next(error);
         }
@@ -66,9 +66,9 @@ export const AdminController = {
             const page = req.query.page ? Number(req.query.page) : 1;
             const limit = req.query.limit ? Number(req.query.limit) : 20;
 
-            const products = await AdminService.getBannedProducts(page, limit);
+            const { data: products, total } = await AdminService.getBannedProducts(page, limit);
 
-            res.status(200).json({ success: true, data: products, pagination: { page, limit } });
+            res.status(200).json({ success: true, data: products, pagination: { page, limit, total } });
         } catch (error) {
             next(error);
         }
@@ -108,9 +108,9 @@ export const AdminController = {
             const page = req.query.page ? Number(req.query.page) : 1;
             const limit = req.query.limit ? Number(req.query.limit) : 20;
 
-            const reports = await AdminService.getAllReports(page, limit);
+            const { data: reports, total } = await AdminService.getAllReports(page, limit);
 
-            res.status(200).json({ success: true, data: reports, pagination: { page, limit } });
+            res.status(200).json({ success: true, data: reports, pagination: { page, limit, total } });
         } catch (error) {
             next(error);
         }

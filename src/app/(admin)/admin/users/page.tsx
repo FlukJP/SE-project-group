@@ -30,6 +30,7 @@ export default function AdminUsersPage() {
   const [tab, setTab] = useState<TabKey>("all");
   const [users, setUsers] = useState<User[]>([]);
   const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const [confirmTarget, setConfirmTarget] = useState<{
@@ -47,7 +48,7 @@ export default function AdminUsersPage() {
         : adminApi.getUsers(page);
 
     fetcher
-      .then((res) => setUsers(res.data))
+      .then((res) => { setUsers(res.data); setTotal(res.pagination.total); })
       .catch(() => setUsers([]))
       .finally(() => setLoading(false));
   }, [tab, page]);
@@ -108,12 +109,12 @@ export default function AdminUsersPage() {
         if (u.Role === "admin") {
           return <span className="text-xs text-zinc-400">-</span>;
         }
-        return u.Is_Banned ? (
+        return tab === "banned" || u.Is_Banned ? (
           <button
             onClick={() => setConfirmTarget({ user: u, action: "unban" })}
             className="text-xs px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
           >
-            ยกเลิกระงับ
+            ปลดระงับ
           </button>
         ) : (
           <button
@@ -159,15 +160,16 @@ export default function AdminUsersPage() {
         data={users}
         loading={loading}
         page={page}
+        total={total}
         onPageChange={setPage}
         emptyText={tab === "banned" ? "ไม่มีผู้ใช้ที่ถูกระงับ" : "ไม่มีข้อมูลผู้ใช้"}
       />
 
       <ConfirmDialog
         open={!!confirmTarget}
-        title={confirmTarget?.action === "ban" ? "ระงับผู้ใช้" : "ยกเลิกการระงับ"}
-        message={`ต้องการ${confirmTarget?.action === "ban" ? "ระงับ" : "ยกเลิกการระงับ"}ผู้ใช้ "${confirmTarget?.user.Username}" หรือไม่?`}
-        confirmLabel={confirmTarget?.action === "ban" ? "ระงับ" : "ยกเลิกการระงับ"}
+        title={confirmTarget?.action === "ban" ? "ระงับผู้ใช้" : "ปลดระงับผู้ใช้"}
+        message={`ต้องการ${confirmTarget?.action === "ban" ? "ระงับ" : "ปลดระงับ"}ผู้ใช้ "${confirmTarget?.user.Username}" หรือไม่?`}
+        confirmLabel={confirmTarget?.action === "ban" ? "ระงับ" : "ปลดระงับ"}
         confirmColor={confirmTarget?.action === "ban" ? "bg-red-600" : "bg-emerald-600"}
         loading={actionLoading}
         onConfirm={handleAction}

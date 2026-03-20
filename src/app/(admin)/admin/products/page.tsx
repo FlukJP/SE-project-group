@@ -32,6 +32,7 @@ export default function AdminProductsPage() {
   const [tab, setTab] = useState<TabKey>("all");
   const [products, setProducts] = useState<ProductWithSeller[]>([]);
   const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -48,7 +49,7 @@ export default function AdminProductsPage() {
     if (tab === "banned") {
       adminApi
         .getBannedProducts(page)
-        .then((res) => setProducts(res.data))
+        .then((res) => { setProducts(res.data); setTotal(res.pagination.total); })
         .catch(() => setProducts([]))
         .finally(() => setLoading(false));
     } else {
@@ -59,7 +60,7 @@ export default function AdminProductsPage() {
       if (search.trim()) params.keyword = search.trim();
       productApi
         .list(params)
-        .then((res) => setProducts(res.data))
+        .then((res) => { setProducts(res.data); setTotal(res.meta.total); })
         .catch(() => setProducts([]))
         .finally(() => setLoading(false));
     }
@@ -135,12 +136,12 @@ export default function AdminProductsPage() {
       key: "actions",
       header: "จัดการ",
       render: (p: ProductWithSeller) =>
-        p.Is_Banned ? (
+        tab === "banned" || p.Is_Banned ? (
           <button
             onClick={() => setConfirmTarget({ product: p, action: "unban" })}
             className="text-xs px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
           >
-            ยกเลิกระงับ
+            ปลดระงับ
           </button>
         ) : (
           <button
@@ -203,15 +204,16 @@ export default function AdminProductsPage() {
         data={products}
         loading={loading}
         page={page}
+        total={total}
         onPageChange={setPage}
         emptyText={tab === "banned" ? "ไม่มีสินค้าที่ถูกระงับ" : "ไม่มีข้อมูลสินค้า"}
       />
 
       <ConfirmDialog
         open={!!confirmTarget}
-        title={confirmTarget?.action === "ban" ? "ระงับสินค้า" : "ยกเลิกการระงับสินค้า"}
-        message={`ต้องการ${confirmTarget?.action === "ban" ? "ระงับ" : "ยกเลิกการระงับ"}สินค้า "${confirmTarget?.product.Title}" หรือไม่?`}
-        confirmLabel={confirmTarget?.action === "ban" ? "ระงับ" : "ยกเลิกการระงับ"}
+        title={confirmTarget?.action === "ban" ? "ระงับสินค้า" : "ปลดระงับสินค้า"}
+        message={`ต้องการ${confirmTarget?.action === "ban" ? "ระงับ" : "ปลดระงับ"}สินค้า "${confirmTarget?.product.Title}" หรือไม่?`}
+        confirmLabel={confirmTarget?.action === "ban" ? "ระงับ" : "ปลดระงับ"}
         confirmColor={confirmTarget?.action === "ban" ? "bg-red-600" : "bg-emerald-600"}
         loading={actionLoading}
         onConfirm={handleAction}

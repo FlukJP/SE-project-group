@@ -10,14 +10,16 @@ export const AdminService = {
     getAllUsers: async (page: number = 1, limit: number = 20) => {
         const offset = (page - 1) * limit;
         const users = await UserModel.findAll(offset, limit);
-        return users;
+        const [[{ total }]] = await db.query<RowDataPacket[]>('SELECT COUNT(*) AS total FROM `User`');
+        return { data: users, total: Number(total) };
     },
 
     // 2.Gat all banned user
     getBannedUsers: async (page: number = 1, limit: number = 20) => {
         const offset = (page - 1) * limit;
         const users = await UserModel.findBannedUsers(offset, limit);
-        return users;
+        const [[{ total }]] = await db.query<RowDataPacket[]>('SELECT COUNT(*) AS total FROM `User` WHERE Is_Banned = 1');
+        return { data: users, total: Number(total) };
     },
 
     // 3.Ban user
@@ -49,7 +51,8 @@ export const AdminService = {
     getBannedProducts: async (page: number = 1, limit: number = 20) => {
         const offset = (page - 1) * limit;
         const products = await ProductModel.findBannedProducts(offset, limit);
-        return products;
+        const [[{ total }]] = await db.query<RowDataPacket[]>('SELECT COUNT(*) AS total FROM Product WHERE Is_Banned = 1');
+        return { data: products, total: Number(total) };
     },
 
     // 5.Ban product
@@ -80,7 +83,8 @@ export const AdminService = {
     getAllReports: async (page: number = 1, limit: number = 20) => {
         const offset = (page - 1) * limit;
         const reports = await ReportModel.findAll(offset, limit);
-        return reports;
+        const [[{ total }]] = await db.query<RowDataPacket[]>('SELECT COUNT(*) AS total FROM Report');
+        return { data: reports, total: Number(total) };
     },
 
     // 8.Get dashboard stats (real COUNT queries)

@@ -148,11 +148,11 @@ export const adminApi = {
       totalReports: number; totalCategories: number;
     } }>("/admin/stats"),
   getUsers: (page = 1, limit = 20) =>
-    apiFetch<{ success: boolean; data: User[]; pagination: { page: number; limit: number } }>(
+    apiFetch<{ success: boolean; data: User[]; pagination: { page: number; limit: number; total: number } }>(
       `/admin/users?page=${page}&limit=${limit}`
     ),
   getBannedUsers: (page = 1, limit = 20) =>
-    apiFetch<{ success: boolean; data: User[]; pagination: { page: number; limit: number } }>(
+    apiFetch<{ success: boolean; data: User[]; pagination: { page: number; limit: number; total: number } }>(
       `/admin/users/banned?page=${page}&limit=${limit}`
     ),
   banUser: (userId: number) =>
@@ -166,7 +166,7 @@ export const adminApi = {
       { method: "PATCH" }
     ),
   getBannedProducts: (page = 1, limit = 20) =>
-    apiFetch<{ success: boolean; data: ProductWithSeller[]; pagination: { page: number; limit: number } }>(
+    apiFetch<{ success: boolean; data: ProductWithSeller[]; pagination: { page: number; limit: number; total: number } }>(
       `/admin/products/banned?page=${page}&limit=${limit}`
     ),
   banProduct: (productId: number) =>
@@ -180,7 +180,7 @@ export const adminApi = {
       { method: "PATCH" }
     ),
   getReports: (page = 1, limit = 20) =>
-    apiFetch<{ success: boolean; data: Report[]; pagination: { page: number; limit: number } }>(
+    apiFetch<{ success: boolean; data: Report[]; pagination: { page: number; limit: number; total: number } }>(
       `/admin/reports?page=${page}&limit=${limit}`
     ),
 };
