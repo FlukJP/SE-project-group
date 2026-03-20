@@ -40,7 +40,7 @@ export default function MessageBubble({ message, isMine }: Props) {
             onClick={() => window.open(message.Content, "_blank")}
           />
         ) : (
-          <p className="text-sm whitespace-pre-wrap break-words">
+          <p className="text-sm whitespace-pre-wrap break-all">
             {message.Content}
           </p>
         )}

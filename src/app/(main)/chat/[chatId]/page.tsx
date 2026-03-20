@@ -199,7 +199,7 @@ export default function ChatConversationPage() {
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4"
       >
         {isLoadingMore && (
           <div className="text-center text-xs text-gray-400 py-2">

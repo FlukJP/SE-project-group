@@ -51,9 +51,9 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
   return (
     <ChatLayoutContext.Provider value={{ rooms, refreshRooms }}>
       <Navbar />
-      <div className="flex h-[calc(100vh-80px)] max-w-6xl mx-auto my-6 border border-gray-200 rounded-md overflow-hidden bg-white shadow-sm">
+      <div className="flex h-[calc(100vh-80px)] max-w-7xl mx-auto my-6 border border-gray-200 rounded-md overflow-hidden bg-white shadow-sm">
 
-        <div className="w-1/3 min-w-[300px] border-r border-gray-200 flex flex-col bg-white">
+        <div className="w-1/4 min-w-[260px] border-r border-gray-200 flex flex-col bg-white">
 
           <div className="flex border-b border-gray-200 text-sm font-medium text-gray-500">
             <button
@@ -118,7 +118,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-        <div className="flex-1 bg-[#FAFAFA] flex flex-col">
+        <div className="flex-1 min-h-0 bg-[#FAFAFA] flex flex-col">
           {children}
         </div>
 
