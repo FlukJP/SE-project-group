@@ -11,6 +11,7 @@ import redisClient, { connectRedis } from "@/src/config/redis";
 import { OTP_TTL_SECONDS, RATE_LIMIT_TTL_SECONDS, MAX_OTP_REQUESTS, MAX_OTP_ATTEMPTS, SALT_ROUNDS } from "@/src/config/constants";
 import { REFRESH_TOKEN_TTL_SECONDS } from "@/src/config/constants";
 import { generateAccessToken, generateRefreshToken, TokenPayload } from "@/src/utils/jwt";
+import admin from "@/src/config/firebaseAdmin";
 
 // Redis (rate limiters)
 const checkRateLimit = async (key: string, limit: number, ttlSeconds: number): Promise<void> => {
@@ -297,6 +298,38 @@ export const AuthService = {
 
         const user = await UserModel.findByPhone(phone);
         if (!user || !user.User_ID) throw new AppError("User not found", 404);
+
+        await UserModel.updateUser(user.User_ID, { Is_Phone_Verified: true, Verified_Date: new Date() });
+
+        const accessToken = generateAccessToken({ userID: user.User_ID, role: user.Role });
+        const refreshToken = generateRefreshToken({ userID: user.User_ID });
+        await redisClient.setEx(`refresh_token:${user.User_ID}`, REFRESH_TOKEN_TTL_SECONDS, refreshToken);
+
+        return { access_token: accessToken, refresh_token: refreshToken };
+    },
+
+    // 13. Verify Phone via Firebase idToken
+    verifyPhoneFirebase: async (idToken: string) => {
+        if (!idToken) throw new AppError("Firebase ID token is required", 400);
+
+        let firebasePhone: string | undefined;
+        try {
+            const decoded = await admin.auth().verifyIdToken(idToken);
+            firebasePhone = decoded.phone_number;
+        } catch {
+            throw new AppError("Invalid Firebase ID token", 401);
+        }
+
+        if (!firebasePhone) throw new AppError("Phone number not found in token", 400);
+
+        // Convert E.164 (+66xxxxxxxxx) → Thai local format (0xxxxxxxxx)
+        const phone = firebasePhone.startsWith('+66')
+            ? '0' + firebasePhone.slice(3)
+            : firebasePhone;
+
+        const user = await UserModel.findByPhone(phone);
+        if (!user || !user.User_ID) throw new AppError("No account found for this phone number", 404);
+        if (!user.Is_Email_Verified) throw new AppError("Please verify your email before verifying phone number", 400);
 
         await UserModel.updateUser(user.User_ID, { Is_Phone_Verified: true, Verified_Date: new Date() });
 

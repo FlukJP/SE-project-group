@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
 import { useAuth } from "@/src/contexts/AuthContext";
-import { userApi, productApi, reviewApi, type ReviewData, API_BASE } from "@/src/lib/api";
+import { userApi, productApi, reviewApi, authApi, type ReviewData, API_BASE } from "@/src/lib/api";
 import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 import EmailOTP from "@/src/components/auth/EmailOTP";
 import PhoneOTP from "@/src/components/auth/PhoneOTP";
@@ -243,7 +243,16 @@ function ProfileInfo({
   const handleOTPVerified = async (data: { access_token: string; refresh_token: string }) => {
     await onVerified(data);
     setShowEmailOTP(false);
-    setShowPhoneOTP(false);
+  };
+
+  const handlePhoneOTPVerified = async (data: { idToken: string }) => {
+    try {
+      const result = await authApi.verifyPhoneFirebase(data.idToken);
+      await onVerified(result);
+      setShowPhoneOTP(false);
+    } catch (err: unknown) {
+      setOtpError(err instanceof Error ? err.message : "ยืนยันเบอร์โทรไม่สำเร็จ");
+    }
   };
 
   const allVerified = isEmailVerified && isPhoneVerified;
@@ -326,7 +335,6 @@ function ProfileInfo({
         {showPhoneOTP && !isPhoneVerified && isEmailVerified && phone && (
           <div className="mt-4 p-4 bg-white border border-blue-200 rounded-xl">
             <h4 className="text-sm font-semibold text-blue-700 mb-3">ยืนยันเบอร์โทรศัพท์ด้วย OTP</h4>
-            <p className="text-xs text-zinc-500 mb-3">* รหัส OTP จะถูกส่งไปที่อีเมลของคุณ เพื่อยืนยันเบอร์โทร</p>
             {otpError && (
               <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2 mb-3">
                 {otpError}
@@ -334,7 +342,7 @@ function ProfileInfo({
             )}
             <PhoneOTP
               phone={phone}
-              onVerified={handleOTPVerified}
+              onVerified={handlePhoneOTPVerified}
               onError={(msg) => setOtpError(msg)}
             />
             <button

@@ -119,12 +119,13 @@ export default function RegisterPage() {
     }
   };
 
-  const handlePhoneVerified = async (data: { access_token: string; refresh_token: string }) => {
+  const handlePhoneVerified = async (data: { idToken: string }) => {
     try {
-      await setTokensAndLoadUser(data.access_token, data.refresh_token);
+      const result = await authApi.verifyPhoneFirebase(data.idToken);
+      await setTokensAndLoadUser(result.access_token, result.refresh_token);
       router.push("/");
-    } catch {
-      setError("เข้าสู่ระบบอัตโนมัติไม่สำเร็จ กรุณาเข้าสู่ระบบด้วยตัวเอง");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "ยืนยันเบอร์โทรไม่สำเร็จ");
     }
   };
 

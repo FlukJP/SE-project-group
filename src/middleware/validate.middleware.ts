@@ -137,6 +137,10 @@ export const verifyPhoneOtpSchema: Schema = {
     otp:   { required: true, type: 'string' },
 };
 
+export const verifyPhoneFirebaseSchema: Schema = {
+    idToken: { required: true, type: 'string' },
+};
+
 // Order
 export const createOrderSchema: Schema = {
     Product_ID: { required: true, type: 'number', min: 1 },

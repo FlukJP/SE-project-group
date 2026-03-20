@@ -84,6 +84,11 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify({ phone, otp }),
     }),
+  verifyPhoneFirebase: (idToken: string) =>
+    apiFetch<{ success: boolean; access_token: string; refresh_token: string }>("/auth/verify-phone-firebase", {
+      method: "POST",
+      body: JSON.stringify({ idToken }),
+    }),
 };
 
 export const userApi = {

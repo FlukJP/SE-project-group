@@ -2,7 +2,7 @@ import admin from "firebase-admin";
 import path from "path";
 import fs from "fs";
 
-const serviceAccountPath = path.resolve(process.cwd(), "firebase_key.json");
+const serviceAccountPath = path.resolve(process.cwd(), "firebase-service-account.json");
 
 if (!admin.apps.length) {
     if (fs.existsSync(serviceAccountPath)) {
@@ -11,7 +11,7 @@ if (!admin.apps.length) {
             credential: admin.credential.cert(serviceAccount),
         });
     } else {
-        console.warn("firebase_key.json not found. Firebase Admin initialized without credentials.");
+        console.warn("firebase-service-account.json not found. Firebase Admin initialized without credentials.");
         admin.initializeApp();
     }
 }

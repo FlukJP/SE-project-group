@@ -13,6 +13,7 @@ import {
     resetPasswordSchema,
     requestPhoneOtpSchema,
     verifyPhoneOtpSchema,
+    verifyPhoneFirebaseSchema,
 } from '../middleware/validate.middleware';
 
 const router = Router();
@@ -24,6 +25,7 @@ router.post('/request-otp', passwordResetLimiter, validateBody(requestOtpSchema)
 router.post('/verify-otp', validateBody(verifyOtpSchema), AuthController.verifyOTP);
 router.post('/request-phone-otp', passwordResetLimiter, validateBody(requestPhoneOtpSchema), AuthController.requestPhoneOTP);
 router.post('/verify-phone-otp', validateBody(verifyPhoneOtpSchema), AuthController.verifyPhoneOTP);
+router.post('/verify-phone-firebase', validateBody(verifyPhoneFirebaseSchema), AuthController.verifyPhoneFirebase);
 router.post('/reset-password', passwordResetLimiter, validateBody(resetPasswordSchema), AuthController.resetPassword);
 
 router.post('/logout', authenticateJWT, AuthController.logout);

@@ -44,7 +44,7 @@ next-env.d.ts
 .env
 .env.local
 
-firebase_key.json
-
 # claude temp files
 tmpclaude-*
+
+firebase-service-account.json

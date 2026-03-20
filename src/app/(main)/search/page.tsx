@@ -50,9 +50,11 @@ function SearchPageContent() {
   const [query, setQuery] = useState(q);
   const [debouncedQuery, setDebouncedQuery] = useState(q);
   const [results, setResults] = useState<ProductDisplay[]>([]);
-  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+
+  const ITEMS_PER_PAGE = 20;
 
   // Categories
   const [categories, setCategories] = useState<CategoryData[]>([]);
@@ -98,11 +100,9 @@ function SearchPageContent() {
       .list(params)
       .then((res) => {
         setResults(res.data.map(toProductDisplay));
-        setTotal(res.meta.total);
       })
       .catch((err) => {
         setResults([]);
-        setTotal(0);
         setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการค้นหา");
       })
       .finally(() => setLoading(false));
@@ -181,6 +181,14 @@ function SearchPageContent() {
     return list;
   }, [results, sort, minPrice, maxPrice, selectedCats, user]);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedQuery, province, district, selectedCats, minPrice, maxPrice, sort]);
+
+  const totalPages = Math.ceil(filteredResults.length / ITEMS_PER_PAGE);
+  const pagedResults = filteredResults.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
   // Header title
   const headerTitle = useMemo(() => {
     if (selectedCats.length === 1) {
@@ -239,7 +247,7 @@ function SearchPageContent() {
                 <span className="text-zinc-500 font-normal"> · &quot;{debouncedQuery}&quot;</span>
               )}
               <span className="text-sm font-normal text-zinc-500 ml-2">
-                ({Number(total).toLocaleString()} รายการ)
+                ({Number(filteredResults.length).toLocaleString()} รายการ)
               </span>
             </h1>
 
@@ -471,11 +479,62 @@ function SearchPageContent() {
               </button>
             </div>
           ) : filteredResults.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredResults.map((product) => (
-                <ProductCard key={product.id} product={product} badgeText="" />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {pagedResults.map((product) => (
+                  <ProductCard key={product.id} product={product} badgeText="" />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1 mt-8">
+                  <button
+                    type="button"
+                    onClick={() => { setPage((p) => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    disabled={page <= 1}
+                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-zinc-700 border-zinc-300 hover:border-emerald-400"
+                  >
+                    ก่อนหน้า
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                    .reduce<(number | "...")[]>((acc, p, idx, arr) => {
+                      if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((item, idx) =>
+                      item === "..." ? (
+                        <span key={`ellipsis-${idx}`} className="px-2 text-zinc-400 select-none">…</span>
+                      ) : (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => { setPage(item as number); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          className={`w-9 h-9 rounded-lg border text-sm font-medium transition ${
+                            page === item
+                              ? "bg-emerald-600 text-white border-emerald-600"
+                              : "bg-white text-zinc-700 border-zinc-300 hover:border-emerald-400"
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      )
+                    )}
+
+                  <button
+                    type="button"
+                    onClick={() => { setPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    disabled={page >= totalPages}
+                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-zinc-700 border-zinc-300 hover:border-emerald-400"
+                  >
+                    ถัดไป
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-16">
               <div className="text-4xl mb-3">🔍</div>

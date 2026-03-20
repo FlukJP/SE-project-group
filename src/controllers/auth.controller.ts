@@ -172,4 +172,20 @@ export const AuthController = {
             next(error);
         }
     },
+
+    // 11. Verify Phone via Firebase idToken
+    verifyPhoneFirebase: async (req: AuthRequest, res: Response, next: NextFunction) => {
+        try {
+            const { idToken } = req.body;
+            const result = await AuthService.verifyPhoneFirebase(idToken);
+
+            res.status(200).json({
+                success: true,
+                message: "ยืนยันเบอร์โทรสำเร็จ",
+                ...result,
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
 };
