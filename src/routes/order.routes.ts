@@ -16,6 +16,7 @@ router.get('/seller/my', authenticateJWT, OrderController.getMySellerOrders);
 router.get('/:orderId', authenticateJWT, validateParams(orderIdParam), OrderController.getByID);
 
 router.post('/', authenticateJWT, requireVerified, validateBody(createOrderSchema), OrderController.create);
+router.post('/seller-record', authenticateJWT, requireVerified, OrderController.sellerRecord);
 router.patch('/:orderId/status', authenticateJWT, requireVerified, validateParams(orderIdParam), validateBody(updateOrderStatusSchema), OrderController.updateStatus);
 router.patch('/:orderId/cancel', authenticateJWT, requireVerified, validateParams(orderIdParam), OrderController.cancel);
 

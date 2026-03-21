@@ -57,6 +57,10 @@ export default function MyProductsPage() {
   const [buyerOrdersLoading, setBuyerOrdersLoading] = useState(true);
   const [buyerOrderUpdating, setBuyerOrderUpdating] = useState<number | null>(null);
 
+  // Buyer ID modal state
+  const [pendingStatus, setPendingStatus] = useState<{ productId: string; newStatus: "reserved" | "sold" } | null>(null);
+  const [buyerIdInput, setBuyerIdInput] = useState("");
+
   useEffect(() => {
     if (!user?.User_ID) return;
     productApi
@@ -83,6 +87,12 @@ export default function MyProductsPage() {
   }, [user?.User_ID]);
 
   const handleStatusChange = async (productId: string, newStatus: string) => {
+    if (newStatus === "reserved" || newStatus === "sold") {
+      setBuyerIdInput("");
+      setPendingStatus({ productId, newStatus: newStatus as "reserved" | "sold" });
+      return;
+    }
+    // available — just update status directly
     setStatusUpdating(productId);
     try {
       const fd = new FormData();
@@ -90,11 +100,38 @@ export default function MyProductsPage() {
       await productApi.update(productId, fd);
       setProducts((prev) =>
         prev.map((p) =>
-          p.id === productId
-            ? { ...p, status: newStatus as ProductDisplay["status"] }
-            : p
+          p.id === productId ? { ...p, status: newStatus as ProductDisplay["status"] } : p
         )
       );
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+    } finally {
+      setStatusUpdating(null);
+    }
+  };
+
+  const handleBuyerIdConfirm = async () => {
+    if (!pendingStatus) return;
+    const buyerId = Number(buyerIdInput.trim());
+    if (!buyerId || buyerId <= 0) {
+      showError("กรุณาใส่ User ID ผู้ซื้อที่ถูกต้อง");
+      return;
+    }
+    const { productId, newStatus } = pendingStatus;
+    setStatusUpdating(productId);
+    setPendingStatus(null);
+    try {
+      await orderApi.sellerRecord(Number(productId), buyerId, newStatus);
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId ? { ...p, status: newStatus as ProductDisplay["status"] } : p
+        )
+      );
+      if (newStatus === "sold") {
+        const res = await orderApi.getMySellerOrders();
+        setSellerOrders(res.data);
+        setActiveTab("selling");
+      }
     } catch (err) {
       showError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
@@ -380,6 +417,42 @@ export default function MyProductsPage() {
           )}
         </div>
       </main>
+
+      {/* Buyer ID Modal */}
+      {pendingStatus && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <h3 className="text-base font-bold text-zinc-800 mb-1">
+              {pendingStatus.newStatus === "sold" ? "บันทึกการขาย" : "บันทึกการจอง"}
+            </h3>
+            <p className="text-sm text-zinc-500 mb-4">กรุณาใส่ User ID ของผู้ซื้อ</p>
+            <input
+              type="number"
+              min={1}
+              placeholder="User ID ผู้ซื้อ"
+              value={buyerIdInput}
+              onChange={(e) => setBuyerIdInput(e.target.value)}
+              className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 mb-4"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPendingStatus(null)}
+                className="flex-1 py-2 rounded-lg border border-zinc-200 text-sm text-zinc-600 hover:bg-zinc-50 transition"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleBuyerIdConfirm}
+                disabled={!buyerIdInput}
+                className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
+              >
+                ยืนยัน
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -99,4 +99,24 @@ export const OrderController = {
             next(error);
         }
     },
+
+    // 7.Seller-initiated record
+    sellerRecord: async (req: AuthRequest, res: Response, next: NextFunction) => {
+        try {
+            if (!req.user) throw new AppError('Unauthorized', 401);
+            const { Product_ID, Buyer_ID, targetStatus } = req.body;
+            if (!Product_ID || !Buyer_ID || !targetStatus) throw new AppError('Product_ID, Buyer_ID and targetStatus are required', 400);
+            if (targetStatus !== 'reserved' && targetStatus !== 'sold') throw new AppError("targetStatus must be 'reserved' or 'sold'", 400);
+
+            const orderId = await OrderService.sellerRecordOrder(
+                req.user.userID,
+                Number(Buyer_ID),
+                Number(Product_ID),
+                targetStatus,
+            );
+            res.status(201).json({ success: true, orderId });
+        } catch (error) {
+            next(error);
+        }
+    },
 };

@@ -16,7 +16,7 @@ import { useAuth } from "@/src/contexts/AuthContext";
 
 export default function HomePage() {
   const router = useRouter();
-  const { isLoggedIn, user } = useAuth();
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [province, setProvince] = useState("");
   const [showLogin, setShowLogin] = useState(false);
@@ -24,12 +24,11 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch products once on mount — always works regardless of auth state
   useEffect(() => {
     setLoading(true);
-    const params: Record<string, string> = { limit: "20", sortBy: "random" };
-    if (user?.User_ID) params.excludeSeller = String(user.User_ID);
     Promise.all([
-      productApi.list(params).then((res) => res.data.map(toProductDisplay)),
+      productApi.list({ limit: "20", sortBy: "random" }).then((res) => res.data.map(toProductDisplay)),
       categoryApi.popular(10).then((res) => res.data.map(toPopularCategory))
         .catch(() => categoryApi.list().then((res) => res.data.map(toCategory))),
     ])
@@ -42,7 +41,16 @@ export default function HomePage() {
         setCategories([]);
       })
       .finally(() => setLoading(false));
-  }, [isLoggedIn]);
+  }, []);
+
+  // Re-fetch with excludeSeller when user logs in
+  useEffect(() => {
+    if (!user?.User_ID) return;
+    productApi
+      .list({ limit: "20", sortBy: "random", excludeSeller: String(user.User_ID) })
+      .then((res) => setFeatured(res.data.map(toProductDisplay)))
+      .catch(() => {});
+  }, [user?.User_ID]);
 
   const visibleFeatured = featured;
 

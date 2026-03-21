@@ -232,4 +232,9 @@ export const orderApi = {
     apiFetch<{ success: boolean; message: string }>(`/orders/${orderId}/cancel`, {
       method: "PATCH",
     }),
+  sellerRecord: (productId: number, buyerId: number, targetStatus: "reserved" | "sold") =>
+    apiFetch<{ success: boolean; orderId: number }>("/orders/seller-record", {
+      method: "POST",
+      body: JSON.stringify({ Product_ID: productId, Buyer_ID: buyerId, targetStatus }),
+    }),
 };

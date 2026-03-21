@@ -96,5 +96,31 @@ export const OrderService = {
             return await OrderModel.cancelOrderTransaction(orderID, order.Product_ID, restoredQuantity);
         }
         return await OrderModel.updateOrder(orderID, 'cancelled');
-    }
+    },
+
+    // 7.Seller-initiated order record
+    sellerRecordOrder: async (sellerID: number, buyerID: number, productID: number, targetStatus: 'reserved' | 'sold'): Promise<number> => {
+        if (!productID || !buyerID) throw new AppError("Product ID and Buyer ID are required", 400);
+        if (buyerID === sellerID) throw new AppError("Buyer cannot be the same as seller", 400);
+
+        const product = await ProductModel.findByID(productID);
+        if (!product) throw new AppError("Product not found", 404);
+        if (product.Seller_ID !== sellerID) throw new AppError("You don't own this product", 403);
+
+        const qty = Math.max(1, product.Quantity || 1);
+        const orderStatus = targetStatus === 'sold' ? 'completed' : 'pending';
+        const newProductStatus = targetStatus === 'sold' ? 'sold' : 'reserved';
+        const remainingQty = targetStatus === 'sold' ? 0 : qty;
+
+        const newOrder: Order = {
+            Product_ID: productID,
+            Buyer_ID: buyerID,
+            Seller_ID: sellerID,
+            Quantity: qty,
+            Total_Price: product.Price * qty,
+            Status: orderStatus,
+        };
+
+        return await OrderModel.createOrderTransaction(newOrder, productID, remainingQty, newProductStatus);
+    },
 };
