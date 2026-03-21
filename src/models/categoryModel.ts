@@ -3,28 +3,28 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { CategoryRow } from '@/src/types/Category';
 
 export const CategoryModel = {
-    // 1.Find all active categories
+    /** Retrieve all active categories ordered by sort_order */
     findAll: async (): Promise<CategoryRow[]> => {
         const sql = `SELECT * FROM Category WHERE is_active = TRUE ORDER BY sort_order ASC, Category_ID ASC`;
         const [rows] = await db.query<RowDataPacket[]>(sql);
         return rows as CategoryRow[];
     },
 
-    // 2.Find category by ID
+    /** Find a category by its primary key ID */
     findById: async (id: number): Promise<CategoryRow | null> => {
         const sql = `SELECT * FROM Category WHERE Category_ID = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as CategoryRow) : null;
     },
 
-    // 3.Find category by key
+    /** Find a category by its unique category_key slug */
     findByKey: async (key: string): Promise<CategoryRow | null> => {
         const sql = `SELECT * FROM Category WHERE category_key = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [key]);
         return rows.length > 0 ? (rows[0] as CategoryRow) : null;
     },
 
-    // 4.Create a new category
+    /** Create a new category and return the inserted ID */
     create: async (data: { category_key: string; name: string; emoji: string; sort_order?: number }): Promise<number> => {
         const sql = `INSERT INTO Category (category_key, name, emoji, sort_order) VALUES (?, ?, ?, ?)`;
         const [result] = await db.query<ResultSetHeader>(sql, [
@@ -36,7 +36,7 @@ export const CategoryModel = {
         return result.insertId;
     },
 
-    // 5.Update a category
+    /** Update one or more fields of a category and return whether any row was affected */
     update: async (id: number, data: Partial<{ category_key: string; name: string; emoji: string; sort_order: number; is_active: boolean }>): Promise<boolean> => {
         const fields: string[] = [];
         const values: unknown[] = [];
@@ -55,7 +55,7 @@ export const CategoryModel = {
         return result.affectedRows > 0;
     },
 
-    // 6.Delete a category (soft delete by setting is_active to false)
+    /** Soft-delete a category by setting is_active to false */
     delete: async (id: number): Promise<boolean> => {
         const sql = `UPDATE Category SET is_active = FALSE WHERE Category_ID = ?`;
         const [result] = await db.query<ResultSetHeader>(sql, [id]);

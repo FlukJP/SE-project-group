@@ -13,7 +13,7 @@ import { REFRESH_TOKEN_TTL_SECONDS } from "@/src/config/constants";
 import { generateAccessToken, generateRefreshToken, TokenPayload } from "@/src/utils/jwt";
 import admin from "@/src/config/firebaseAdmin";
 
-// Redis (rate limiters)
+/** Increment a Redis counter and throw a rate-limit error if the limit is exceeded within the TTL window */
 const checkRateLimit = async (key: string, limit: number, ttlSeconds: number): Promise<void> => {
     await connectRedis();
     const countValue = await redisClient.incr(key);
@@ -32,7 +32,7 @@ const roleHierarchy: Record<Role, number> = {
 };
 
 export const AuthService = {
-    // 1.Register
+    /** Validate input, hash the password, create a new user, and send a verification OTP email */
     register: async (userData: User): Promise<number> => {
         if (!userData.Username || !userData.Email || !userData.Password || !userData.Phone_number) throw new AppError("Username, Email, Password and Phone number are required", 400);
         if (!validateUsername(userData.Username)) throw new AppError("Username must be 2-50 characters and contain only letters, numbers, spaces, underscores, or hyphens", 400);
@@ -50,16 +50,16 @@ export const AuthService = {
             ...userData,
             Password: await bcrypt.hash(userData.Password, SALT_ROUNDS),
             Role: 'customer',
-        }
+        };
 
         const insertId = await UserModel.createUser(newUser);
         // Fire-and-forget: send OTP email in background without blocking response
         AuthService.requestOTP(userData.Email).catch(() => {});
 
-        return insertId
+        return insertId;
     },
 
-    // 2.Login
+    /** Verify credentials, enforce brute-force protection, and return access + refresh tokens */
     login: async (params: { email: string; password: string }) => {
         if (!params.email || !params.password) throw new AppError("Email and Password are required", 400);
 
@@ -94,7 +94,7 @@ export const AuthService = {
         return { access_token: accessToken, refresh_token: refreshToken, user: userWithoutPassword };
     },
 
-    // 3.Logout
+    /** Blacklist the access token and remove the stored refresh token from Redis */
     logout: async (token: string): Promise<void> => {
         if (!token) throw new AppError("Token is required", 400);
         let decoded: TokenPayload;
@@ -112,7 +112,7 @@ export const AuthService = {
         await redisClient.del(`refresh_token:${decoded.userID}`);
     },
 
-    // 4.Token verification
+    /** Check the token against the blacklist and verify its signature, returning the user ID and role */
     verifyToken: async (token: string): Promise<{ userID: number; role: string }> => {
         if (!token) throw new AppError("Token is required", 400);
         const isBlacklisted = await redisClient.get(`blacklist:${token}`);
@@ -120,26 +120,21 @@ export const AuthService = {
         try {
             const decoded = jwt.verify(token, ENV.JWT_SECRET, { issuer: ENV.JWT_ISSUER, audience: ENV.JWT_AUDIENCE }) as TokenPayload;
             return { userID: decoded.userID, role: decoded.role };
-        }
-        catch {
+        } catch {
             throw new AppError("Invalid or expired token", 401);
         }
     },
 
-    // 5.Refresh token
+    /** Verify the refresh token against the stored value in Redis and issue a new access token */
     refreshToken: async (token: string) => {
         if (!token) throw new AppError("Token is required", 400);
         let decoded: TokenPayload;
 
         try {
-            decoded = jwt.verify(token,
-                ENV.JWT_REFRESH_SECRET as string,
-                {
-                    issuer: ENV.JWT_ISSUER,
-                    audience: ENV.JWT_AUDIENCE
-                }
-            ) as TokenPayload;
-
+            decoded = jwt.verify(token, ENV.JWT_REFRESH_SECRET as string, {
+                issuer: ENV.JWT_ISSUER,
+                audience: ENV.JWT_AUDIENCE
+            }) as TokenPayload;
         } catch (error) {
             if (error instanceof jwt.TokenExpiredError) throw new AppError("Refresh token expired", 401);
             if (error instanceof jwt.JsonWebTokenError) throw new AppError("Invalid refresh token", 401);
@@ -156,7 +151,7 @@ export const AuthService = {
         return { access_token: newAccessToken };
     },
 
-    // 6.Authorization
+    /** Verify the token and ensure the user's role meets or exceeds the required role level */
     authorize: async (token: string, requiredRole: Role) => {
         const { userID, role } = await AuthService.verifyToken(token);
         const userRole = role as Role;
@@ -165,7 +160,7 @@ export const AuthService = {
         return { userID, role: userRole };
     },
 
-    // 7.Change password
+    /** Verify the old password and update it with the new hashed password */
     changePassword: async (userID: number, oldPassword: string, newPassword: string): Promise<boolean> => {
         if (!oldPassword || !newPassword) throw new AppError("Old password and new password are required", 400);
         if (!validatePassword(newPassword)) throw new AppError("New password must be at least 8 characters long", 400);
@@ -180,7 +175,7 @@ export const AuthService = {
         return await UserModel.updateUser(userID, { Password: hashedNewPassword });
     },
 
-    // 8.request OTP
+    /** Generate a 6-digit OTP, hash and store it in Redis, then send it to the user's email */
     requestOTP: async (email: string): Promise<void> => {
         if (!validateEmail(email)) throw new AppError("Invalid email format", 400);
 
@@ -198,7 +193,7 @@ export const AuthService = {
         );
     },
 
-    // 9.verify OTP
+    /** Verify the provided OTP using a timing-safe comparison, mark the email as verified, and return new tokens */
     verifyOTP: async (email: string, otp: string) => {
         if (!validateEmail(email)) throw new AppError("Invalid email format", 400);
 
@@ -230,7 +225,7 @@ export const AuthService = {
         return { access_token: accessToken, refresh_token: refreshToken };
     },
 
-    // 10. Reset Password with OTP
+    /** Verify the OTP and update the user's password to the new hashed value */
     resetPasswordWithOTP: async (email: string, otp: string, newPassword: string): Promise<void> => {
         if (!validateEmail(email) || !newPassword) throw new AppError("Email and new password are required", 400);
         if (!validatePassword(newPassword)) throw new AppError("New password must be at least 8 characters long", 400);
@@ -256,7 +251,7 @@ export const AuthService = {
         await UserModel.updateUser(user.User_ID, { Password: hashedNewPassword });
     },
 
-    // 11. Request Phone OTP
+    /** Generate a phone OTP and send it to the user's registered email address */
     requestPhoneOTP: async (phone: string): Promise<void> => {
         if (!validatePhoneNumber(phone)) throw new AppError("Phone number must be 10 digits", 400);
 
@@ -276,7 +271,7 @@ export const AuthService = {
         );
     },
 
-    // 12. Verify Phone OTP
+    /** Verify the phone OTP, mark the phone as verified, and return new tokens */
     verifyPhoneOTP: async (phone: string, otp: string) => {
         if (!validatePhoneNumber(phone)) throw new AppError("Invalid phone number", 400);
 
@@ -308,7 +303,7 @@ export const AuthService = {
         return { access_token: accessToken, refresh_token: refreshToken };
     },
 
-    // 13. Verify Phone via Firebase idToken
+    /** Verify a Firebase ID token, resolve the phone number to a local user, mark the phone as verified, and return new tokens */
     verifyPhoneFirebase: async (idToken: string) => {
         if (!idToken) throw new AppError("Firebase ID token is required", 400);
 
@@ -322,7 +317,7 @@ export const AuthService = {
 
         if (!firebasePhone) throw new AppError("Phone number not found in token", 400);
 
-        // Convert E.164 (+66xxxxxxxxx) → Thai local format (0xxxxxxxxx)
+        // Convert E.164 (+66xxxxxxxxx) to Thai local format (0xxxxxxxxx)
         const phone = firebasePhone.startsWith('+66')
             ? '0' + firebasePhone.slice(3)
             : firebasePhone;

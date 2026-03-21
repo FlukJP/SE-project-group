@@ -3,12 +3,12 @@ import { CategoryPopularityModel } from '../models/categoryPopularityModel';
 import { AppError } from '../errors/AppError';
 
 export const CategoryService = {
-    // 1.Get all categories
+    /** Retrieve all active categories */
     getAll: async () => {
         return CategoryModel.findAll();
     },
 
-    // 2.Retrieving popular categories (calculated from search and purchase data over the past 7 days) — fallback to sort_order if no data is available.
+    /** Retrieve popular categories ranked by search and purchase events over the last 7 days; falls back to sort_order if no event data exists */
     getPopular: async (limit = 10) => {
         const popular = await CategoryPopularityModel.getPopular(limit);
         if (popular.length > 0) return popular;
@@ -21,19 +21,19 @@ export const CategoryService = {
         }));
     },
 
-    // 3.Record search or purchase events
+    /** Record a search or purchase event for a category key */
     recordPopularity: async (categoryKey: string, eventType: 'search' | 'purchase') => {
         await CategoryPopularityModel.record(categoryKey, eventType);
     },
 
-    // 4.Get category by key
+    /** Find a single category by its key slug */
     getByKey: async (key: string) => {
         const category = await CategoryModel.findByKey(key);
         if (!category) throw new AppError('Category not found', 404);
         return category;
     },
 
-    // 5.Create a new category
+    /** Validate required fields, check uniqueness of the key, and create a new category */
     create: async (data: { category_key: string; name: string; emoji: string; sort_order?: number }) => {
         if (!data.category_key || !data.name || !data.emoji) {
             throw new AppError('category_key, name, and emoji are required', 400);
@@ -46,7 +46,7 @@ export const CategoryService = {
         return CategoryModel.findById(id);
     },
 
-    // 6.Update a category
+    /** Update a category's fields, ensuring the new key is unique if changed */
     update: async (id: number, data: Partial<{ category_key: string; name: string; emoji: string; sort_order: number; is_active: boolean }>) => {
         const category = await CategoryModel.findById(id);
         if (!category) throw new AppError('Category not found', 404);
@@ -62,7 +62,7 @@ export const CategoryService = {
         return CategoryModel.findById(id);
     },
 
-    // 7.Delete a category
+    /** Soft-delete a category by ID */
     delete: async (id: number): Promise<{ message: string }> => {
         const category = await CategoryModel.findById(id);
         if (!category) throw new AppError('Category not found', 404);

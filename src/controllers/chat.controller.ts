@@ -4,7 +4,7 @@ import { ChatService } from '../services/chat.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const ChatController = {
-    // 1.View all of your chat history (Inbox)
+    /** Return all chat rooms in the authenticated user's inbox */
     getChatRooms: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -17,7 +17,7 @@ export const ChatController = {
         }
     },
 
-    // 2.View Chat Room by ID
+    /** Return the details of a specific chat room, verifying the user is a participant */
     getChatRoomByID: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -31,7 +31,7 @@ export const ChatController = {
         }
     },
 
-    // 3.Find or Create Chat Room
+    /** Return an existing chat room for the given seller and product, or create a new one */
     findOrCreateChatRoom: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -51,7 +51,7 @@ export const ChatController = {
         }
     },
 
-    // 4.Delete Chat Room - Soft Delete (Hide)
+    /** Soft-delete (hide) a chat room for the authenticated participant */
     deleteChatRoom: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -65,7 +65,7 @@ export const ChatController = {
         }
     },
 
-    // 5.View Messages in Chat Room (Get Messages - paginated)
+    /** Return paginated messages from a chat room for the authenticated user */
     getMessages: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -80,7 +80,7 @@ export const ChatController = {
         }
     },
 
-    // 6.Send Message
+    /** Validate content length and persist a new message in the specified chat room */
     sendMessage: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -103,7 +103,7 @@ export const ChatController = {
         }
     },
 
-    // 7.Mark Messages as Read
+    /** Mark all unread messages in a chat room as read for the authenticated user */
     markAsRead: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -117,7 +117,7 @@ export const ChatController = {
         }
     },
 
-    // 8.Get Unread Messages Count
+    /** Return the total count of unread messages across all chat rooms for the authenticated user */
     getUnreadCount: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);

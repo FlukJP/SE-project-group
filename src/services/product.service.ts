@@ -5,7 +5,7 @@ import { CategoryService } from "@/src/services/category.service";
 import { cleanupImages } from "@/src/utils/uploadHelpers";
 
 export const ProductService = {
-    // 1.Product list
+    /** Search products with optional filters and record category popularity for search events */
     getAllProducts: async (filters: ProductFilters = {}) => {
         const result = await ProductModel.searchProducts(filters);
 
@@ -16,20 +16,20 @@ export const ProductService = {
         return result;
     },
 
-    // 2.Product by seller
+    /** Retrieve all products listed by a specific seller */
     getProductsBySeller: async (sellerID: number) => {
         if (!sellerID || sellerID <= 0) throw new AppError("Invalid seller ID", 400);
         return await ProductModel.findBySellerID(sellerID);
     },
 
-    // 3.Product detail
+    /** Retrieve a single product by its ID */
     getProductByID: async (productID: number) => {
         const product = await ProductModel.findByID(productID);
         if (!product) throw new AppError("Product not found", 404);
         return product;
     },
 
-    // 4.Create product
+    /** Validate and create a new product listing for the given seller */
     createProduct: async (sellerID: number, productData: Omit<Product, 'Product_ID'>) => {
         if (!productData.Title || !productData.Description || !productData.Price || !productData.Condition || !productData.Category_ID || !productData.Image_URL) {
             throw new AppError("Missing required fields", 400);
@@ -39,7 +39,7 @@ export const ProductService = {
         if (productData.Title.trim().length > 255) throw new AppError("Title must be less than 255 characters", 400);
         if (productData.Description.trim().length > 2000) throw new AppError("Description must be less than 2000 characters", 400);
 
-        // Validate Image_URL is valid JSON array
+        // Validate Image_URL is a valid JSON array
         try {
             const parsed = JSON.parse(productData.Image_URL);
             if (!Array.isArray(parsed)) throw new Error();
@@ -63,7 +63,7 @@ export const ProductService = {
         return await ProductModel.createProduct(newProduct as Product);
     },
 
-    // 5.Update product (with admin override support)
+    /** Validate and apply allowed field updates; admin users may bypass ownership checks */
     updateProduct: async (productID: number, userID: number, updateData: Partial<Product>, isAdmin: boolean = false) => {
         const product = await ProductModel.findByID(productID);
         if (!product) throw new AppError("Product not found", 404);
@@ -89,7 +89,7 @@ export const ProductService = {
         return { updated, oldImageURL: product.Image_URL };
     },
 
-    // 6.Delete product (with admin override support)
+    /** Delete a product and clean up its associated images; admin users may bypass ownership checks */
     deleteProduct: async (productID: number, userID: number, isAdmin: boolean = false) => {
         const product = await ProductModel.findByID(productID);
         if (!product) throw new AppError("Product not found", 404);

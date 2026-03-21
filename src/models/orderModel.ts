@@ -3,7 +3,7 @@ import { Order } from '@/src/types/Order';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export const OrderModel = {
-    // 1.Detail one by one
+    /** Find a single order by its ID */
     findByID: async (id: number): Promise<Order | null> => {
         const sql = `
             SELECT * FROM Purchase
@@ -13,7 +13,7 @@ export const OrderModel = {
         return rows.length > 0 ? (rows[0] as Order) : null;
     },
 
-    // 2.Get orders by Buyer ID (Buyer Order List)
+    /** Retrieve all orders placed by a specific buyer, joined with product and user info */
     findByBuyerID: async (buyerID: number): Promise<Order[]> => {
         const sql = `
             SELECT o.*,
@@ -31,7 +31,7 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 3.Get orders by Seller ID (Seller Order List)
+    /** Retrieve all orders received by a specific seller, joined with product and user info */
     findBySellerID: async (sellerID: number): Promise<Order[]> => {
         const sql = `
             SELECT o.*,
@@ -49,7 +49,7 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 4.Get orders by Product ID (Product Order List)
+    /** Retrieve all orders for a specific product */
     findByProductID: async (productID: number): Promise<Order[]> => {
         const sql = `
             SELECT * FROM Purchase
@@ -60,7 +60,7 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 5.Search orders by Product Title
+    /** Search orders by matching product title */
     findByProductTitle: async (title: string): Promise<Order[]> => {
         const sql = `
             SELECT o.* FROM Purchase o
@@ -72,7 +72,7 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 6.Search orders by Status
+    /** Retrieve all orders filtered by status */
     findByStatus: async (status: string): Promise<Order[]> => {
         const sql = `
             SELECT * FROM Purchase
@@ -83,7 +83,7 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 7.Get all orders (All Order List)
+    /** Retrieve all orders sorted by most recent */
     findAll: async (): Promise<Order[]> => {
         const sql = `
             SELECT * FROM Purchase
@@ -93,7 +93,7 @@ export const OrderModel = {
         return rows as Order[];
     },
 
-    // 8.Create Order
+    /** Create a new order and return the inserted ID */
     createOrder: async (orderData: Order): Promise<number> => {
         const sql = `
             INSERT INTO Purchase (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price)
@@ -110,7 +110,7 @@ export const OrderModel = {
         return result.insertId;
     },
 
-    // 9.Update Order Status
+    /** Update the status of an existing order */
     updateOrder: async (orderID: number, status: string): Promise<boolean> => {
         const sql = `
             UPDATE Purchase
@@ -121,7 +121,7 @@ export const OrderModel = {
         return result.affectedRows > 0;
     },
 
-    // 10.Cancel Order
+    /** Set an order's status to cancelled */
     cancelOrder: async (orderID: number): Promise<boolean> => {
         const sql = `
             UPDATE Purchase
@@ -132,10 +132,10 @@ export const OrderModel = {
         return result.affectedRows > 0;
     },
 
-    // 11.Transaction
+    /** Create an order and decrement product quantity atomically; uses row-level locking to prevent race conditions */
     createOrderTransaction: async (newOrder: Order, productID: number, remainingQuantity: number, newProductStatus: string): Promise<number> => {
         const connection = await db.getConnection();
-        try{
+        try {
             await connection.beginTransaction();
 
             // Lock the product row to prevent race conditions
@@ -148,10 +148,9 @@ export const OrderModel = {
             if (currentQty < newOrder.Quantity) throw new Error('Insufficient stock');
 
             const insertOrderSQL = `
-            INSERT INTO Purchase (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price, Status)
+                INSERT INTO Purchase (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price, Status)
                 VALUES (?, ?, ?, ?, ?, ?)
             `;
-
             const orderValues = [
                 newOrder.Product_ID,
                 newOrder.Buyer_ID,
@@ -160,13 +159,12 @@ export const OrderModel = {
                 newOrder.Total_Price,
                 newOrder.Status
             ];
-
             const [orderResult] = await connection.query<ResultSetHeader>(insertOrderSQL, orderValues);
             const orderID = orderResult.insertId;
 
             const updateProductSql = `
-                UPDATE Product 
-                SET Quantity = ?, Status = ? 
+                UPDATE Product
+                SET Quantity = ?, Status = ?
                 WHERE Product_ID = ?
             `;
             await connection.query(updateProductSql, [remainingQuantity, newProductStatus, productID]);
@@ -180,7 +178,7 @@ export const OrderModel = {
         }
     },
 
-    // 12. Cancel Order Transaction
+    /** Cancel an order and restore product stock atomically; uses row-level locking to prevent concurrent cancellation */
     cancelOrderTransaction: async (orderID: number, productID: number, restoredQuantity: number): Promise<boolean> => {
         const connection = await db.getConnection();
         try {
@@ -201,7 +199,6 @@ export const OrderModel = {
             if (!lockedOrder || lockedOrder.length === 0) throw new Error('Order not found');
             if (lockedOrder[0].Status === 'cancelled') throw new Error('Order is already cancelled');
 
-            // Recalculate restored quantity from the locked current value
             const currentQty = lockedRows[0].Quantity;
             const actualRestoredQuantity = currentQty + (restoredQuantity - currentQty);
 

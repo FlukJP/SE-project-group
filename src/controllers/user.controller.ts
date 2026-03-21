@@ -7,7 +7,7 @@ import { deleteUploadedFile } from '../utils/uploadHelpers';
 import { UploadFolderType } from '../types/upload';
 
 export const UserController = {
-    // 1.Get My Profile
+    /** Return the full profile of the currently authenticated user */
     getProfile: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -20,7 +20,7 @@ export const UserController = {
         }
     },
 
-    // 2.Get User by ID - public profile
+    /** Return the public profile (ID, username, rating, avatar) of any user by ID */
     getUserByID: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const userId = Number(req.params.id);
@@ -41,7 +41,7 @@ export const UserController = {
         }
     },
 
-    // 3.Update Profile
+    /** Update allowed profile fields for the authenticated user */
     updateProfile: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -60,7 +60,7 @@ export const UserController = {
         }
     },
 
-    // 4.Upload Avatar
+    /** Save an uploaded avatar image, delete the old one, and persist the new URL */
     uploadAvatar: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);

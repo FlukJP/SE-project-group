@@ -5,7 +5,7 @@ import { AppError } from "@/src/errors/AppError";
 import { UserModel } from "./UserModel";
 
 export const ProductModel = {
-    // 1.ดึงข้อมูลสินค้าจาก ID (detail one by one)
+    /** Find a single non-banned product by ID, joined with seller and category info */
     findByID: async (id: number): Promise<ProductWithSeller | null> => {
         if (!id || id <= 0) throw new AppError("Invalid product ID", 400);
         const sql = `
@@ -21,7 +21,7 @@ export const ProductModel = {
         return rows.length > 0 ? (rows[0] as ProductWithSeller) : null;
     },
 
-    // 2.ดึงข้อมูลสินค้าจาก User ID (Seller's Product List)
+    /** Find all non-banned products belonging to a specific seller */
     findBySellerID: async (sellerID: number): Promise<ProductWithSeller[]> => {
         if (!sellerID || sellerID <= 0) throw new AppError("Invalid seller ID", 400);
         const sql = `
@@ -38,14 +38,14 @@ export const ProductModel = {
         return rows as ProductWithSeller[];
     },
 
-    // 3.ค้นหาสินค้า (Search Products)
+    /** Search products with optional filters (category, condition, price range, location, keyword, sort) and return paginated results with total count */
     searchProducts: async (filters: ProductFilters): Promise<{ products: ProductWithSeller[]; total: number }> => {
         let whereSql = `
             WHERE 1=1
             AND p.Is_Banned = 0
         `;
 
-    const values: (string | number)[] = [];
+        const values: (string | number)[] = [];
 
         if (filters.category) {
             whereSql += ` AND c.category_key = ?`;
@@ -84,12 +84,12 @@ export const ProductModel = {
             values.push(filters.excludeSeller);
         }
 
-        // Count total matching rows
+        // Count total matching rows before applying pagination
         const countSql = `SELECT COUNT(*) AS total FROM Product p LEFT JOIN Category c ON p.Category_ID = c.Category_ID ${whereSql}`;
         const [countRows] = await db.query<RowDataPacket[]>(countSql, values);
         const total = countRows[0]?.total || 0;
 
-        // Build data query
+        // Build the main data query with seller and category joins
         let dataSql = `
             SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
             u.Avatar_URL AS SellerAvatar, c.name AS Category_Name, c.category_key AS Category_Key
@@ -100,9 +100,8 @@ export const ProductModel = {
         `;
 
         if (filters.sortBy) {
-            // Fix #21: SECURITY NOTE - sortBy is validated against a strict whitelist
-            // before being interpolated into SQL. Do NOT remove this validation.
-            // ORDER BY columns cannot be parameterized in MySQL, so whitelist is required.
+            // SECURITY: sortBy is validated against a strict whitelist before being interpolated
+            // into SQL. ORDER BY columns cannot be parameterized in MySQL, so the whitelist is required.
             const validSortFields = ['Price', 'Created_at', 'random'];
             if (!validSortFields.includes(filters.sortBy)) {
                 throw new AppError("Invalid sort field", 400);
@@ -129,7 +128,7 @@ export const ProductModel = {
         return { products: rows as ProductWithSeller[], total };
     },
 
-    // 4.สร้างสินค้าใหม่ (Create Product)
+    /** Create a new product after verifying the seller exists, and return the inserted ID */
     createProduct: async (productData: Product): Promise<number> => {
         const seller = await UserModel.findByIDSafe(productData.Seller_ID);
         if (!seller) throw new AppError("Seller not found", 404);
@@ -154,8 +153,8 @@ export const ProductModel = {
         return result.insertId;
     },
 
-    // 5.Update ข้อมูลสินค้า (Edit Product)
-    updateProduct: async ( id: number, productData: Partial<Product> ): Promise<boolean> => {
+    /** Update allowed fields of a product and return whether any row was affected */
+    updateProduct: async (id: number, productData: Partial<Product>): Promise<boolean> => {
         const ALLOWED_FIELDS = ['Title', 'Description', 'Province', 'District', 'Price', 'Condition', 'Category_ID', 'Status', 'Quantity', 'Image_URL'];
         const keys = Object.keys(productData).filter(
             (key) => productData[key as keyof Product] !== undefined
@@ -174,17 +173,17 @@ export const ProductModel = {
         return result.affectedRows > 0;
     },
 
-    // 6.ลบสินค้า (Delete Product)
+    /** Permanently delete a product by ID */
     deleteProduct: async (id: number): Promise<boolean> => {
         const sql = `
-            DELETE FROM Product 
+            DELETE FROM Product
             WHERE Product_ID = ?
         `;
         const [result] = await db.query<ResultSetHeader>(sql, [id]);
         return result.affectedRows > 0;
     },
 
-    // 7.ดึงข้อมูลสินค้าที่โดนBan (Admin List)
+    /** Retrieve a paginated list of banned products including seller and category info (admin use) */
     findBannedProducts: async (offset: number, limit: number): Promise<ProductWithSeller[]> => {
         const sql = `
             SELECT p.*, u.Username AS SellerName, u.Email AS SellerEmail, u.Phone_number AS SellerPhone_number,
@@ -200,7 +199,7 @@ export const ProductModel = {
         return rows as ProductWithSeller[];
     },
 
-    // 8.ดึงข้อมูลสินค้าจาก ID รวมที่โดน Ban (สำหรับ Admin)
+    /** Find a product by ID regardless of its ban status (admin use) */
     findByIDIncludingBanned: async (id: number): Promise<ProductWithSeller | null> => {
         if (!id || id <= 0) throw new AppError("Invalid product ID", 400);
         const sql = `
@@ -215,7 +214,7 @@ export const ProductModel = {
         return rows.length > 0 ? (rows[0] as ProductWithSeller) : null;
     },
 
-    // 9.Ban/Unban สินค้า (Admin only - dedicated method แยกจาก updateProduct)
+    /** Set the ban status of a product (admin only) */
     setBanStatus: async (id: number, isBanned: boolean): Promise<boolean> => {
         const sql = `UPDATE Product SET Is_Banned = ? WHERE Product_ID = ?`;
         const [result] = await db.query<ResultSetHeader>(sql, [isBanned ? 1 : 0, id]);

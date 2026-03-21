@@ -4,7 +4,7 @@ import { CategoryService } from '../services/category.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const CategoryController = {
-    // 1.Get All Categories
+    /** Return all active categories */
     getAll: async (_req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const categories = await CategoryService.getAll();
@@ -14,7 +14,7 @@ export const CategoryController = {
         }
     },
 
-    // 2.Get Popular
+    /** Return the most popular categories ranked by recent search and purchase activity */
     getPopular: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const limit = Number(req.query.limit) || 10;
@@ -25,7 +25,7 @@ export const CategoryController = {
         }
     },
 
-    // 3.Create Category
+    /** Create a new category (admin only) */
     create: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { category_key, name, emoji, sort_order } = req.body;
@@ -36,7 +36,7 @@ export const CategoryController = {
         }
     },
 
-    // 4.Update Category
+    /** Update a category's fields by ID (admin only) */
     update: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const id = Number(req.params.id);
@@ -49,7 +49,7 @@ export const CategoryController = {
         }
     },
 
-    // 5.Delete Category
+    /** Soft-delete a category by ID (admin only) */
     delete: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const id = Number(req.params.id);

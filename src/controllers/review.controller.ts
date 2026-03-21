@@ -4,7 +4,7 @@ import { ReviewService } from '../services/review.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const ReviewController = {
-    // 1.Create Review
+    /** Submit a review for a completed order */
     create: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -16,7 +16,7 @@ export const ReviewController = {
         }
     },
 
-    // 2.Get My Reviews
+    /** Return all reviews written by the authenticated user */
     getMyReviews: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -27,7 +27,7 @@ export const ReviewController = {
         }
     },
 
-    // 3.Get Reviews for Seller
+    /** Return all reviews received by a specific seller */
     getReviewsForSeller: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const sellerId = Number(req.params.sellerId);
@@ -39,7 +39,7 @@ export const ReviewController = {
         }
     },
 
-    // 4.Get Seller Rating
+    /** Return the average rating and review count for a specific seller */
     getSellerRating: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const sellerId = Number(req.params.sellerId);
@@ -51,7 +51,7 @@ export const ReviewController = {
         }
     },
 
-    // 5.Check if Reviewed
+    /** Check whether a specific order has already been reviewed */
     checkReviewed: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);

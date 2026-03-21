@@ -4,7 +4,7 @@ import { OrderService } from '../services/order.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const OrderController = {
-    // 1.Create new order
+    /** Validate input and create a new order for the authenticated buyer */
     create: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -21,7 +21,7 @@ export const OrderController = {
         }
     },
 
-    // 2.Get Order by ID
+    /** Return the details of a single order, verifying the user is the buyer or seller */
     getByID: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -37,7 +37,7 @@ export const OrderController = {
         }
     },
 
-    // 3.Get My Buyer Orders
+    /** Return all orders where the authenticated user is the buyer */
     getMyBuyerOrders: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -50,7 +50,7 @@ export const OrderController = {
         }
     },
 
-    // 4.Get My Seller Orders
+    /** Return all orders where the authenticated user is the seller */
     getMySellerOrders: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -63,7 +63,7 @@ export const OrderController = {
         }
     },
 
-    // 5.Update Order Status
+    /** Advance the order status following allowed transitions (pending→paid by buyer, paid→completed by seller) */
     updateStatus: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -84,7 +84,7 @@ export const OrderController = {
         }
     },
 
-    // 6.Cancel Order
+    /** Cancel an order and restore product stock */
     cancel: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);
@@ -100,7 +100,7 @@ export const OrderController = {
         }
     },
 
-    // 7.Seller-initiated record
+    /** Allow a seller to record an order on behalf of a buyer for a product they own */
     sellerRecord: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError('Unauthorized', 401);

@@ -4,7 +4,7 @@ import { AuthRequest } from '../middleware/auth.middleware';
 import { AppError } from '../errors/AppError';
 
 export const AuthController = {
-    // 1.Register
+    /** Handle user registration and respond with the new user ID */
     register: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { username, email, password, phone, address } = req.body;
@@ -28,7 +28,7 @@ export const AuthController = {
         }
     },
 
-    // 2.Login
+    /** Authenticate the user and return access and refresh tokens */
     login: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { email, password } = req.body;
@@ -44,7 +44,7 @@ export const AuthController = {
         }
     },
 
-    // 3.Logout
+    /** Invalidate the current access token and remove the stored refresh token */
     logout: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const authHeader = req.headers.authorization;
@@ -62,7 +62,7 @@ export const AuthController = {
         }
     },
 
-    // 4.Refresh Token
+    /** Exchange a valid refresh token for a new access token */
     refreshToken: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { refresh_token } = req.body;
@@ -79,7 +79,7 @@ export const AuthController = {
         }
     },
 
-    // 5.Change Password
+    /** Update the authenticated user's password after verifying the old password */
     changePassword: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -96,7 +96,7 @@ export const AuthController = {
         }
     },
 
-    // 6.Request OTP
+    /** Send a one-time password to the user's email address */
     requestOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { email } = req.body;
@@ -111,7 +111,7 @@ export const AuthController = {
         }
     },
 
-    // 7.Verify OTP
+    /** Verify the submitted OTP and return new tokens on success */
     verifyOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { email, otp } = req.body;
@@ -127,7 +127,7 @@ export const AuthController = {
         }
     },
 
-    // 8.Reset Password
+    /** Reset the user's password after verifying the OTP */
     resetPassword: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { email, otp, newPassword } = req.body;
@@ -142,7 +142,7 @@ export const AuthController = {
         }
     },
 
-    // 9.Request Phone OTP
+    /** Send a phone verification OTP to the user's registered email address */
     requestPhoneOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { phone } = req.body;
@@ -150,15 +150,15 @@ export const AuthController = {
 
             res.status(200).json({
                 success: true,
-                message: "OTP สำหรับยืนยันเบอร์โทรถูกส่งไปยังอีเมลของคุณแล้ว",
-                warning: "OTP ถูกส่งทางอีเมลแทน SMS เนื่องจากระบบยังไม่ได้เชื่อมต่อ SMS provider",
+                message: "Phone verification OTP has been sent to your email",
+                warning: "OTP was sent via email instead of SMS because the SMS provider is not yet connected",
             });
         } catch (error) {
             next(error);
         }
     },
 
-    // 10. Verify Phone OTP
+    /** Verify the phone OTP and return new tokens on success */
     verifyPhoneOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { phone, otp } = req.body;
@@ -166,7 +166,7 @@ export const AuthController = {
 
             res.status(200).json({
                 success: true,
-                message: "ยืนยันเบอร์โทรสำเร็จ",
+                message: "Phone number verified successfully",
                 ...result,
             });
         } catch (error) {
@@ -174,7 +174,7 @@ export const AuthController = {
         }
     },
 
-    // 11. Verify Phone via Firebase idToken
+    /** Verify a Firebase ID token to confirm phone ownership and return new tokens */
     verifyPhoneFirebase: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { idToken } = req.body;
@@ -182,7 +182,7 @@ export const AuthController = {
 
             res.status(200).json({
                 success: true,
-                message: "ยืนยันเบอร์โทรสำเร็จ",
+                message: "Phone number verified successfully",
                 ...result,
             });
         } catch (error) {

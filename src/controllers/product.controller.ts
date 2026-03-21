@@ -8,7 +8,7 @@ import { AuthRequest } from '../middleware/auth.middleware';
 import { Product } from '../types/Product';
 
 export const ProductController = {
-    // 1.Create product
+    /** Parse and validate the multipart form, reorder images by coverIndex, then create a new product listing */
     createProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
         const files = req.files as Express.Multer.File[] | undefined;
         try {
@@ -27,7 +27,7 @@ export const ProductController = {
 
             if (!files || files.length === 0) throw new AppError("At least one image is required", 400);
 
-            // P-9: Reorder images so coverIndex image is first
+            // Reorder images so the coverIndex image is first
             const coverIdx = req.body.coverIndex != null ? Number(req.body.coverIndex) : 0;
             const orderedFiles = [...files];
             if (coverIdx > 0 && coverIdx < orderedFiles.length) {
@@ -47,7 +47,7 @@ export const ProductController = {
                 Province: province.trim(),
                 District: district.trim(),
                 Price: numPrice,
-                Condition: condition?.trim() || "มือสอง",
+                Condition: condition?.trim() || "used",
                 Category_ID: category.Category_ID,
                 Status: "available",
                 Quantity: numQuantity,
@@ -71,7 +71,7 @@ export const ProductController = {
         }
     },
 
-    // 2.Search/List Products
+    /** Search or list products using query parameters (keyword, category, price range, location, sort, pagination) */
     getAllProducts: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { q, category, minPrice, maxPrice, limit, page, sortBy, sortOrder, province, district, excludeSeller } = req.query;
@@ -95,7 +95,7 @@ export const ProductController = {
         }
     },
 
-    // 3.Get Product by ID 
+    /** Retrieve the details of a single product by its ID */
     getProductByID: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const productId = Number(req.params.id);
@@ -107,7 +107,7 @@ export const ProductController = {
         }
     },
 
-    // 4.Get Products by Seller
+    /** Retrieve all products listed by a specific seller ID */
     getProductsBySeller: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const sellerId = Number(req.params.sellerId);
@@ -118,7 +118,7 @@ export const ProductController = {
         }
     },
 
-    // 5.Update Product
+    /** Update product fields; if new images are uploaded, replace existing images and clean up old files */
     updateProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
         const files = req.files as Express.Multer.File[] | undefined;
         try {
@@ -151,7 +151,7 @@ export const ProductController = {
         }
     },
 
-    // 6.Delete Product
+    /** Delete a product by ID; admin users may delete any product regardless of ownership */
     deleteProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);

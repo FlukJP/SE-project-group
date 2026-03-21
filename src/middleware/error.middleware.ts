@@ -14,11 +14,11 @@ const STATUS_CODE_MAP: Record<number, string> = {
     500: 'INTERNAL_ERROR',
 };
 
+/** Classify errors, log them, and return a normalized JSON error response */
 export const errorHandler = (err: any, req: AuthRequest, res: Response, _next: NextFunction) => {
     let statusCode = 500;
     let message = 'Internal Server Error';
 
-    // --- Classify the error ---
     if (err instanceof AppError) {
         statusCode = err.statusCode;
         message = err.message;
@@ -38,7 +38,6 @@ export const errorHandler = (err: any, req: AuthRequest, res: Response, _next: N
         message = err.message;
     }
 
-    // --- Logging ---
     const logData = {
         timestamp: new Date().toISOString(),
         method: req.method,
@@ -50,7 +49,6 @@ export const errorHandler = (err: any, req: AuthRequest, res: Response, _next: N
     console.error(logData);
     if (statusCode === 500) console.error(err);
 
-    // --- Normalized response shape ---
     const isDevMode = process.env.NODE_ENV === 'development';
 
     res.status(statusCode).json({

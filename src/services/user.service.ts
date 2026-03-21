@@ -1,18 +1,18 @@
 import { UserModel } from "@/src/models/UserModel";
-import { User , pickUpdateFields , UpdateUserData } from "@/src/types/User";
+import { User, pickUpdateFields, UpdateUserData } from "@/src/types/User";
 import { AppError } from "@/src/errors/AppError";
 import "dotenv/config";
 import { validatePhoneNumber } from '@/src/utils/validators';
 
 export const UserService = {
-    // 1.Profile
+    /** Retrieve the public profile of a user by their ID */
     getProfile: async (params: { userID: number }): Promise<Omit<User, "Password">> => {
         const user = await UserModel.findByIDSafe(params.userID);
         if (!user) throw new AppError("User not found", 404);
         return user;
     },
 
-    // 2.Update profile
+    /** Update allowed profile fields, reset phone verification if the phone number changes */
     updateProfile: async (params: { userID: number, updateData: Partial<User> }): Promise<boolean> => {
         const safeData = pickUpdateFields(params.updateData);
         if (Object.keys(safeData).length === 0) throw new AppError("No valid fields to update", 400);

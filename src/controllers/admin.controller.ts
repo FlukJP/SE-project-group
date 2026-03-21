@@ -4,7 +4,7 @@ import { AdminService } from '../services/admin.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const AdminController = {
-    // 1.Get All Users
+    /** Return a paginated list of all users */
     getAllUsers: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;
@@ -18,7 +18,7 @@ export const AdminController = {
         }
     },
 
-    // 2.Get Banned Users
+    /** Return a paginated list of banned users */
     getBannedUsers: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;
@@ -32,7 +32,7 @@ export const AdminController = {
         }
     },
 
-    // 3.Ban User
+    /** Ban a user by their ID */
     banUser: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const userId = Number(req.params.userId);
@@ -46,7 +46,7 @@ export const AdminController = {
         }
     },
 
-    // 4.Unban User
+    /** Unban a user by their ID */
     unbanUser: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const userId = Number(req.params.userId);
@@ -60,7 +60,7 @@ export const AdminController = {
         }
     },
 
-    // 5.Get Banned Products
+    /** Return a paginated list of banned products */
     getBannedProducts: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;
@@ -74,7 +74,7 @@ export const AdminController = {
         }
     },
 
-    // 6.Ban Product
+    /** Ban a product by its ID */
     banProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const productId = Number(req.params.productId);
@@ -88,7 +88,7 @@ export const AdminController = {
         }
     },
 
-    // 7.Unban Product
+    /** Unban a product by its ID */
     unbanProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const productId = Number(req.params.productId);
@@ -102,7 +102,7 @@ export const AdminController = {
         }
     },
 
-    // 8.Get All Reports
+    /** Return a paginated list of all user and product reports */
     getAllReports: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;
@@ -116,7 +116,7 @@ export const AdminController = {
         }
     },
 
-    // 9.Get Dashboard Stats
+    /** Return aggregate statistics for the admin dashboard */
     getStats: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const stats = await AdminService.getStats();

@@ -1,13 +1,23 @@
+// Redis
 export const REDIS_URL = process.env.REDIS_URL;
+
+// OTP and rate limiting
 export const OTP_TTL_SECONDS = 5 * 60;
 export const RATE_LIMIT_TTL_SECONDS = 15 * 60;
 export const MAX_OTP_REQUESTS = 5;
 export const MAX_OTP_ATTEMPTS = 5;
+
+// Auth
 export const SALT_ROUNDS = 10;
 export const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60;
+
+// File upload limits
 export const MAX_FILE_SIZE = 5 * 1024 * 1024;
 export const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const parseFileSize = (sizeInMB: string): number => { return parseInt(sizeInMB) * 1024 * 1024; };
+
+// Converts a file size string in MB to bytes.
+const parseFileSize = (sizeInMB: string): number => parseInt(sizeInMB) * 1024 * 1024;
+
 export const UPLOAD_CONFIG = {
     ALLOWED_MIMES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
     PRODUCT: {
@@ -19,6 +29,7 @@ export const UPLOAD_CONFIG = {
         UPLOAD_DIR: process.env.USER_UPLOAD_DIR || 'public/uploads/users',
     },
 };
+
 export const UPLOAD_ERRORS = {
     NOT_IMAGE: 'Not an image! Please upload only images.',
     INVALID_TYPE: 'Invalid file type.',

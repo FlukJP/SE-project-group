@@ -3,6 +3,7 @@ import 'dotenv/config';
 
 const isDevMode = process.env.NODE_ENV !== 'production';
 
+/** Create a rate-limiter middleware with the given time window, request limit, and error message; localhost is skipped in development */
 const createLimiter = (windowMs: number, max: number, message: string) => {
     return rateLimit({
         windowMs,
@@ -18,13 +19,13 @@ const createLimiter = (windowMs: number, max: number, message: string) => {
     });
 };
 
-// Global Limiter (300 req/15min เหมาะกับ SPA ที่มี API call หลาย endpoint ต่อหน้า)
-export const globalLimiter = createLimiter( 15 * 60 * 1000, 300, "Too many requests from this IP, please try again after 15 minutes." );
-// Strict Limiter
-export const loginLimiter = createLimiter( 5 * 60 * 1000, 5, "Too many login attempts, please try again after 5 minutes." );
-// Signup Limiter
-export const signupLimiter = createLimiter( 60 * 60 * 1000, 3, "Too many accounts created from this IP, please try again after an hour." );
-//  Password Reset Limiter
-export const passwordResetLimiter = createLimiter( 30 * 60 * 1000, 3, "Too many password reset requests. Please try again in 30 minutes." );
-// API Endpoint Limiter
-export const apiEndpointLimiter = createLimiter( 1 * 60 * 1000, 20, "You are requesting data too frequently. Please try again in a minute." );
+// Global limiter: 300 requests per 15 minutes (suitable for SPAs that make multiple API calls per page)
+export const globalLimiter = createLimiter(15 * 60 * 1000, 300, "Too many requests from this IP, please try again after 15 minutes.");
+// Strict limiter for login attempts
+export const loginLimiter = createLimiter(5 * 60 * 1000, 5, "Too many login attempts, please try again after 5 minutes.");
+// Limiter for account registration
+export const signupLimiter = createLimiter(60 * 60 * 1000, 3, "Too many accounts created from this IP, please try again after an hour.");
+// Limiter for password reset requests
+export const passwordResetLimiter = createLimiter(30 * 60 * 1000, 3, "Too many password reset requests. Please try again in 30 minutes.");
+// Limiter for high-frequency API endpoints
+export const apiEndpointLimiter = createLimiter(1 * 60 * 1000, 20, "You are requesting data too frequently. Please try again in a minute.");

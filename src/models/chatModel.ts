@@ -3,8 +3,8 @@ import { Chat, ChatRoomWithPartner } from "@/src/types/Chat";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 export const ChatModel = {
-    // 1.User's Chat Room List with partner info, last message, and unread count
-    findByUserID: async(userID: number): Promise<ChatRoomWithPartner[]> => {
+    /** Retrieve all chat rooms for a user with partner info, last message, and unread count */
+    findByUserID: async (userID: number): Promise<ChatRoomWithPartner[]> => {
         const sql = `
             SELECT c.*,
                 CASE
@@ -43,7 +43,7 @@ export const ChatModel = {
         return rows as ChatRoomWithPartner[];
     },
 
-    // 2.Check if chat exists between two users
+    /** Check whether a chat room already exists between two participants for a specific product */
     findExistingChat: async (p1: number, p2: number, productID: number): Promise<Chat | null> => {
         const sql = `
             SELECT * FROM Chat
@@ -54,7 +54,7 @@ export const ChatModel = {
         return rows.length > 0 ? (rows[0] as Chat) : null;
     },
 
-    // 3.Get chat room details by ID
+    /** Find a chat room by its ID */
     findByID: async (chatID: number): Promise<Chat | null> => {
         const sql = `
             SELECT * FROM Chat
@@ -64,7 +64,7 @@ export const ChatModel = {
         return rows.length > 0 ? (rows[0] as Chat) : null;
     },
 
-    // 4.Create a new chat
+    /** Create a new chat room and return the inserted ID */
     createChatRoom: async (chatData: Chat): Promise<number> => {
         const sql = `
             INSERT INTO Chat (Participant_1, Participant_2, Chats_product_ID)
@@ -78,14 +78,13 @@ export const ChatModel = {
         const [result] = await db.query<ResultSetHeader>(sql, values);
         return result.insertId;
     },
-    
-    // 5.Hide chat for a participant (soft delete)
+
+    /** Soft-delete a chat room for one participant by setting the corresponding deletion flag */
     hideChatForParticipant: async (chatID: number, participantRole: 'P1' | 'P2'): Promise<boolean> => {
         const fieldToUpdate = participantRole === 'P1' ? 'Is_Deleted_By_P1' : 'Is_Deleted_By_P2';
-
         const sql = `
-            UPDATE Chat 
-            SET ?? = 1 
+            UPDATE Chat
+            SET ?? = 1
             WHERE Chat_ID = ?
         `;
         const [result] = await db.query<ResultSetHeader>(sql, [fieldToUpdate, chatID]);

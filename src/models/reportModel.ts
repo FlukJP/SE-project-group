@@ -3,7 +3,7 @@ import { Report } from '@/src/types/Report';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export const ReportModel = {
-    // 1.Get report details (Detail one by one)
+    /** Find a single report by its ID */
     findByID: async (id: number): Promise<Report | null> => {
         const sql = `
             SELECT * FROM Report
@@ -13,7 +13,7 @@ export const ReportModel = {
         return rows.length > 0 ? (rows[0] as Report) : null;
     },
 
-    // 2.Get all reports (Admin List)
+    /** Retrieve a paginated list of all reports with reporter, target user, and target product info (admin use) */
     findAll: async (offset: number, limit: number): Promise<Report[]> => {
         const sql = `
             SELECT
@@ -42,7 +42,7 @@ export const ReportModel = {
         return rows as Report[];
     },
 
-    // 3.Get reports by User ID (User Report List)
+    /** Retrieve all reports submitted by a specific user */
     findReportsByUserID: async (userID: number): Promise<Report[]> => {
         const sql = `
             SELECT * FROM Report
@@ -52,7 +52,7 @@ export const ReportModel = {
         return rows as Report[];
     },
 
-    // 4.Create a new report (Report)
+    /** Create a new report and return the inserted ID */
     createReport: async (reportData: Report): Promise<number> => {
         const sql = `
             INSERT INTO Report (Reporter_ID, Reported_User_ID, Reported_Product_ID, Reason)

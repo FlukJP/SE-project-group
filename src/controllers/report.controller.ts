@@ -5,7 +5,7 @@ import { ProductModel } from '../models/productModel';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const ReportController = {
-    // 1.Create Report
+    /** Validate the target, prevent self-reporting, and submit a new report against a user or product */
     createReport: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
@@ -20,7 +20,7 @@ export const ReportController = {
 
             const numericTargetId = Number(targetId);
 
-            // ป้องกัน self-report
+            // Prevent users from reporting themselves
             if (reportType === 'user' && numericTargetId === req.user.userID) {
                 throw new AppError("You cannot report yourself", 400);
             }
@@ -49,7 +49,7 @@ export const ReportController = {
         }
     },
 
-    // 2.Get My Reports
+    /** Return all reports submitted by the authenticated user */
     getMyReports: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);

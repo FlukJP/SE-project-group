@@ -6,7 +6,7 @@ import { ProductModel } from "../models/productModel";
 import { AppError } from "../errors/AppError";
 
 export const AdminService = {
-    // 1.Get all user
+    /** Retrieve a paginated list of all users with a total count */
     getAllUsers: async (page: number = 1, limit: number = 20) => {
         const offset = (page - 1) * limit;
         const users = await UserModel.findAll(offset, limit);
@@ -14,7 +14,7 @@ export const AdminService = {
         return { data: users, total: Number(total) };
     },
 
-    // 2.Gat all banned user
+    /** Retrieve a paginated list of banned users with a total count */
     getBannedUsers: async (page: number = 1, limit: number = 20) => {
         const offset = (page - 1) * limit;
         const users = await UserModel.findBannedUsers(offset, limit);
@@ -22,7 +22,7 @@ export const AdminService = {
         return { data: users, total: Number(total) };
     },
 
-    // 3.Ban user
+    /** Ban a user by setting Is_Banned to true; prevents banning admins or already-banned users */
     banUser: async (targetUserID: number) => {
         if (!targetUserID) throw new AppError("Target User ID is required", 400);
         const user = await UserModel.findByIDSafe(targetUserID);
@@ -35,19 +35,19 @@ export const AdminService = {
         return { message: `User ID ${targetUserID} has been banned.` };
     },
 
-    // 4.Unban user
+    /** Unban a user by setting Is_Banned to false */
     unbanUser: async (targetUserID: number) => {
         if (!targetUserID) throw new AppError("Target User ID is required", 400);
         const user = await UserModel.findByIDSafe(targetUserID);
         if (!user) throw new AppError("User not found", 404);
         if (!user.Is_Banned) throw new AppError("User is not banned", 400);
 
-        const success = await UserModel.updateUser(targetUserID, { Is_Banned: false } );
+        const success = await UserModel.updateUser(targetUserID, { Is_Banned: false });
         if (!success) throw new AppError("Failed to unban user", 500);
         return { message: `User ID ${targetUserID} has been unbanned successfully.` };
     },
 
-    // 5.Get all banned products
+    /** Retrieve a paginated list of banned products with a total count */
     getBannedProducts: async (page: number = 1, limit: number = 20) => {
         const offset = (page - 1) * limit;
         const products = await ProductModel.findBannedProducts(offset, limit);
@@ -55,7 +55,7 @@ export const AdminService = {
         return { data: products, total: Number(total) };
     },
 
-    // 5.Ban product
+    /** Ban a product by setting Is_Banned to true */
     banProduct: async (productID: number) => {
         if (!productID) throw new AppError("Product ID is required", 400);
         const product = await ProductModel.findByIDIncludingBanned(productID);
@@ -67,7 +67,7 @@ export const AdminService = {
         return { message: `Product ID ${productID} has been banned.` };
     },
 
-    // 6.Unban product
+    /** Unban a product by setting Is_Banned to false */
     unbanProduct: async (productID: number) => {
         if (!productID) throw new AppError("Product ID is required", 400);
         const product = await ProductModel.findByIDIncludingBanned(productID);
@@ -79,7 +79,7 @@ export const AdminService = {
         return { message: `Product ID ${productID} has been unbanned successfully.` };
     },
 
-    // 7.See reports
+    /** Retrieve a paginated list of all reports with a total count */
     getAllReports: async (page: number = 1, limit: number = 20) => {
         const offset = (page - 1) * limit;
         const reports = await ReportModel.findAll(offset, limit);
@@ -87,7 +87,7 @@ export const AdminService = {
         return { data: reports, total: Number(total) };
     },
 
-    // 8.Get dashboard stats (real COUNT queries)
+    /** Fetch aggregate counts of users, products, reports, and categories for the admin dashboard */
     getStats: async () => {
         const sql = `
             SELECT

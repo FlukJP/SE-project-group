@@ -5,8 +5,8 @@ import { ProductModel } from "@/src/models/productModel";
 import { CategoryService } from "@/src/services/category.service";
 
 export const OrderService = {
-    // 1.Create order
-    createOrder: async ( buyerID: number, orderData: {Product_ID: number; Quantity: number}): Promise<number> => {
+    /** Validate stock, compute total price, atomically create the order and update product quantity, then record category popularity */
+    createOrder: async (buyerID: number, orderData: { Product_ID: number; Quantity: number }): Promise<number> => {
         if (!orderData.Product_ID || !orderData.Quantity) throw new AppError("Missing required fields", 400);
         if (orderData.Quantity <= 0) throw new AppError("Quantity must be greater than 0", 400);
 
@@ -36,10 +36,9 @@ export const OrderService = {
         }
 
         return orderID;
-
     },
 
-    // 2.Get order by ID
+    /** Retrieve a single order by ID, verifying the user is the buyer or seller */
     getOrderByID: async (orderID: number, userID: number): Promise<Order> => {
         if (!orderID) throw new AppError("Order ID is required", 400);
         const order = await OrderModel.findByID(orderID);
@@ -48,21 +47,21 @@ export const OrderService = {
         return order;
     },
 
-    // 3.Get order by Buyer id
+    /** Retrieve all orders placed by a specific buyer */
     getOrderByBuyerID: async (buyerID: number): Promise<Order[]> => {
         if (!buyerID) throw new AppError("Buyer ID is required", 400);
         const orders = await OrderModel.findByBuyerID(buyerID);
         return orders || [];
     },
 
-    // 4.Get order by Seller id
+    /** Retrieve all orders received by a specific seller */
     getOrderBySellerID: async (sellerID: number): Promise<Order[]> => {
         if (!sellerID) throw new AppError("Seller ID is required", 400);
         const orders = await OrderModel.findBySellerID(sellerID);
         return orders || [];
     },
 
-    // 5.Update order status
+    /** Advance the order status following allowed transitions: buyer marks pending→paid, seller marks paid→completed */
     updateOrderStatus: async (orderID: number, userID: number, newStatus: 'paid' | 'completed'): Promise<boolean> => {
         if (!orderID || !newStatus) throw new AppError("Order ID and new status are required", 400);
 
@@ -80,7 +79,7 @@ export const OrderService = {
         throw new AppError("Invalid status transition or permission denied", 400);
     },
 
-    // 6.Cancel order
+    /** Cancel an order and restore product stock atomically; falls back to a simple status update if the product no longer exists */
     cancelOrder: async (orderID: number, userID: number): Promise<boolean> => {
         if (!orderID) throw new AppError("Order ID is required", 400);
 
@@ -98,7 +97,7 @@ export const OrderService = {
         return await OrderModel.updateOrder(orderID, 'cancelled');
     },
 
-    // 7.Seller-initiated order record
+    /** Allow a seller to record an order on behalf of a buyer for a product they own, setting the target status */
     sellerRecordOrder: async (sellerID: number, buyerID: number, productID: number, targetStatus: 'reserved' | 'sold'): Promise<number> => {
         if (!productID || !buyerID) throw new AppError("Product ID and Buyer ID are required", 400);
         if (buyerID === sellerID) throw new AppError("Buyer cannot be the same as seller", 400);

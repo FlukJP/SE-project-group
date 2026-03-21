@@ -9,13 +9,13 @@ export interface PopularCategoryRow {
 }
 
 export const CategoryPopularityModel = {
-    // 1.Record a search or purchase event for a category
+    /** Record a search or purchase event for a category key */
     record: async (categoryKey: string, eventType: 'search' | 'purchase'): Promise<void> => {
         const sql = `INSERT INTO CategoryPopularity (category_key, event_type) VALUES (?, ?)`;
         await db.query<ResultSetHeader>(sql, [categoryKey, eventType]);
     },
 
-    // 2.Get popular categories based on search and purchase events in the last 7 days
+    /** Retrieve popular categories ranked by weighted event score over the last 7 days (purchases count 3x, searches count 1x) */
     getPopular: async (limit = 10): Promise<PopularCategoryRow[]> => {
         const sql = `
             SELECT

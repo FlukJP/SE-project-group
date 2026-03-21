@@ -3,7 +3,7 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { ReviewRow, SellerRating } from '@/src/types/Review';
 
 export const ReviewModel = {
-    // 1.Create a new review
+    /** Create a new review for an order and return the inserted ID */
     create: async (data: { orderId: number; reviewerId: number; sellerId: number; rating: number; comment?: string }): Promise<number> => {
         const sql = `INSERT INTO Review (Order_ID, Reviewer_ID, Seller_ID, Rating, Comment) VALUES (?, ?, ?, ?, ?)`;
         const [result] = await db.query<ResultSetHeader>(sql, [
@@ -16,14 +16,14 @@ export const ReviewModel = {
         return result.insertId;
     },
 
-    // 2.Get review by ID
+    /** Find a single review by its ID */
     findById: async (id: number): Promise<ReviewRow | null> => {
         const sql = `SELECT * FROM Review WHERE Review_ID = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as ReviewRow) : null;
     },
 
-    // 3.Get reviews by Reviewer ID (My Reviews)
+    /** Retrieve all reviews written by a specific reviewer, joined with product title */
     findByReviewerId: async (reviewerId: number): Promise<ReviewRow[]> => {
         const sql = `
             SELECT r.*, u.Username AS ReviewerName, p.Title AS ProductTitle
@@ -38,7 +38,7 @@ export const ReviewModel = {
         return rows as ReviewRow[];
     },
 
-    // 4.Get reviews by Seller ID (Seller Reviews)
+    /** Retrieve all reviews received by a specific seller, joined with reviewer name and product title */
     findBySellerId: async (sellerId: number): Promise<ReviewRow[]> => {
         const sql = `
             SELECT r.*, u.Username AS ReviewerName, p.Title AS ProductTitle
@@ -53,14 +53,14 @@ export const ReviewModel = {
         return rows as ReviewRow[];
     },
 
-    // 5.Check if the order has been reviewed
+    /** Find the review associated with a specific order (used to check if already reviewed) */
     findByOrderId: async (orderId: number): Promise<ReviewRow | null> => {
         const sql = `SELECT * FROM Review WHERE Order_ID = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [orderId]);
         return rows.length > 0 ? (rows[0] as ReviewRow) : null;
     },
 
-    // 6.Calculate the average rating of a seller
+    /** Calculate the average rating and total review count for a seller */
     getSellerRating: async (sellerId: number): Promise<SellerRating> => {
         const sql = `
             SELECT

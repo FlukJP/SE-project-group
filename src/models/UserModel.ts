@@ -11,7 +11,7 @@ const ALLOWED_UPDATE_COLUMNS: ReadonlySet<string> = new Set([
 const USER_COLUMNS_WITHOUT_PASSWORD = 'User_ID, Username, Email, Role, Phone_number, Is_Phone_Verified, Is_Email_Verified, Address, Verified_Date, RatingScore, Avatar_URL, Is_Banned';
 
 export const UserModel = {
-    // 1.Get User  (Login/Check - includes Password for auth)
+    /** Find a user by email including password (used for authentication) */
     findByEmail: async (email: string): Promise<User | null> => {
         const sql = `
             SELECT * FROM User
@@ -21,14 +21,14 @@ export const UserModel = {
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 1b.Get User by Email without Password (safe for non-auth use)
+    /** Find a user by email excluding password (safe for non-auth use) */
     findByEmailSafe: async (email: string): Promise<User | null> => {
         const sql = `SELECT ${USER_COLUMNS_WITHOUT_PASSWORD} FROM User WHERE Email = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [email]);
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 2.Get User by ID (Profile/Identity - includes Password for auth)
+    /** Find a user by ID including password (used for authentication) */
     findByID: async (id: number): Promise<User | null> => {
         const sql = `
             SELECT * FROM User
@@ -38,14 +38,14 @@ export const UserModel = {
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 2b.Get User by ID without Password (safe for non-auth use)
+    /** Find a user by ID excluding password (safe for non-auth use) */
     findByIDSafe: async (id: number): Promise<User | null> => {
         const sql = `SELECT ${USER_COLUMNS_WITHOUT_PASSWORD} FROM User WHERE User_ID = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 3.Get all Users (Admin List)
+    /** Retrieve a paginated list of all users (admin use) */
     findAll: async (offset: number, limit: number): Promise<User[]> => {
         const sql = `
             SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore
@@ -56,14 +56,14 @@ export const UserModel = {
         return rows as User[];
     },
 
-    // 4.Get User by Phone number (Phone number lookup)
+    /** Find a user by phone number */
     findByPhone: async (phone: string): Promise<User | null> => {
         const sql = `SELECT ${USER_COLUMNS_WITHOUT_PASSWORD} FROM User WHERE Phone_number = ?`;
         const [rows] = await db.query<RowDataPacket[]>(sql, [phone]);
         return rows.length > 0 ? (rows[0] as User) : null;
     },
 
-    // 5.Get banned Users (Admin List)
+    /** Retrieve a paginated list of banned users (admin use) */
     findBannedUsers: async (offset: number, limit: number): Promise<User[]> => {
         const sql = `
             SELECT User_ID, Username, Email, Role, Verified_Date, RatingScore
@@ -75,7 +75,7 @@ export const UserModel = {
         return rows as User[];
     },
 
-    // 6.Create a new User (Register)
+    /** Create a new user and return the inserted ID */
     createUser: async (userData: User): Promise<number> => {
         const sql = `
             INSERT INTO User (Username, Email, Password, Role, Phone_number, Address, Verified_Date, RatingScore)
@@ -95,7 +95,7 @@ export const UserModel = {
         return result.insertId;
     },
 
-    // 7.Update User (Edit Profile)
+    /** Update allowed fields of a user record and return whether any row was affected */
     updateUser: async (id: number, userData: Partial<User>): Promise<boolean> => {
         const keys = Object.keys(userData).filter(
             (key) => userData[key as keyof User] !== undefined && ALLOWED_UPDATE_COLUMNS.has(key)
@@ -108,7 +108,7 @@ export const UserModel = {
         return result.affectedRows > 0;
     },
 
-    // 8.Delete User (Ban/Close Account)
+    /** Delete a user record permanently by ID */
     delete: async (id: number): Promise<boolean> => {
         const sql = 'DELETE FROM User WHERE User_ID = ?';
         const [result] = await db.query<ResultSetHeader>(sql, [id]);

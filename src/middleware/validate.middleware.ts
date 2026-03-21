@@ -2,19 +2,19 @@ import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
 import { validateEmail, validatePassword, validatePhoneNumber, validateUsername } from '../utils/validators';
 
-// Generic schema types
 type FieldRule = {
     required?: boolean;
     type?: 'string' | 'number' | 'boolean';
     min?: number;
     max?: number;
     oneOf?: readonly string[];
-    custom?: (value: unknown) => string | null; // return error message or null
+    /** Return an error message string on failure, or null if the value is valid */
+    custom?: (value: unknown) => string | null;
 };
 
 type Schema = Record<string, FieldRule>;
 
-// Validate middleware factory — validates req.body against a schema
+/** Return an Express middleware that validates req.body against the provided field schema */
 export function validateBody(schema: Schema) {
     return (req: Request, _res: Response, next: NextFunction) => {
         const errors: string[] = [];
@@ -62,7 +62,7 @@ export function validateBody(schema: Schema) {
     };
 }
 
-// Validate params middleware factory
+/** Return an Express middleware that validates req.params against the provided field schema */
 export function validateParams(schema: Schema) {
     return (req: Request, _res: Response, next: NextFunction) => {
         const errors: string[] = [];
@@ -89,9 +89,7 @@ export function validateParams(schema: Schema) {
     };
 }
 
-// Pre-built schemas for each domain
-
-// Auth
+// Auth schemas
 export const registerSchema: Schema = {
     username: { required: true, type: 'string', custom: (v) => validateUsername(v as string) ? null : 'Username must be 2-50 characters (letters, numbers, spaces, underscores, hyphens, Thai)' },
     email:    { required: true, type: 'string', custom: (v) => validateEmail(v as string) ? null : 'Invalid email format' },
@@ -141,7 +139,7 @@ export const verifyPhoneFirebaseSchema: Schema = {
     idToken: { required: true, type: 'string' },
 };
 
-// Order
+// Order schemas
 export const createOrderSchema: Schema = {
     Product_ID: { required: true, type: 'number', min: 1 },
     Quantity:   { required: true, type: 'number', min: 1 },
@@ -151,31 +149,31 @@ export const updateOrderStatusSchema: Schema = {
     status: { required: true, type: 'string', oneOf: ['paid', 'completed'] as const },
 };
 
-// Review
+// Review schema
 export const createReviewSchema: Schema = {
     orderId: { required: true, type: 'number', min: 1 },
     rating:  { required: true, type: 'number', min: 1, max: 5 },
     comment: { type: 'string', max: 1000 },
 };
 
-// Report
+// Report schema
 export const createReportSchema: Schema = {
     targetId:   { required: true, type: 'number', min: 1 },
     reportType: { required: true, type: 'string', oneOf: ['product', 'user'] as const },
     reason:     { required: true, type: 'string', min: 1, max: 500 },
 };
 
-// Chat
+// Chat schemas
 export const createChatSchema: Schema = {
-    productId:    { required: true, type: 'number', min: 1 },
-    sellerId: { required: true, type: 'number', min: 1 },
+    productId: { required: true, type: 'number', min: 1 },
+    sellerId:  { required: true, type: 'number', min: 1 },
 };
 
 export const sendMessageSchema: Schema = {
     content: { required: true, type: 'string', min: 1, max: 2000 },
 };
 
-// Category (admin)
+// Category schema (admin)
 export const createCategorySchema: Schema = {
     category_key: { required: true, type: 'string', min: 1, max: 50 },
     name:         { required: true, type: 'string', min: 1, max: 100 },
