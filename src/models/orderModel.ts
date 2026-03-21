@@ -6,7 +6,7 @@ export const OrderModel = {
     // 1.Detail one by one
     findByID: async (id: number): Promise<Order | null> => {
         const sql = `
-            SELECT * FROM \`Order\`
+            SELECT * FROM Purchase
             WHERE Order_ID = ?
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [id]);
@@ -20,12 +20,12 @@ export const OrderModel = {
                 p.Title, p.Image_URL,
                 buyer.Username  AS BuyerName,
                 seller.Username AS SellerName
-            FROM \`Order\` o
+            FROM Purchase o
             LEFT JOIN Product p      ON o.Product_ID = p.Product_ID
             LEFT JOIN User   buyer   ON o.Buyer_ID   = buyer.User_ID
             LEFT JOIN User   seller  ON o.Seller_ID  = seller.User_ID
             WHERE o.Buyer_ID = ?
-            ORDER BY o.Created_at DESC
+            ORDER BY o.OrderDate DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [buyerID]);
         return rows as Order[];
@@ -38,12 +38,12 @@ export const OrderModel = {
                 p.Title, p.Image_URL,
                 buyer.Username  AS BuyerName,
                 seller.Username AS SellerName
-            FROM \`Order\` o
+            FROM Purchase o
             LEFT JOIN Product p      ON o.Product_ID = p.Product_ID
             LEFT JOIN User   buyer   ON o.Buyer_ID   = buyer.User_ID
             LEFT JOIN User   seller  ON o.Seller_ID  = seller.User_ID
             WHERE o.Seller_ID = ?
-            ORDER BY o.Created_at DESC
+            ORDER BY o.OrderDate DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [sellerID]);
         return rows as Order[];
@@ -52,9 +52,9 @@ export const OrderModel = {
     // 4.Get orders by Product ID (Product Order List)
     findByProductID: async (productID: number): Promise<Order[]> => {
         const sql = `
-            SELECT * FROM \`Order\`
+            SELECT * FROM Purchase
             WHERE Product_ID = ?
-            ORDER BY Created_at DESC
+            ORDER BY OrderDate DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [productID]);
         return rows as Order[];
@@ -63,10 +63,10 @@ export const OrderModel = {
     // 5.Search orders by Product Title
     findByProductTitle: async (title: string): Promise<Order[]> => {
         const sql = `
-            SELECT o.* FROM \`Order\` o
+            SELECT o.* FROM Purchase o
             JOIN Product p ON o.Product_ID = p.Product_ID
             WHERE p.Title LIKE ?
-            ORDER BY o.Created_at DESC
+            ORDER BY o.OrderDate DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [`%${title}%`]);
         return rows as Order[];
@@ -75,9 +75,9 @@ export const OrderModel = {
     // 6.Search orders by Status
     findByStatus: async (status: string): Promise<Order[]> => {
         const sql = `
-            SELECT * FROM \`Order\`
+            SELECT * FROM Purchase
             WHERE Status = ?
-            ORDER BY Created_at DESC
+            ORDER BY OrderDate DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql, [status]);
         return rows as Order[];
@@ -86,8 +86,8 @@ export const OrderModel = {
     // 7.Get all orders (All Order List)
     findAll: async (): Promise<Order[]> => {
         const sql = `
-            SELECT * FROM \`Order\`
-            ORDER BY Created_at DESC
+            SELECT * FROM Purchase
+            ORDER BY OrderDate DESC
         `;
         const [rows] = await db.query<RowDataPacket[]>(sql);
         return rows as Order[];
@@ -96,7 +96,7 @@ export const OrderModel = {
     // 8.Create Order
     createOrder: async (orderData: Order): Promise<number> => {
         const sql = `
-            INSERT INTO \`Order\` (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price)
+            INSERT INTO Purchase (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price)
             VALUES (?, ?, ?, ?, ?)
         `;
         const values = [
@@ -113,7 +113,7 @@ export const OrderModel = {
     // 9.Update Order Status
     updateOrder: async (orderID: number, status: string): Promise<boolean> => {
         const sql = `
-            UPDATE \`Order\`
+            UPDATE Purchase
             SET Status = ?
             WHERE Order_ID = ?
         `;
@@ -124,7 +124,7 @@ export const OrderModel = {
     // 10.Cancel Order
     cancelOrder: async (orderID: number): Promise<boolean> => {
         const sql = `
-            UPDATE \`Order\`
+            UPDATE Purchase
             SET Status = 'cancelled'
             WHERE Order_ID = ?
         `;
@@ -148,7 +148,7 @@ export const OrderModel = {
             if (currentQty < newOrder.Quantity) throw new Error('Insufficient stock');
 
             const insertOrderSQL = `
-            INSERT INTO \`Order\` (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price, Status)
+            INSERT INTO Purchase (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price, Status)
                 VALUES (?, ?, ?, ?, ?, ?)
             `;
 
@@ -195,7 +195,7 @@ export const OrderModel = {
 
             // Lock the order row to prevent concurrent cancellation
             const [lockedOrder] = await connection.query<RowDataPacket[]>(
-                `SELECT Status FROM \`Order\` WHERE Order_ID = ? FOR UPDATE`,
+                `SELECT Status FROM Purchase WHERE Order_ID = ? FOR UPDATE`,
                 [orderID]
             );
             if (!lockedOrder || lockedOrder.length === 0) throw new Error('Order not found');
@@ -211,7 +211,7 @@ export const OrderModel = {
             await connection.query(updateProductSql, [actualRestoredQuantity, productID]);
 
             const updateOrderSql = `
-                UPDATE \`Order\` SET Status = 'cancelled' WHERE Order_ID = ?
+                UPDATE Purchase SET Status = 'cancelled' WHERE Order_ID = ?
             `;
             await connection.query(updateOrderSql, [orderID]);
 
