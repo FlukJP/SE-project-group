@@ -57,7 +57,7 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
-  register: (data: { username: string; email: string; password: string; phone: string }) =>
+  register: (data: { username: string; email: string; password: string; phone: string; address?: string }) =>
     apiFetch<{ success: boolean; userId: number }>("/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
@@ -183,6 +183,14 @@ export const adminApi = {
     apiFetch<{ success: boolean; data: Report[]; pagination: { page: number; limit: number; total: number } }>(
       `/admin/reports?page=${page}&limit=${limit}`
     ),
+};
+
+export const reportApi = {
+  create: (data: { targetId: number; reportType: "user" | "product"; reason: string }) =>
+    apiFetch<{ success: boolean; reportId: number }>("/reports", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
 
 export const chatApi = {

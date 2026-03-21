@@ -7,6 +7,7 @@ import { useAuth } from "@/src/contexts/AuthContext";
 import { authApi } from "@/src/lib/api";
 import EmailOTP from "@/src/components/auth/EmailOTP";
 import PhoneOTP from "@/src/components/auth/PhoneOTP";
+import { PROVINCES } from "@/src/data/provinces";
 
 function getPasswordStrength(pw: string): { level: number; label: string; color: string } {
   if (!pw) return { level: 0, label: "", color: "" };
@@ -49,6 +50,12 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"form" | "email-otp" | "phone-otp">("form");
+  const [addressDetail, setAddressDetail] = useState("");
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+
+  const selectedProvinceData = PROVINCES.find((p) => p.name === province);
 
   // Track which fields have been touched for inline validation
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -69,6 +76,9 @@ export default function RegisterPage() {
   const phoneError = touched.phone ? validatePhone(phone) : null;
   const passwordError = touched.password && password.length > 0 && password.length < 8 ? "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร" : null;
   const confirmError = touched.confirmPassword && confirmPassword.length > 0 && password !== confirmPassword ? "รหัสผ่านไม่ตรงกัน" : null;
+  const addressDetailError = touched.addressDetail && !addressDetail.trim() ? "กรุณากรอกที่อยู่" : null;
+  const provinceError = touched.province && !province ? "กรุณาเลือกจังหวัด" : null;
+  const districtError = touched.district && !district ? "กรุณาเลือกเขต/อำเภอ" : null;
 
   const pwStrength = getPasswordStrength(password);
 
@@ -77,7 +87,7 @@ export default function RegisterPage() {
     if (loading) return;
 
     // Mark all fields as touched
-    setTouched({ username: true, email: true, phone: true, password: true, confirmPassword: true });
+    setTouched({ username: true, email: true, phone: true, password: true, confirmPassword: true, addressDetail: true, province: true, district: true });
 
     // Validate all
     if (!username.trim() || !email.trim() || !password.trim() || !phone.trim()) {
@@ -90,6 +100,11 @@ export default function RegisterPage() {
     if (pErr) { setError(pErr); return; }
     if (password.length < 8) { setError("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"); return; }
     if (password !== confirmPassword) { setError("รหัสผ่านไม่ตรงกัน"); return; }
+    if (!addressDetail.trim()) { setError("กรุณากรอกที่อยู่"); return; }
+    if (!province) { setError("กรุณาเลือกจังหวัด"); return; }
+    if (!district) { setError("กรุณาเลือกเขต/อำเภอ"); return; }
+
+    const fullAddress = [addressDetail.trim(), district, province, postalCode.trim()].filter(Boolean).join(" ");
 
     setError("");
     setLoading(true);
@@ -99,6 +114,7 @@ export default function RegisterPage() {
         email: email.trim(),
         password,
         phone: phone.trim(),
+        address: fullAddress,
       });
       setStep("email-otp");
     } catch (err: unknown) {
@@ -232,6 +248,70 @@ export default function RegisterPage() {
                   className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${confirmError ? "border-red-300" : "border-zinc-200"}`}
                 />
                 {confirmError && <p className="text-xs text-red-500 mt-1">{confirmError}</p>}
+              </div>
+
+              <div className="pt-2">
+                <p className="text-sm font-semibold text-zinc-700 mb-3">ที่อยู่สำหรับจัดส่ง</p>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">บ้านเลขที่ / ซอย / ถนน</label>
+                    <input
+                      type="text"
+                      value={addressDetail}
+                      onChange={(e) => setAddressDetail(e.target.value)}
+                      onBlur={() => markTouched("addressDetail")}
+                      placeholder="เช่น 123/4 ซอยสุขุมวิท 11 ถนนสุขุมวิท"
+                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${addressDetailError ? "border-red-300" : "border-zinc-200"}`}
+                    />
+                    {addressDetailError && <p className="text-xs text-red-500 mt-1">{addressDetailError}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">จังหวัด</label>
+                    <select
+                      value={province}
+                      onChange={(e) => { setProvince(e.target.value); setDistrict(""); }}
+                      onBlur={() => markTouched("province")}
+                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white ${provinceError ? "border-red-300" : "border-zinc-200"}`}
+                    >
+                      <option value="">-- เลือกจังหวัด --</option>
+                      {PROVINCES.map((p) => (
+                        <option key={p.name} value={p.name}>{p.name}</option>
+                      ))}
+                    </select>
+                    {provinceError && <p className="text-xs text-red-500 mt-1">{provinceError}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">เขต / อำเภอ</label>
+                    <select
+                      value={district}
+                      onChange={(e) => setDistrict(e.target.value)}
+                      onBlur={() => markTouched("district")}
+                      disabled={!province}
+                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white disabled:bg-zinc-50 disabled:text-zinc-400 ${districtError ? "border-red-300" : "border-zinc-200"}`}
+                    >
+                      <option value="">-- เลือกเขต/อำเภอ --</option>
+                      {selectedProvinceData?.districts.map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                    {districtError && <p className="text-xs text-red-500 mt-1">{districtError}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">รหัสไปรษณีย์ <span className="text-zinc-400 font-normal">(ไม่บังคับ)</span></label>
+                    <input
+                      type="text"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                      placeholder="เช่น 10110"
+                      maxLength={5}
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                    />
+                  </div>
+                </div>
               </div>
 
               <button

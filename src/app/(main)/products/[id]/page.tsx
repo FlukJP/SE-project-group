@@ -4,9 +4,66 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
-import { productApi, reviewApi, type SellerRatingData } from "@/src/lib/api";
+import { productApi, reviewApi, reportApi, type SellerRatingData } from "@/src/lib/api";
 import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 import { useAuth } from "@/src/contexts/AuthContext";
+
+function ReportProductModal({
+  onClose,
+  onSubmit,
+  error,
+}: {
+  onClose: () => void;
+  onSubmit: (reason: string) => Promise<void>;
+  error: string;
+}) {
+  const [reason, setReason] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!reason.trim()) return;
+    setLoading(true);
+    await onSubmit(reason.trim());
+    setLoading(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-red-500 text-xl">🚩</span>
+          <h2 className="text-lg font-bold text-zinc-800">รายงานสินค้านี้</h2>
+        </div>
+        <label className="block text-sm font-medium text-zinc-700 mb-1">เหตุผลในการรายงาน</label>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={4}
+          placeholder="อธิบายเหตุผลที่ต้องการรายงานสินค้านี้..."
+          className="w-full border border-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+        />
+        {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+        <div className="flex gap-3 mt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 border border-zinc-300 rounded-xl py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50"
+          >
+            ยกเลิก
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading || !reason.trim()}
+            className="flex-1 bg-red-500 text-white rounded-xl py-2 text-sm font-semibold hover:bg-red-600 disabled:opacity-50"
+          >
+            {loading ? "กำลังส่ง..." : "ส่งรายงาน"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +72,9 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [mainImage, setMainImage] = useState("");
   const [sellerRating, setSellerRating] = useState<SellerRatingData | null>(null);
+  const [showReport, setShowReport] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
+  const [reportError, setReportError] = useState("");
   const cancelledRef = useRef(false);
 
   useEffect(() => {
@@ -79,9 +139,29 @@ export default function ProductDetailPage() {
   // P-1: Determine if chat button should be shown / disabled
   const isSelfProduct = isLoggedIn && user && String(user.User_ID) === product.seller.id;
 
+  const handleReport = async (reason: string) => {
+    setReportError("");
+    try {
+      await reportApi.create({ targetId: Number(id), reportType: "product", reason });
+      setShowReport(false);
+      setReportDone(true);
+    } catch (err: unknown) {
+      setReportError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+    }
+  };
+
   return (
     <>
       <Navbar />
+
+      {/* Report Modal */}
+      {showReport && (
+        <ReportProductModal
+          onClose={() => { setShowReport(false); setReportError(""); }}
+          onSubmit={handleReport}
+          error={reportError}
+        />
+      )}
       <div className="container mx-auto px-4 py-8">
         <div className="mb-4">
           <Link href="/" className="text-sm text-emerald-700 hover:underline">
@@ -216,6 +296,28 @@ export default function ProductDetailPage() {
                   </a>
                 )}
               </div>
+
+              {/* Report product button */}
+              {isLoggedIn && !isSelfProduct && (
+                <div className="mt-3">
+                  {reportDone ? (
+                    <p className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                      ส่งรายงานเรียบร้อยแล้ว ขอบคุณที่แจ้งให้เราทราบ
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowReport(true)}
+                      className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-red-500 border border-zinc-200 hover:border-red-300 rounded-lg px-3 py-1.5 transition"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 01.832 1.555L13.382 10l3.45 5.445A1 1 0 0116 17H4a1 1 0 01-1-1V4z" clipRule="evenodd" />
+                      </svg>
+                      รายงานสินค้านี้
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -29,7 +29,7 @@ export const ReviewModel = {
             SELECT r.*, u.Username AS ReviewerName, p.Title AS ProductTitle
             FROM Review r
             LEFT JOIN User u ON r.Reviewer_ID = u.User_ID
-            LEFT JOIN \`Order\` o ON r.Order_ID = o.Order_ID
+            LEFT JOIN Purchase o ON r.Order_ID = o.Order_ID
             LEFT JOIN Product p ON o.Product_ID = p.Product_ID
             WHERE r.Reviewer_ID = ?
             ORDER BY r.Created_at DESC
@@ -44,7 +44,7 @@ export const ReviewModel = {
             SELECT r.*, u.Username AS ReviewerName, p.Title AS ProductTitle
             FROM Review r
             LEFT JOIN User u ON r.Reviewer_ID = u.User_ID
-            LEFT JOIN \`Order\` o ON r.Order_ID = o.Order_ID
+            LEFT JOIN Purchase o ON r.Order_ID = o.Order_ID
             LEFT JOIN Product p ON o.Product_ID = p.Product_ID
             WHERE r.Seller_ID = ?
             ORDER BY r.Created_at DESC

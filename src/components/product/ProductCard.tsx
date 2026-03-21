@@ -44,11 +44,13 @@ export default function ProductCard({
             📷
           </div>
         )}
-        <div className="absolute top-3 left-3">
-          <span className="text-[11px] font-semibold bg-white/95 border border-zinc-200 px-2 py-1 rounded-full">
-            {badgeText}
-          </span>
-        </div>
+        {badgeText && (
+          <div className="absolute top-3 left-3">
+            <span className="text-[11px] font-semibold bg-white/95 border border-zinc-200 px-2 py-1 rounded-full">
+              {badgeText}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="p-4">

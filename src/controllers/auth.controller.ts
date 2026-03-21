@@ -7,13 +7,14 @@ export const AuthController = {
     // 1.Register
     register: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
-            const { username, email, password, phone } = req.body;
+            const { username, email, password, phone, address } = req.body;
 
             const insertId = await AuthService.register({
                 Username: username,
                 Email: email,
                 Password: password,
                 Phone_number: phone,
+                Address: address || undefined,
                 Role: 'customer',
             });
 

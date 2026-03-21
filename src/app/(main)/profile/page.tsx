@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
 import { useAuth } from "@/src/contexts/AuthContext";
-import { userApi, productApi, reviewApi, authApi, type ReviewData, API_BASE } from "@/src/lib/api";
+import { userApi, productApi, reviewApi, authApi, orderApi, type ReviewData, type OrderWithDetails, API_BASE } from "@/src/lib/api";
 import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
+import ProductCard from "@/src/components/product/ProductCard";
 import EmailOTP from "@/src/components/auth/EmailOTP";
 import PhoneOTP from "@/src/components/auth/PhoneOTP";
 import { startTransition } from "react";
@@ -146,10 +147,11 @@ useEffect(() => {
               {/* Fix #9: Use key to force remount when user data changes, preventing stale sync */}
               {activeTab === "profile" && (
                 <ProfileInfo
-                  key={`${user?.Username}-${user?.Phone_number}-${user?.Is_Email_Verified}-${user?.Is_Phone_Verified}`}
+                  key={`${user?.Username}-${user?.Phone_number}-${user?.Is_Email_Verified}-${user?.Is_Phone_Verified}-${user?.Address}`}
                   username={user?.Username || ""}
                   phone={user?.Phone_number || ""}
                   email={user?.Email || ""}
+                  address={user?.Address || ""}
                   isEmailVerified={!!user?.Is_Email_Verified}
                   isPhoneVerified={!!user?.Is_Phone_Verified}
                   onSaved={refreshUser}
@@ -187,6 +189,7 @@ function ProfileInfo({
   username: initialUsername,
   phone: initialPhone,
   email,
+  address: initialAddress,
   isEmailVerified,
   isPhoneVerified,
   onSaved,
@@ -195,6 +198,7 @@ function ProfileInfo({
   username: string;
   phone: string;
   email: string;
+  address: string;
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   onSaved: () => Promise<void>;
@@ -202,6 +206,7 @@ function ProfileInfo({
 }) {
   const [username, setUsername] = useState(initialUsername);
   const [phone, setPhone] = useState(initialPhone);
+  const [address, setAddress] = useState(initialAddress);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [showEmailOTP, setShowEmailOTP] = useState(false);
@@ -217,6 +222,10 @@ function ProfileInfo({
     setPhone(initialPhone);
   }, [initialPhone]);
 
+  useEffect(() => {
+    setAddress(initialAddress);
+  }, [initialAddress]);
+
   const handleSave = async () => {
     if (saving) return;
     if (!username.trim()) {
@@ -230,7 +239,7 @@ function ProfileInfo({
     setSaving(true);
     setMessage("");
     try {
-      await userApi.updateMe({ Username: username.trim(), Phone_number: phone.trim() });
+      await userApi.updateMe({ Username: username.trim(), Phone_number: phone.trim(), Address: address.trim() });
       await onSaved();
       setMessage("บันทึกสำเร็จ");
     } catch (err: unknown) {
@@ -362,6 +371,12 @@ function ProfileInfo({
           <InputField value={username} onChange={(e) => setUsername(e.target.value)} />
         </div>
 
+        <div>
+          <Label>อีเมล</Label>
+          <InputField value={email} readOnly className="bg-zinc-50 text-zinc-500 cursor-not-allowed" />
+          <p className="text-xs text-zinc-400 mt-1">อีเมลไม่สามารถเปลี่ยนแปลงได้</p>
+        </div>
+
         <div className="border-t border-zinc-300 pt-6 mt-6">
           <h3 className="text-base font-bold text-emerald-700 mb-4">ข้อมูลการติดต่อ</h3>
 
@@ -372,6 +387,17 @@ function ProfileInfo({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="เช่น 08x-xxx-xxxx"
+              />
+            </div>
+
+            <div>
+              <Label>ที่อยู่</Label>
+              <textarea
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="เช่น 123/4 ซอยสุขุมวิท 11 พระนคร กรุงเทพมหานคร 10200"
+                rows={3}
+                className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-300 focus:outline-none resize-none text-sm"
               />
             </div>
           </div>
@@ -426,61 +452,176 @@ function AutoReply() {
   );
 }
 
+function StarSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          onMouseEnter={() => setHovered(star)}
+          onMouseLeave={() => setHovered(0)}
+          className="text-2xl transition-colors leading-none"
+        >
+          <span className={(hovered ? star <= hovered : star <= value) ? "text-yellow-400" : "text-zinc-300"}>
+            ★
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function WriteReviewCard({ order, onSubmitted }: { order: OrderWithDetails; onSubmitted: () => void }) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setError("");
+    try {
+      await reviewApi.create({ orderId: order.Order_ID, rating, comment: comment.trim() || undefined });
+      onSubmitted();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="border border-emerald-200 bg-emerald-50 rounded-xl p-4">
+      <div className="flex items-center gap-3 mb-3">
+        {order.Image_URL && (
+          <img
+            src={order.Image_URL.startsWith("/") ? `${API_BASE}${order.Image_URL}` : order.Image_URL}
+            alt={order.Title}
+            className="w-12 h-12 object-cover rounded-lg border border-zinc-200 shrink-0"
+          />
+        )}
+        <div className="min-w-0">
+          <div className="font-semibold text-zinc-800 text-sm truncate">{order.Title || "สินค้า"}</div>
+          <div className="text-xs text-zinc-500">ผู้ขาย: {order.SellerName || "—"}</div>
+        </div>
+      </div>
+
+      <div className="mb-2">
+        <div className="text-xs font-medium text-zinc-600 mb-1">ให้คะแนน</div>
+        <StarSelector value={rating} onChange={setRating} />
+      </div>
+
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        placeholder="แสดงความคิดเห็น (ไม่บังคับ)..."
+        rows={2}
+        className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white mt-2"
+      />
+
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={submitting}
+        className="mt-2 bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50"
+      >
+        {submitting ? "กำลังส่ง..." : "ส่งรีวิว"}
+      </button>
+    </div>
+  );
+}
+
 function MyReview() {
-  const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<OrderWithDetails[]>([]);
+  const [reviews, setReviews] = useState<ReviewData[]>([]);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
-    reviewApi
-      .getMyReviews()
-      .then((res) => setReviews(res.data))
-      .catch(() => setReviews([]))
+    setLoading(true);
+    Promise.all([orderApi.getMyBuyerOrders(), reviewApi.getMyReviews()])
+      .then(([ordersRes, reviewsRes]) => {
+        setOrders(ordersRes.data);
+        setReviews(reviewsRes.data);
+      })
+      .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [reload]);
+
+  const reviewedOrderIds = new Set(reviews.map((r) => r.Order_ID));
+  const pendingOrders = orders.filter(
+    (o) => o.Status === "completed" && !reviewedOrderIds.has(o.Order_ID)
+  );
 
   return (
     <>
-      <h2 className="text-lg font-bold text-emerald-700 mb-4">รีวิวของฉัน</h2>
-
-      <div className="border-b border-zinc-200 pb-3 mb-6 font-semibold text-zinc-700">
-        รีวิวที่เขียนแล้ว ({reviews.length})
-      </div>
+      <h2 className="text-lg font-bold text-emerald-700 mb-5">รีวิวของฉัน</h2>
 
       {loading ? (
         <div className="text-center text-zinc-500 py-16">กำลังโหลด...</div>
-      ) : reviews.length > 0 ? (
-        <div className="space-y-3">
-          {reviews.map((r) => {
-            const date = new Date(r.Created_at);
-            const formatted = date.toLocaleDateString("th-TH", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            });
-            return (
-              <div
-                key={r.Review_ID}
-                className="border border-zinc-200 rounded-xl p-4"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="text-sm font-semibold text-zinc-800">
-                    {r.ProductTitle || "สินค้า"}
-                  </div>
-                  <div className="text-xs text-zinc-400">{formatted}</div>
-                </div>
-                <div className="mb-1 text-yellow-400 text-sm">
-                  {"★".repeat(r.Rating)}
-                  <span className="text-zinc-300">{"★".repeat(5 - r.Rating)}</span>
-                </div>
-                {r.Comment && (
-                  <p className="text-sm text-zinc-600">{r.Comment}</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
       ) : (
-        <div className="text-center text-zinc-500 py-16">ยังไม่มีรายการรีวิว</div>
+        <>
+          {/* Pending reviews */}
+          {pendingOrders.length > 0 && (
+            <div className="mb-7">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-base font-bold text-zinc-700">รอรีวิว</span>
+                <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                  {pendingOrders.length}
+                </span>
+              </div>
+              <div className="space-y-3">
+                {pendingOrders.map((order) => (
+                  <WriteReviewCard
+                    key={order.Order_ID}
+                    order={order}
+                    onSubmitted={() => setReload((r) => r + 1)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Written reviews */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-base font-bold text-zinc-700">รีวิวที่เขียนแล้ว</span>
+              <span className="bg-zinc-100 text-zinc-600 text-xs font-bold px-2 py-0.5 rounded-full">
+                {reviews.length}
+              </span>
+            </div>
+
+            {reviews.length > 0 ? (
+              <div className="space-y-3">
+                {reviews.map((r) => (
+                  <div key={r.Review_ID} className="border border-zinc-200 rounded-xl p-4 bg-white">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-sm font-semibold text-zinc-800">{r.ProductTitle || "สินค้า"}</div>
+                      <div className="text-xs text-zinc-400">
+                        {new Date(r.Created_at).toLocaleDateString("th-TH", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </div>
+                    </div>
+                    <div className="mb-1 text-yellow-400 text-sm">
+                      {"★".repeat(r.Rating)}
+                      <span className="text-zinc-300">{"★".repeat(5 - r.Rating)}</span>
+                    </div>
+                    {r.Comment && <p className="text-sm text-zinc-600">{r.Comment}</p>}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-zinc-400 py-10">ยังไม่มีรายการรีวิว</div>
+            )}
+          </div>
+        </>
       )}
     </>
   );
@@ -521,28 +662,9 @@ function ManageProfile() {
       {loading ? (
         <div className="text-center text-zinc-500 py-16">กำลังโหลด...</div>
       ) : products.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {products.map((p) => (
-            <Link
-              key={p.id}
-              href={`/products/${p.id}`}
-              className="border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md transition bg-white"
-            >
-              <div className="aspect-square bg-zinc-100 overflow-hidden">
-                {p.images[0] ? (
-                  <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-zinc-300 text-3xl">📷</div>
-                )}
-              </div>
-              <div className="p-3">
-                <div className="text-sm font-semibold text-zinc-800 truncate">{p.title}</div>
-                <div className="text-sm font-bold text-emerald-700 mt-1">{Number(p.price).toLocaleString()} ฿</div>
-                <div className="text-xs text-zinc-400 mt-1">
-                  {p.status === "available" ? "กำลังขาย" : p.status === "reserved" ? "จอง" : "ขายแล้ว"}
-                </div>
-              </div>
-            </Link>
+            <ProductCard key={p.id} product={p} badgeText="" />
           ))}
         </div>
       ) : (
