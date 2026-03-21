@@ -38,8 +38,9 @@ export interface ProductFilters {
     district?: string;
     page?: number;
     limit?: number;
-    sortBy?: 'Price' | 'Created_at';
+    sortBy?: 'Price' | 'Created_at' | 'random';
     sortOrder?: 'asc' | 'desc';
+    excludeSeller?: number;
 }
 
 export type UpdateProductData = Partial<Pick<Product, "Title" | "Description" | "Province" | "District" | "Price" | "Condition" | "Category_ID" | "Quantity" | "Image_URL" | "Status">>;

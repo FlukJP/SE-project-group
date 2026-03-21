@@ -20,6 +20,7 @@ export default function ProductCard({
   const timeAgo = product.postedAt;
   const priceStr = `${Number(product.price ?? 0).toLocaleString()} ฿`;
   const [imgError, setImgError] = useState(false);
+  const isLocalImage = image.startsWith("http://localhost") || image.startsWith("http://127.");
 
   return (
     <Link
@@ -35,6 +36,7 @@ export default function ProductCard({
             className="object-cover group-hover:scale-[1.03] transition"
             sizes="(max-width: 1024px) 100vw, 25vw"
             priority={false}
+            unoptimized={isLocalImage}
             onError={() => setImgError(true)}
           />
         ) : (

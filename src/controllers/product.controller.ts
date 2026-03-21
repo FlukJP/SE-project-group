@@ -74,7 +74,7 @@ export const ProductController = {
     // 2.Search/List Products
     getAllProducts: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
-            const { q, category, minPrice, maxPrice, limit, page, sortBy, sortOrder, province, district } = req.query;
+            const { q, category, minPrice, maxPrice, limit, page, sortBy, sortOrder, province, district, excludeSeller } = req.query;
             const result = await ProductService.getAllProducts({
                 keyword: q as string,
                 category: category as string,
@@ -82,10 +82,11 @@ export const ProductController = {
                 maxPrice: maxPrice ? Number(maxPrice) : undefined,
                 limit: limit ? Number(limit) : 20,
                 page: page ? Number(page) : 1,
-                sortBy: (sortBy === 'Price' || sortBy === 'Created_at') ? sortBy : undefined,
+                sortBy: (sortBy === 'Price' || sortBy === 'Created_at' || sortBy === 'random') ? sortBy : undefined,
                 sortOrder: sortOrder as 'asc' | 'desc',
                 province: province as string | undefined,
                 district: district as string | undefined,
+                excludeSeller: excludeSeller ? Number(excludeSeller) : undefined,
             });
 
             res.status(200).json({ success: true, data: result.products, meta: { page: page ? Number(page) : 1, limit: limit ? Number(limit) : 20, total: result.total } });

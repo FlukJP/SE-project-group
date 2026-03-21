@@ -79,6 +79,10 @@ export const ProductModel = {
             whereSql += ` AND (p.Title LIKE ? OR p.Description LIKE ?)`;
             values.push(`%${filters.keyword}%`, `%${filters.keyword}%`);
         }
+        if (filters.excludeSeller) {
+            whereSql += ` AND p.Seller_ID != ?`;
+            values.push(filters.excludeSeller);
+        }
 
         // Count total matching rows
         const countSql = `SELECT COUNT(*) AS total FROM Product p LEFT JOIN Category c ON p.Category_ID = c.Category_ID ${whereSql}`;
@@ -99,13 +103,17 @@ export const ProductModel = {
             // Fix #21: SECURITY NOTE - sortBy is validated against a strict whitelist
             // before being interpolated into SQL. Do NOT remove this validation.
             // ORDER BY columns cannot be parameterized in MySQL, so whitelist is required.
-            const validSortFields = ['Price', 'Created_at'];
+            const validSortFields = ['Price', 'Created_at', 'random'];
             if (!validSortFields.includes(filters.sortBy)) {
                 throw new AppError("Invalid sort field", 400);
             }
-            const sortField = filters.sortBy === 'Price' ? 'p.Price' : 'p.Created_at';
-            const sortOrder = filters.sortOrder === 'asc' ? 'ASC' : 'DESC';
-            dataSql += ` ORDER BY ${sortField} ${sortOrder}`;
+            if (filters.sortBy === 'random') {
+                dataSql += ` ORDER BY RAND()`;
+            } else {
+                const sortField = filters.sortBy === 'Price' ? 'p.Price' : 'p.Created_at';
+                const sortOrder = filters.sortOrder === 'asc' ? 'ASC' : 'DESC';
+                dataSql += ` ORDER BY ${sortField} ${sortOrder}`;
+            }
         } else {
             dataSql += ` ORDER BY p.Created_at DESC`;
         }

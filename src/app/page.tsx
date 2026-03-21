@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/src/components/layout/Navbar";
@@ -25,8 +25,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
+    const params: Record<string, string> = { limit: "20", sortBy: "random" };
+    if (user?.User_ID) params.excludeSeller = String(user.User_ID);
     Promise.all([
-      productApi.list({ limit: "12" }).then((res) => res.data.map(toProductDisplay)),
+      productApi.list(params).then((res) => res.data.map(toProductDisplay)),
       categoryApi.popular(10).then((res) => res.data.map(toPopularCategory))
         .catch(() => categoryApi.list().then((res) => res.data.map(toCategory))),
     ])
@@ -39,12 +42,9 @@ export default function HomePage() {
         setCategories([]);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [isLoggedIn]);
 
-  const visibleFeatured = useMemo(() => {
-    if (!user?.User_ID) return featured;
-    return featured.filter((p) => p.seller.id !== String(user.User_ID));
-  }, [featured, user]);
+  const visibleFeatured = featured;
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +96,7 @@ export default function HomePage() {
 
             {visibleFeatured.length > 0 ? (
               <FeaturedSection
-                title="ประกาศแนะนำ"
+                title="สินค้าแนะนำวันนี้"
                 subtitle="ประกาศล่าสุด"
                 products={visibleFeatured}
               />
