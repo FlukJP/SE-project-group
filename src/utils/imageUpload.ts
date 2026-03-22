@@ -12,7 +12,7 @@ const UPLOAD_DIR = path.join(process.cwd(), 'public/uploads');
 const ALLOWED_MIME_TYPES = [
     'image/jpeg',
     'image/png',
-    'image/webp'
+    'image/webp',
 ];
 
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -21,6 +21,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 
 let fileTypeFromFile: typeof import('file-type').fileTypeFromFile;
 
+// Lazily loads and caches the file-type module for magic byte inspection.
 const getFileTypeLoader = async () => {
     if (!fileTypeFromFile) {
         const module = await import('file-type');
@@ -29,7 +30,7 @@ const getFileTypeLoader = async () => {
     return fileTypeFromFile;
 };
 
-// Set file saving settings.
+// Multer disk storage that saves uploaded files to the upload directory with a unique temporary filename.
 const storage = multer.diskStorage({
     destination: (req: Request, file, cb) => {
         cb(null, UPLOAD_DIR);
@@ -37,9 +38,10 @@ const storage = multer.diskStorage({
     filename: (req: Request, file, cb) => {
         const uniqueName = crypto.randomBytes(8).toString('hex') + '-' + Date.now();
         cb(null, `tmp-${uniqueName}`);
-    }
+    },
 });
 
+// Multer file filter that rejects files whose declared MIME type is not in the allowed list.
 const fileFilter: multer.Options['fileFilter'] = (req, file, cb) => {
     if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
         return cb(new AppError('Invalid file type. Only JPEG, PNG, WEBP allowed.', 400));
@@ -50,10 +52,11 @@ const fileFilter: multer.Options['fileFilter'] = (req, file, cb) => {
 export const uploadImage = multer({
     storage,
     limits: { fileSize: MAX_FILE_SIZE },
-    fileFilter
+    fileFilter,
 });
 
-// Middleware detects Magic Bytes.
+// Middleware that validates uploaded files by inspecting their magic bytes,
+// renames them from their temporary name, and rejects files whose actual type does not match.
 export const validateUploadedImage = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.file ? [req.file] : (req.files as Express.Multer.File[]) || [];
     if (files.length === 0) return next();
@@ -70,15 +73,14 @@ export const validateUploadedImage = async (req: Request, res: Response, next: N
             }
             const finalFilename = file.filename.replace('tmp-', 'image-') + `.${meta.ext}`;
             const newFilePath = path.join(UPLOAD_DIR, finalFilename);
-            
+
             await fsPromises.rename(oldFilePath, newFilePath);
             file.path = newFilePath;
             file.filename = finalFilename;
             file.mimetype = meta.mime;
         }
         next();
-    } 
-    catch (err) {
+    } catch (err) {
         await Promise.all(
             files.map(async (file) => {
                 try {

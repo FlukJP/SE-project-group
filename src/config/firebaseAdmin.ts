@@ -2,6 +2,8 @@ import admin from "firebase-admin";
 import path from "path";
 import fs from "fs";
 
+// Initializes Firebase Admin SDK using a local service account file if present,
+// otherwise falls back to default initialization (e.g., Application Default Credentials).
 const serviceAccountPath = path.resolve(process.cwd(), "firebase-service-account.json");
 
 if (!admin.apps.length) {

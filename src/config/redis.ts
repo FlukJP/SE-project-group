@@ -25,6 +25,7 @@ redisClient.on("error", (err) => {
 let redisAvailable = false;
 let connectionPromise: Promise<void> | null = null;
 
+// Connects to Redis if not already connected. Marks Redis as unavailable if the connection times out or fails.
 export const connectRedis = async () => {
     if (redisClient.isOpen) {
         redisAvailable = true;
@@ -60,6 +61,7 @@ export const connectRedis = async () => {
     await connectionPromise;
 };
 
+// Gracefully disconnects the Redis client and marks Redis as unavailable.
 export const disconnectRedis = async (): Promise<void> => {
     if (redisClient.isOpen) {
         await redisClient.quit();
@@ -68,9 +70,10 @@ export const disconnectRedis = async (): Promise<void> => {
     }
 };
 
-// --- In-memory fallback store ---
+// In-memory fallback store used when Redis is unavailable.
 const memoryStore = new Map<string, { value: string; expiresAt: number | null }>();
 
+// Removes all expired entries from the in-memory store.
 function memoryCleanup() {
     const now = Date.now();
     for (const [key, entry] of memoryStore) {
@@ -80,11 +83,12 @@ function memoryCleanup() {
     }
 }
 
-// Cleanup expired keys every 60 seconds
+// Periodically purge expired in-memory keys every 60 seconds.
 setInterval(memoryCleanup, 60_000).unref();
 
-// --- Cache adapter: same API as redis client subset used in auth.service ---
+// Unified cache adapter that uses Redis when available, falling back to an in-memory store.
 const cacheAdapter = {
+    // Returns the cached value for the given key, or null if not found or expired.
     async get(key: string): Promise<string | null> {
         if (redisAvailable && redisClient.isOpen) {
             return redisClient.get(key);
@@ -98,6 +102,7 @@ const cacheAdapter = {
         return entry.value;
     },
 
+    // Stores a value with a TTL (in seconds) under the given key.
     async setEx(key: string, seconds: number, value: string): Promise<void> {
         if (redisAvailable && redisClient.isOpen) {
             await redisClient.setEx(key, seconds, value);
@@ -106,6 +111,7 @@ const cacheAdapter = {
         memoryStore.set(key, { value, expiresAt: Date.now() + seconds * 1000 });
     },
 
+    // Increments the integer value of the given key by one, creating it at 1 if it does not exist.
     async incr(key: string): Promise<number> {
         if (redisAvailable && redisClient.isOpen) {
             return redisClient.incr(key);
@@ -123,6 +129,7 @@ const cacheAdapter = {
         return newVal;
     },
 
+    // Sets a TTL (in seconds) on an existing key. Returns true if the key exists, false otherwise.
     async expire(key: string, seconds: number): Promise<boolean> {
         if (redisAvailable && redisClient.isOpen) {
             const result = await redisClient.expire(key, seconds);
@@ -134,6 +141,7 @@ const cacheAdapter = {
         return true;
     },
 
+    // Returns the remaining TTL in seconds for the given key, or -1 if no expiry is set, -2 if expired.
     async ttl(key: string): Promise<number> {
         if (redisAvailable && redisClient.isOpen) {
             return redisClient.ttl(key);
@@ -144,6 +152,7 @@ const cacheAdapter = {
         return remaining > 0 ? remaining : -2;
     },
 
+    // Deletes the given key. Returns 1 if deleted, 0 if not found.
     async del(key: string): Promise<number> {
         if (redisAvailable && redisClient.isOpen) {
             return redisClient.del(key);
@@ -151,13 +160,13 @@ const cacheAdapter = {
         return memoryStore.delete(key) ? 1 : 0;
     },
 
+    // Always returns true because the adapter itself is always operational.
     get isOpen(): boolean {
-        return true; // adapter is always "open"
+        return true;
     },
 };
 
+// Returns whether the Redis connection is currently active.
 export const isRedisAvailable = () => redisAvailable;
-
-// Fix #15: Removed duplicate SIGINT/SIGTERM handlers (server.ts handles graceful shutdown)
 
 export default cacheAdapter;

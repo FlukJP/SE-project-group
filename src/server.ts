@@ -23,7 +23,6 @@ const server = http.createServer(app);
 const CLIENT_URLS = (process.env.CLIENT_URL || 'http://localhost:3000')
     .split(',')
     .map(u => u.trim());
-// Also allow common dev ports
 if (!CLIENT_URLS.includes('http://localhost:3001')) CLIENT_URLS.push('http://localhost:3001');
 
 const io = new SocketIOServer(server, {
@@ -33,7 +32,7 @@ const io = new SocketIOServer(server, {
     },
 });
 
-// Fix #14: Socket.IO authentication middleware - use validated ENV config instead of process.env fallback
+// Authenticates each incoming Socket.IO connection by verifying the JWT token in the handshake auth payload.
 io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) {
@@ -51,6 +50,7 @@ io.use((socket, next) => {
     }
 });
 
+// Handles Socket.IO connection lifecycle — joining/leaving chat rooms and broadcasting messages.
 io.on('connection', (socket) => {
     const socketUser = (socket as unknown as Record<string, unknown>).user as { userID: number } | undefined;
     console.log(`[Socket] connected: ${socket.id}, user: ${socketUser?.userID}`);
@@ -74,10 +74,8 @@ io.on('connection', (socket) => {
 
     socket.on('sendMessage', (data: { roomId: string; message: unknown }) => {
         if (!socketUser) return;
-
         const msg = data.message as Record<string, unknown> | undefined;
         if (!msg || msg.Sender_ID !== socketUser.userID) return;
-
         socket.to(data.roomId).emit('newMessage', data.message);
     });
 
@@ -90,16 +88,16 @@ app.set('io', io);
 
 // Security headers
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow /uploads to be loaded cross-origin
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
-// CORS allowlist
+// CORS
 app.use(cors({
     origin: CLIENT_URLS,
     credentials: true,
 }));
 
-// Gzip/Brotli compression
+// Compression
 app.use(compression());
 
 app.use(express.json({ limit: '10mb' }));
@@ -122,6 +120,7 @@ app.use(errorHandler);
 
 const PORT = Number(process.env.PORT) || 5000;
 
+// Verifies the database connection, connects to Redis, then starts the HTTP server.
 async function bootstrap() {
     try {
         const conn = await pool.getConnection();
@@ -140,23 +139,19 @@ async function bootstrap() {
     }
 
     server.listen(PORT, () => {
-        console.log(`[Server]  running on http://localhost:${PORT}`);
-        console.log(`[Server]  static files at http://localhost:${PORT}/uploads`);
-        console.log(`[Server]  environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`[Server] running on http://localhost:${PORT}`);
+        console.log(`[Server] static files at http://localhost:${PORT}/uploads`);
+        console.log(`[Server] environment: ${process.env.NODE_ENV || 'development'}`);
     });
 }
 
-// Graceful Shutdown
+// Gracefully closes the HTTP server, Socket.IO, Redis, and MySQL pool before exiting.
 async function shutdown(signal: string) {
     console.log(`\n[${signal}] shutting down...`);
-
     server.close(() => console.log('[HTTP] closed'));
-
     io.close(() => console.log('[Socket] closed'));
-
     try { await disconnectRedis(); } catch {}
     try { await pool.end(); console.log('[MySQL] pool closed'); } catch {}
-
     process.exit(0);
 }
 

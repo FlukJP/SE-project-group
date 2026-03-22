@@ -8,28 +8,28 @@ const MIME_TO_EXT: Record<string, string> = {
     'image/gif': '.gif',
 };
 
-// Get extension from mimetype
+// Returns the file extension for a given MIME type, throwing if the type is not supported.
 const getExtension = (mimetype: string): string => {
-    if (!MIME_TO_EXT[mimetype]) throw new Error('Unsupported Mime Type in storage');
+    if (!MIME_TO_EXT[mimetype]) throw new Error('Unsupported MIME type in storage');
     return MIME_TO_EXT[mimetype];
 };
 
-// Generate unique filename
+// Generates a unique filename using the given prefix, current timestamp, and a random suffix.
 const generateUniqueFilename = (prefix: string, mimetype: string): string => {
     const ext = getExtension(mimetype);
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     return `${prefix}-${uniqueSuffix}${ext}`;
 };
 
-// Factory function
+// Creates a multer disk storage instance that saves files to the given directory with a unique filename.
 const createMulterStorage = (uploadDir: string, filePrefix: string) =>
     multer.diskStorage({
         destination: (req, file, cb) => cb(null, uploadDir),
         filename: (req, file, cb) => cb(null, generateUniqueFilename(filePrefix, file.mimetype)),
     });
 
-// Factory function
-const createMulterLimits = (maxSize: number) => ({ fileSize: maxSize, });
+// Creates a multer file size limit configuration object for the given maximum size in bytes.
+const createMulterLimits = (maxSize: number) => ({ fileSize: maxSize });
 
 export const MULTER_CONFIG = {
     product: {

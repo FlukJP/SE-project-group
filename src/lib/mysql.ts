@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 
+// MySQL connection pool configured for the Aiven cloud database with SSL enabled.
 const pool = mysql.createPool({
     host: process.env.DB_HOST_AIVEN,
     user: process.env.DB_USER_AIVEN,
@@ -12,7 +13,7 @@ const pool = mysql.createPool({
     queueLimit: 0,
     ssl: {
         rejectUnauthorized: false,
-    }
+    },
 });
 
 export default pool;

@@ -1,10 +1,6 @@
 import "dotenv/config";
 
-// ---------------------------------------------------------------------------
-// Schema-style validation for every required environment variable.
-// The server will crash fast on startup if anything is missing or malformed.
-// ---------------------------------------------------------------------------
-
+// Returns the trimmed value of an environment variable, throwing if it is missing or empty.
 function requireString(name: string): string {
     const value = process.env[name];
     if (!value || value.trim().length === 0) {
@@ -13,6 +9,7 @@ function requireString(name: string): string {
     return value.trim();
 }
 
+// Returns the value of an environment variable as a positive integer, throwing if invalid.
 function requirePositiveInt(name: string): number {
     const raw = process.env[name];
     const value = Number(raw);
@@ -22,6 +19,7 @@ function requirePositiveInt(name: string): number {
     return value;
 }
 
+// Returns the value of an environment variable as a validated URL string, throwing if malformed.
 function requireUrl(name: string): string {
     const value = requireString(name);
     try {
@@ -32,7 +30,7 @@ function requireUrl(name: string): string {
     return value;
 }
 
-// --- JWT ---
+// JWT
 const JWT_SECRET = requireString("JWT_SECRET");
 const JWT_ISSUER = requireString("JWT_ISSUER");
 const JWT_AUDIENCE = requireString("JWT_AUDIENCE");
@@ -40,19 +38,19 @@ const JWT_EXPIRES_IN = requirePositiveInt("JWT_EXPIRES_IN");
 const JWT_REFRESH_SECRET = requireString("JWT_REFRESH_SECRET");
 const JWT_REFRESH_EXPIRES_IN = requireString("JWT_REFRESH_EXPIRES_IN");
 
-// --- Database ---
+// Database
 const DB_HOST = requireString("DB_HOST");
 const DB_USER = requireString("DB_USER");
 const DB_NAME = requireString("DB_NAME");
 const DB_PORT = requirePositiveInt("DB_PORT");
-// DB_PASSWORD may be empty for local dev (e.g. root with no password)
+// DB_PASSWORD may be empty for local development
 const DB_PASSWORD = process.env.DB_PASSWORD ?? "";
 
-// --- Client / Socket ---
+// Client / Socket
 const SOCKET_URL = requireUrl("NEXT_PUBLIC_API_URL");
 const CLIENT_URL = requireString("CLIENT_URL");
 
-// --- Email (optional in dev, required in production) ---
+// Email — optional in development, required in production
 const NODE_ENV = process.env.NODE_ENV || "development";
 let EMAIL_USER = process.env.EMAIL_USER ?? "";
 let EMAIL_PASS = process.env.EMAIL_PASS ?? "";

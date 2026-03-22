@@ -6,6 +6,7 @@ export interface TokenPayload extends jwt.JwtPayload {
     role: string;
 }
 
+// Signs and returns a short-lived JWT access token for the given payload.
 export const generateAccessToken = (payload: TokenPayload) => {
     return jwt.sign(payload, ENV.JWT_SECRET as string, {
         expiresIn: ENV.JWT_EXPIRES_IN,
@@ -14,6 +15,7 @@ export const generateAccessToken = (payload: TokenPayload) => {
     });
 };
 
+// Signs and returns a long-lived JWT refresh token for the given user ID.
 export const generateRefreshToken = (payload: { userID: number }) => {
     return jwt.sign(
         payload,
