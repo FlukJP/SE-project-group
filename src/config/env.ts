@@ -43,8 +43,8 @@ const DB_HOST = requireString("DB_HOST");
 const DB_USER = requireString("DB_USER");
 const DB_NAME = requireString("DB_NAME");
 const DB_PORT = requirePositiveInt("DB_PORT");
-// DB_PASSWORD may be empty for local development
-const DB_PASSWORD = process.env.DB_PASSWORD ?? "";
+// DB_PASS may be empty for local development
+const DB_PASSWORD = process.env.DB_PASS ?? "";
 
 // Client / Socket
 const SOCKET_URL = requireUrl("NEXT_PUBLIC_API_URL");
