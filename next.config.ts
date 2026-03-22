@@ -19,6 +19,11 @@ const nextConfig = {
         port: "5000",
         pathname: "/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "se-project-group.onrender.com",
+        pathname: "/uploads/**",
+      },
     ],
   },
 };
