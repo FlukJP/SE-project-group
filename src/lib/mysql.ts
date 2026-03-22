@@ -1,6 +1,7 @@
 import mysql from 'mysql2/promise';
 
 // MySQL connection pool configured for the Aiven cloud database with SSL enabled.
+// enableKeepAlive prevents ECONNRESET caused by the cloud server closing idle connections.
 const pool = mysql.createPool({
     host: process.env.DB_HOST_AIVEN,
     user: process.env.DB_USER_AIVEN,
@@ -11,6 +12,8 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
     ssl: {
         rejectUnauthorized: false,
     },

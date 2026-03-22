@@ -53,9 +53,6 @@ export const AuthService = {
         };
 
         const insertId = await UserModel.createUser(newUser);
-        // Fire-and-forget: send OTP email in background without blocking response
-        AuthService.requestOTP(userData.Email).catch(() => {});
-
         return insertId;
     },
 
