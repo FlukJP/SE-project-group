@@ -9,6 +9,7 @@ interface EmailOTPProps {
     onError: (message: string) => void;
 }
 
+// Handles email OTP flow: requesting a code and verifying it to authenticate the user
 export default function EmailOTP({ email, onVerified, onError }: EmailOTPProps) {
     const [step, setStep] = useState<"send" | "verify">("send");
     const [otp, setOtp] = useState("");
@@ -16,13 +17,13 @@ export default function EmailOTP({ email, onVerified, onError }: EmailOTPProps) 
     const [countdown, setCountdown] = useState(0);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Cleanup timer on unmount
     useEffect(() => {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
     }, []);
 
+    // Starts a 60-second countdown that prevents the user from requesting a new OTP too quickly
     const startCountdown = useCallback(() => {
         if (timerRef.current) clearInterval(timerRef.current);
         setCountdown(60);
@@ -38,6 +39,7 @@ export default function EmailOTP({ email, onVerified, onError }: EmailOTPProps) 
         }, 1000);
     }, []);
 
+    // Requests an OTP to be sent to the user's email and transitions to the verify step
     const handleSendOTP = async () => {
         if (loading) return;
         setLoading(true);
@@ -52,6 +54,7 @@ export default function EmailOTP({ email, onVerified, onError }: EmailOTPProps) 
         }
     };
 
+    // Verifies the entered OTP and calls onVerified with the resulting tokens on success
     const handleVerifyOTP = async () => {
         if (loading) return;
         setLoading(true);
