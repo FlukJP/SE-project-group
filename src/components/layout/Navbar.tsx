@@ -42,14 +42,14 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
     };
 
     return (
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-zinc-200">
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-kd-border">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-2">
-                    <div className="h-9 w-9 rounded-xl bg-emerald-600 text-white grid place-items-center font-extrabold">
+                    <div className="h-9 w-9 rounded-xl bg-kd-primary text-white grid place-items-center font-extrabold">
                         K
                     </div>
-                    <div className="font-extrabold">Kaidee-like</div>
-                    <div className="text-[11px] text-zinc-500 -mt-0.5">ตลาดมือสองใกล้คุณ</div>
+                    <div className="font-extrabold text-kd-text">Kaidee-like</div>
+                    <div className="text-[11px] text-kd-text-light -mt-0.5">ตลาดมือสองใกล้คุณ</div>
                 </Link>
 
                 <div className="flex items-center gap-3">
@@ -62,26 +62,26 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
                                         setIsChatOpen(!isChatOpen);
                                         setIsProfileOpen(false);
                                     }}
-                                    className="p-2 hover:bg-zinc-100 rounded-full transition-colors flex items-center justify-center text-xl"
+                                    className="p-2 hover:bg-kd-hover rounded-full transition-colors flex items-center justify-center text-xl"
                                 >
                                     💬
                                 </button>
 
                                 {isChatOpen && (
-                                    <div className="absolute right-0 top-full mt-2 w-[350px] h-[400px] bg-white rounded-lg shadow-2xl border border-gray-100 flex flex-col z-50 overflow-hidden cursor-default">
+                                    <div className="absolute right-0 top-full mt-2 w-[350px] h-[400px] bg-white rounded-lg shadow-2xl border border-kd-border flex flex-col z-50 overflow-hidden cursor-default">
                                         <div className="flex-1 flex flex-col items-center justify-center bg-white p-6">
-                                            <div className="w-24 h-24 mb-4 bg-gray-50 rounded-full flex items-center justify-center">
-                                                <svg viewBox="0 0 24 24" fill="#273B8C" className="w-12 h-12">
+                                            <div className="w-24 h-24 mb-4 bg-kd-bg rounded-full flex items-center justify-center">
+                                                <svg viewBox="0 0 24 24" fill="#D9734E" className="w-12 h-12">
                                                     <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
                                                 </svg>
                                             </div>
-                                            <p className="text-sm text-gray-500">เริ่มพูดคุย</p>
+                                            <p className="text-sm text-kd-text-light">เริ่มพูดคุย</p>
                                         </div>
-                                        <div className="border-t border-gray-100 p-4 text-center bg-white">
+                                        <div className="border-t border-kd-border p-4 text-center bg-white">
                                             <Link
                                                 href="/chat"
                                                 onClick={() => setIsChatOpen(false)}
-                                                className="text-[#3b82f6] hover:text-blue-700 text-sm font-medium transition-colors"
+                                                className="text-kd-primary hover:text-kd-primary-hover text-sm font-medium transition-colors"
                                             >
                                                 ดูทั้งหมด
                                             </Link>
@@ -97,7 +97,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
                                         setIsProfileOpen(!isProfileOpen);
                                         setIsChatOpen(false);
                                     }}
-                                    className="h-9 w-9 rounded-full bg-zinc-200 grid place-items-center hover:bg-zinc-300 transition-colors text-sm font-semibold"
+                                    className="h-9 w-9 rounded-full bg-kd-card grid place-items-center hover:bg-kd-hover transition-colors text-sm font-semibold"
                                     title={user?.Username}
                                 >
                                     {user?.Avatar_URL ? (
@@ -108,47 +108,47 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
                                 </button>
 
                                 {isProfileOpen && (
-                                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 flex flex-col z-50 py-2">
+                                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-kd-border flex flex-col z-50 py-2">
                                         {user && (
-                                            <div className="px-5 py-2 text-sm text-zinc-500 border-b border-gray-100 mb-1">
+                                            <div className="px-5 py-2 text-sm text-kd-text-light border-b border-kd-border mb-1">
                                                 {user.Username}
                                             </div>
                                         )}
-                                        <Link href="/profile?tab=profile" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
-                                            ดูแลและแก้ไขข้อมูลส่วนตัว
+                                        <Link href="/profile?tab=profile" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-kd-text hover:bg-kd-hover hover:text-kd-primary transition-colors">
+                                            ดูและแก้ไขข้อมูลส่วนตัว
                                         </Link>
-                                        <Link href="/profile?tab=review" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
+                                        <Link href="/profile?tab=review" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-kd-text hover:bg-kd-hover hover:text-kd-primary transition-colors">
                                             รีวิวของฉัน
                                         </Link>
-                                        <Link href="/my-products" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
+                                        <Link href="/my-products" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-kd-text hover:bg-kd-hover hover:text-kd-primary transition-colors">
                                             สินค้าของฉัน
                                         </Link>
-                                        <Link href="/history" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
+                                        <Link href="/history" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-kd-text hover:bg-kd-hover hover:text-kd-primary transition-colors">
                                             ประวัติการใช้งาน
                                         </Link>
-                                        <Link href="/chat" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 hover:text-[#121E4D]">
+                                        <Link href="/chat" onClick={() => setIsProfileOpen(false)} className="px-5 py-2.5 text-[15px] text-kd-text hover:bg-kd-hover hover:text-kd-primary transition-colors">
                                             แชท
                                         </Link>
 
                                         {user?.Role === "admin" && (
                                             <>
-                                                <div className="border-t border-gray-100 my-1" />
+                                                <div className="border-t border-kd-border my-1" />
                                                 <Link
                                                     href="/admin"
                                                     onClick={() => setIsProfileOpen(false)}
-                                                    className="px-5 py-2.5 text-[15px] text-emerald-700 font-semibold hover:bg-gray-50"
+                                                    className="px-5 py-2.5 text-[15px] text-kd-primary font-semibold hover:bg-kd-hover transition-colors"
                                                 >
                                                     ระบบจัดการ (Admin)
                                                 </Link>
                                             </>
                                         )}
 
-                                        <div className="border-t border-gray-100 my-1" />
+                                        <div className="border-t border-kd-border my-1" />
 
                                         <button
                                             type="button"
                                             onClick={handleLogout}
-                                            className="text-left px-5 py-2.5 text-[15px] text-red-500 hover:bg-gray-50 transition-colors"
+                                            className="text-left px-5 py-2.5 text-[15px] text-red-500 hover:bg-kd-hover transition-colors"
                                         >
                                             ออกจากระบบ
                                         </button>
@@ -158,7 +158,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
 
                             <Link
                                 href="/products/create"
-                                className="px-4 py-2 rounded-lg bg-blue-900 text-white text-sm font-semibold"
+                                className="px-4 py-2 rounded-lg bg-kd-primary text-white text-sm font-semibold hover:bg-kd-primary-hover transition-colors"
                             >
                                 ลงขาย
                             </Link>
@@ -167,7 +167,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
                         <button
                             type="button"
                             onClick={onLoginClick ?? (() => router.push("/login"))}
-                            className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
+                            className="px-4 py-2 rounded-lg bg-kd-primary text-white text-sm font-semibold hover:bg-kd-primary-hover transition-colors"
                         >
                             เข้าสู่ระบบ
                         </button>

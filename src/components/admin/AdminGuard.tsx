@@ -21,15 +21,15 @@ export default function AdminGuard({ children }: AdminGuardProps) {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-                <p className="text-zinc-500">กำลังโหลด...</p>
+            <div className="min-h-screen flex items-center justify-center bg-kd-bg">
+                <p className="text-kd-text-light">กำลังโหลด...</p>
             </div>
         );
     }
 
     if (!isLoggedIn || user?.Role !== "admin") {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+            <div className="min-h-screen flex items-center justify-center bg-kd-bg">
                 <p className="text-red-600">ไม่มีสิทธิ์เข้าถึงหน้านี้</p>
             </div>
         );

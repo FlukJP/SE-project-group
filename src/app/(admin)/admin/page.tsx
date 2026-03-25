@@ -34,21 +34,21 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="text-center text-zinc-500 py-16">กำลังโหลด...</div>
+      <div className="text-center text-kd-text-light py-16">กำลังโหลด...</div>
     );
   }
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-emerald-700 mb-6">แดชบอร์ด</h2>
+      <h2 className="text-xl font-bold text-kd-primary mb-6">แดชบอร์ด</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <StatCard emoji="👥" label="ผู้ใช้ทั้งหมด" value={stats.totalUsers} bgColor="bg-blue-50" />
-        <StatCard emoji="📦" label="สินค้าทั้งหมด" value={stats.totalProducts} bgColor="bg-emerald-50" />
-        <StatCard emoji="🚩" label="รายงานทั้งหมด" value={stats.totalReports} bgColor="bg-amber-50" />
-        <StatCard emoji="🏷️" label="หมวดหมู่ทั้งหมด" value={stats.totalCategories} bgColor="bg-purple-50" />
+        <StatCard emoji="👥" label="ผู้ใช้ทั้งหมด" value={stats.totalUsers} bgColor="bg-kd-bg" />
+        <StatCard emoji="📦" label="สินค้าทั้งหมด" value={stats.totalProducts} bgColor="bg-kd-card" />
+        <StatCard emoji="🚩" label="รายงานทั้งหมด" value={stats.totalReports} bgColor="bg-kd-hover" />
+        <StatCard emoji="🏷️" label="หมวดหมู่ทั้งหมด" value={stats.totalCategories} bgColor="bg-kd-bg" />
         <StatCard emoji="🚫" label="ผู้ใช้ที่ถูกระงับ" value={stats.bannedUsers} bgColor="bg-red-50" />
-        <StatCard emoji="⛔" label="สินค้าที่ถูกระงับ" value={stats.bannedProducts} bgColor="bg-orange-50" />
+        <StatCard emoji="⛔" label="สินค้าที่ถูกระงับ" value={stats.bannedProducts} bgColor="bg-red-50" />
       </div>
     </div>
   );

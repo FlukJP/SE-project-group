@@ -63,11 +63,11 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-zinc-50">
+    <main className="min-h-screen bg-kd-bg">
       <Navbar onLoginClick={() => setShowLogin(true)} />
 
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-emerald-600 to-emerald-500" />
+        <div className="absolute inset-0 bg-gradient-to-br from-kd-primary via-kd-primary to-kd-primary-hover" />
         <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
         <div className="absolute -left-24 -bottom-24 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
 
@@ -97,7 +97,7 @@ export default function HomePage() {
 
       <div className="container mx-auto px-4 py-8">
         {loading ? (
-          <div className="text-center text-zinc-500 py-12">กำลังโหลดสินค้า...</div>
+          <div className="text-center text-kd-text-light py-12">กำลังโหลดสินค้า...</div>
         ) : (
           <>
             <CategoriesSection categories={categories} />
@@ -109,7 +109,7 @@ export default function HomePage() {
                 products={visibleFeatured}
               />
             ) : (
-              <div className="text-center text-zinc-500 py-12">ยังไม่มีประกาศในขณะนี้</div>
+              <div className="text-center text-kd-text-light py-12">ยังไม่มีประกาศในขณะนี้</div>
             )}
           </>
         )}
@@ -117,13 +117,13 @@ export default function HomePage() {
         <div className="md:hidden mt-8 grid grid-cols-2 gap-3">
           <Link
             href="/products/create"
-            className="text-center py-3 rounded-xl bg-emerald-600 text-white font-semibold shadow-sm hover:bg-emerald-700 transition"
+            className="text-center py-3 rounded-xl bg-kd-primary text-white font-semibold shadow-sm hover:bg-kd-primary-hover transition-colors"
           >
             ลงขาย
           </Link>
           <Link
             href="/profile"
-            className="text-center py-3 rounded-xl border border-zinc-200 bg-white font-semibold text-zinc-800 shadow-sm hover:bg-zinc-50 transition"
+            className="text-center py-3 rounded-xl border border-kd-border bg-white font-semibold text-kd-text shadow-sm hover:bg-kd-hover transition-colors"
           >
             โปรไฟล์
           </Link>

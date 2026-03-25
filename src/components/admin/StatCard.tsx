@@ -6,12 +6,12 @@ interface StatCardProps {
 }
 
 // Renders a summary statistic card with an emoji icon, label, and formatted numeric value
-export default function StatCard({ emoji, label, value, bgColor = "bg-emerald-50" }: StatCardProps) {
+export default function StatCard({ emoji, label, value, bgColor = "bg-kd-card" }: StatCardProps) {
     return (
-        <div className={`${bgColor} border border-zinc-200 rounded-xl p-6`}>
+        <div className={`${bgColor} border border-kd-border rounded-xl p-6`}>
             <div className="text-3xl mb-2">{emoji}</div>
-            <div className="text-sm text-zinc-500">{label}</div>
-            <div className="text-2xl font-extrabold text-zinc-900 mt-1">
+            <div className="text-sm text-kd-text-light">{label}</div>
+            <div className="text-2xl font-extrabold text-kd-text mt-1">
                 {typeof value === "number" ? Number(value).toLocaleString() : value}
             </div>
         </div>

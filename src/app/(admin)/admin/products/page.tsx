@@ -12,9 +12,9 @@ type TabKey = "all" | "banned";
 
 const statusBadge = (status: string) => {
   const styles: Record<string, string> = {
-    available: "bg-emerald-100 text-emerald-700",
+    available: "bg-kd-hover text-kd-text",
     reserved: "bg-amber-100 text-amber-700",
-    sold: "bg-zinc-100 text-zinc-700",
+    sold: "bg-kd-bg text-kd-text-light",
   };
   const labels: Record<string, string> = {
     available: "มีอยู่",
@@ -22,7 +22,7 @@ const statusBadge = (status: string) => {
     sold: "ขายแล้ว",
   };
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] || "bg-zinc-100 text-zinc-600"}`}>
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] || "bg-kd-bg text-kd-text-light"}`}>
       {labels[status] || status}
     </span>
   );
@@ -104,7 +104,7 @@ export default function AdminProductsPage() {
       key: "id",
       header: "ID",
       render: (p: ProductWithSeller) => (
-        <span className="text-zinc-500">#{p.Product_ID}</span>
+        <span className="text-kd-text-light">#{p.Product_ID}</span>
       ),
       className: "w-16",
     },
@@ -139,7 +139,7 @@ export default function AdminProductsPage() {
         tab === "banned" || p.Is_Banned ? (
           <button
             onClick={() => setConfirmTarget({ product: p, action: "unban" })}
-            className="text-xs px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+            className="text-xs px-3 py-1 rounded-lg bg-kd-hover text-kd-text hover:bg-kd-card transition-colors"
           >
             ปลดระงับ
           </button>
@@ -162,9 +162,9 @@ export default function AdminProductsPage() {
 
   return (
     <>
-      <h2 className="text-xl font-bold text-emerald-700 mb-6">จัดการสินค้า</h2>
+      <h2 className="text-xl font-bold text-kd-primary mb-6">จัดการสินค้า</h2>
 
-      <div className="flex gap-1 border-b border-zinc-200 mb-6">
+      <div className="flex gap-1 border-b border-kd-border mb-6">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -172,8 +172,8 @@ export default function AdminProductsPage() {
             className={cn(
               "px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
               tab === t.key
-                ? "border-emerald-600 text-emerald-700"
-                : "border-transparent text-zinc-500 hover:text-zinc-700"
+                ? "border-kd-primary text-kd-primary"
+                : "border-transparent text-kd-text-light hover:text-kd-text"
             )}
           >
             {t.label}
@@ -192,7 +192,7 @@ export default function AdminProductsPage() {
           />
           <button
             type="submit"
-            className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+            className="px-4 py-2 text-sm bg-kd-primary text-white rounded-md hover:bg-kd-primary-hover transition-colors"
           >
             ค้นหา
           </button>
@@ -214,7 +214,7 @@ export default function AdminProductsPage() {
         title={confirmTarget?.action === "ban" ? "ระงับสินค้า" : "ปลดระงับสินค้า"}
         message={`ต้องการ${confirmTarget?.action === "ban" ? "ระงับ" : "ปลดระงับ"}สินค้า "${confirmTarget?.product.Title}" หรือไม่?`}
         confirmLabel={confirmTarget?.action === "ban" ? "ระงับ" : "ปลดระงับ"}
-        confirmColor={confirmTarget?.action === "ban" ? "bg-red-600" : "bg-emerald-600"}
+        confirmColor={confirmTarget?.action === "ban" ? "bg-red-600" : "bg-kd-primary"}
         loading={actionLoading}
         onConfirm={handleAction}
         onCancel={() => setConfirmTarget(null)}

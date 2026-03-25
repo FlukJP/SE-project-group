@@ -13,7 +13,7 @@ type TabKey = "all" | "banned";
 const roleBadge = (role: string) => {
   const styles: Record<string, string> = {
     admin: "bg-purple-100 text-purple-700",
-    customer: "bg-zinc-100 text-zinc-700",
+    customer: "bg-kd-bg text-kd-text-light",
   };
   const labels: Record<string, string> = {
     admin: "แอดมิน",
@@ -84,7 +84,7 @@ export default function AdminUsersPage() {
     {
       key: "id",
       header: "ID",
-      render: (u: User) => <span className="text-zinc-500">#{u.User_ID}</span>,
+      render: (u: User) => <span className="text-kd-text-light">#{u.User_ID}</span>,
       className: "w-16",
     },
     {
@@ -107,12 +107,12 @@ export default function AdminUsersPage() {
       header: "จัดการ",
       render: (u: User) => {
         if (u.Role === "admin") {
-          return <span className="text-xs text-zinc-400">-</span>;
+          return <span className="text-xs text-kd-text-light">-</span>;
         }
         return tab === "banned" || u.Is_Banned ? (
           <button
             onClick={() => setConfirmTarget({ user: u, action: "unban" })}
-            className="text-xs px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+            className="text-xs px-3 py-1 rounded-lg bg-kd-hover text-kd-text hover:bg-kd-card transition-colors"
           >
             ปลดระงับ
           </button>
@@ -136,9 +136,9 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      <h2 className="text-xl font-bold text-emerald-700 mb-6">จัดการผู้ใช้</h2>
+      <h2 className="text-xl font-bold text-kd-primary mb-6">จัดการผู้ใช้</h2>
 
-      <div className="flex gap-1 border-b border-zinc-200 mb-6">
+      <div className="flex gap-1 border-b border-kd-border mb-6">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -146,8 +146,8 @@ export default function AdminUsersPage() {
             className={cn(
               "px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
               tab === t.key
-                ? "border-emerald-600 text-emerald-700"
-                : "border-transparent text-zinc-500 hover:text-zinc-700"
+                ? "border-kd-primary text-kd-primary"
+                : "border-transparent text-kd-text-light hover:text-kd-text"
             )}
           >
             {t.label}
@@ -170,7 +170,7 @@ export default function AdminUsersPage() {
         title={confirmTarget?.action === "ban" ? "ระงับผู้ใช้" : "ปลดระงับผู้ใช้"}
         message={`ต้องการ${confirmTarget?.action === "ban" ? "ระงับ" : "ปลดระงับ"}ผู้ใช้ "${confirmTarget?.user.Username}" หรือไม่?`}
         confirmLabel={confirmTarget?.action === "ban" ? "ระงับ" : "ปลดระงับ"}
-        confirmColor={confirmTarget?.action === "ban" ? "bg-red-600" : "bg-emerald-600"}
+        confirmColor={confirmTarget?.action === "ban" ? "bg-red-600" : "bg-kd-primary"}
         loading={actionLoading}
         onConfirm={handleAction}
         onCancel={() => setConfirmTarget(null)}

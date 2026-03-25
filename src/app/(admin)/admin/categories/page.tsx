@@ -70,48 +70,48 @@ export default function AdminCategoriesPage() {
 
   if (loading) {
     return (
-      <div className="text-center text-zinc-500 py-16">กำลังโหลด...</div>
+      <div className="text-center text-kd-text-light py-16">กำลังโหลด...</div>
     );
   }
 
   return (
     <>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-emerald-700">จัดการหมวดหมู่</h2>
+        <h2 className="text-xl font-bold text-kd-primary">จัดการหมวดหมู่</h2>
         <button
           onClick={handleCreate}
-          className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+          className="px-4 py-2 text-sm bg-kd-primary text-white rounded-lg hover:bg-kd-primary-hover transition-colors"
         >
           + เพิ่มหมวดหมู่
         </button>
       </div>
 
       {categories.length === 0 ? (
-        <div className="text-center text-zinc-500 py-16">ไม่มีหมวดหมู่</div>
+        <div className="text-center text-kd-text-light py-16">ไม่มีหมวดหมู่</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 bg-zinc-50">
-                <th className="text-left px-4 py-3 font-semibold text-zinc-600 w-16">
+              <tr className="border-b border-kd-border bg-kd-bg">
+                <th className="text-left px-4 py-3 font-semibold text-kd-text-light w-16">
                   ID
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-zinc-600">
+                <th className="text-left px-4 py-3 font-semibold text-kd-text-light">
                   Emoji
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-zinc-600">
+                <th className="text-left px-4 py-3 font-semibold text-kd-text-light">
                   Key
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-zinc-600">
+                <th className="text-left px-4 py-3 font-semibold text-kd-text-light">
                   ชื่อ
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-zinc-600 w-20">
+                <th className="text-left px-4 py-3 font-semibold text-kd-text-light w-20">
                   ลำดับ
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-zinc-600 w-20">
+                <th className="text-left px-4 py-3 font-semibold text-kd-text-light w-20">
                   สถานะ
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-zinc-600 w-36">
+                <th className="text-left px-4 py-3 font-semibold text-kd-text-light w-36">
                   จัดการ
                 </th>
               </tr>
@@ -120,23 +120,23 @@ export default function AdminCategoriesPage() {
               {categories.map((cat) => (
                 <tr
                   key={cat.Category_ID}
-                  className="border-b border-zinc-100 hover:bg-zinc-50 transition-colors"
+                  className="border-b border-kd-border hover:bg-kd-hover transition-colors"
                 >
-                  <td className="px-4 py-3 text-zinc-500">
+                  <td className="px-4 py-3 text-kd-text-light">
                     #{cat.Category_ID}
                   </td>
                   <td className="px-4 py-3 text-xl">{cat.emoji}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-zinc-600">
+                  <td className="px-4 py-3 font-mono text-xs text-kd-text-light">
                     {cat.category_key}
                   </td>
                   <td className="px-4 py-3 font-medium">{cat.name}</td>
-                  <td className="px-4 py-3 text-zinc-500">{cat.sort_order}</td>
+                  <td className="px-4 py-3 text-kd-text-light">{cat.sort_order}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                         cat.is_active
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-zinc-100 text-zinc-500"
+                          ? "bg-kd-hover text-kd-text"
+                          : "bg-kd-bg text-kd-text-light"
                       }`}
                     >
                       {cat.is_active ? "เปิด" : "ปิด"}
@@ -146,7 +146,7 @@ export default function AdminCategoriesPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(cat)}
-                        className="text-xs px-3 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                        className="text-xs px-3 py-1 rounded-lg bg-kd-hover text-kd-text hover:bg-kd-card transition-colors"
                       >
                         แก้ไข
                       </button>

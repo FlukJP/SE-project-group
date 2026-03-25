@@ -1,21 +1,30 @@
 @import "tailwindcss";
+@config "../../tailwind.config.ts";
 
 .kd-input {
-  @apply w-full h-[44px] border border-zinc-300 rounded-md px-3 text-sm
-         focus:outline-none focus:ring-1 focus:ring-blue-300;
+  @apply w-full h-[44px] border border-kd-border rounded-md px-3 text-sm text-kd-text
+         focus:outline-none focus:ring-2 focus:ring-kd-primary/30 bg-white;
 }
 
 .kd-btn-primary {
-  @apply bg-blue-900 text-white px-8 py-2.5 rounded-md text-sm
-         hover:opacity-95;
+  @apply bg-kd-primary text-white px-8 py-2.5 rounded-md text-sm
+         hover:bg-kd-primary-hover transition-colors;
 }
 
 .kd-btn-secondary {
-  @apply border border-zinc-300 px-4 py-1.5 rounded-md text-sm
-         hover:bg-zinc-50;
+  @apply border border-kd-border px-4 py-1.5 rounded-md text-sm text-kd-text
+         hover:bg-kd-hover transition-colors bg-white;
 }
 
 .kd-btn-outline {
-  @apply border border-blue-900 text-blue-900 px-4 py-2 rounded-md text-sm
-         hover:bg-blue-50;
+  @apply border border-kd-primary text-kd-primary px-4 py-2 rounded-md text-sm
+         hover:bg-kd-primary hover:text-white transition-colors;
+}
+
+.kd-card {
+  @apply bg-kd-card border border-kd-border rounded-lg;
+}
+
+.kd-hover-card {
+  @apply hover:bg-kd-hover transition-colors;
 }

@@ -70,7 +70,7 @@ export default function CategoryFormModal({ open, category, onSave, onClose }: C
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
             <div className="relative bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
-                <h3 className="text-lg font-bold text-emerald-700 mb-4">
+                <h3 className="text-lg font-bold text-kd-primary mb-4">
                     {isEdit ? "แก้ไขหมวดหมู่" : "เพิ่มหมวดหมู่ใหม่"}
                 </h3>
 
@@ -123,14 +123,14 @@ export default function CategoryFormModal({ open, category, onSave, onClose }: C
                         <button
                             onClick={onClose}
                             disabled={saving}
-                            className="px-4 py-2 text-sm border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors"
+                            className="px-4 py-2 text-sm border border-kd-border rounded-lg hover:bg-kd-hover transition-colors"
                         >
                             ยกเลิก
                         </button>
                         <button
                             onClick={handleSubmit}
                             disabled={saving}
-                            className="bg-emerald-600 text-white px-4 py-2 text-sm rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                            className="bg-kd-primary text-white px-4 py-2 text-sm rounded-lg hover:bg-kd-primary-hover disabled:opacity-50 transition-colors"
                         >
                             {saving ? "กำลังบันทึก..." : isEdit ? "บันทึก" : "เพิ่ม"}
                         </button>

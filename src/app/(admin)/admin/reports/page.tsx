@@ -31,7 +31,7 @@ const banBadge = (isBanned: boolean | number | undefined) => {
     );
   }
   return (
-    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-kd-hover text-kd-text">
       ปกติ
     </span>
   );
@@ -94,7 +94,7 @@ export default function AdminReportsPage() {
       key: "id",
       header: "ID",
       render: (r: Report) => (
-        <span className="text-zinc-500">#{r.Report_ID}</span>
+        <span className="text-kd-text-light">#{r.Report_ID}</span>
       ),
       className: "w-16",
     },
@@ -108,7 +108,7 @@ export default function AdminReportsPage() {
       key: "reporter",
       header: "ผู้รายงาน",
       render: (r: Report) => (
-        <span className="text-zinc-600">{r.ReporterName || `#${r.Reporter_ID}`}</span>
+        <span className="text-kd-text-light">{r.ReporterName || `#${r.Reporter_ID}`}</span>
       ),
     },
     {
@@ -116,7 +116,7 @@ export default function AdminReportsPage() {
       header: "เป้าหมาย",
       render: (r: Report) => (
         <div className="flex items-center gap-2">
-          <span className="text-zinc-700">{r.TargetName || `#${r.Target_ID}`}</span>
+          <span className="text-kd-text">{r.TargetName || `#${r.Target_ID}`}</span>
           {banBadge(r.TargetIsBanned)}
         </div>
       ),
@@ -145,11 +145,11 @@ export default function AdminReportsPage() {
       key: "actions",
       header: "จัดการ",
       render: (r: Report) => {
-        if (!r.ReportType) return <span className="text-xs text-zinc-400">-</span>;
+        if (!r.ReportType) return <span className="text-xs text-kd-text-light">-</span>;
         return r.TargetIsBanned ? (
           <button
             onClick={() => setConfirmTarget({ report: r, action: "unban" })}
-            className="text-xs px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+            className="text-xs px-3 py-1 rounded-lg bg-kd-hover text-kd-text hover:bg-kd-card transition-colors"
           >
             ปลดระงับ
           </button>
@@ -172,7 +172,7 @@ export default function AdminReportsPage() {
 
   return (
     <>
-      <h2 className="text-xl font-bold text-emerald-700 mb-6">รายงาน</h2>
+      <h2 className="text-xl font-bold text-kd-primary mb-6">รายงาน</h2>
 
       <DataTable
         columns={columns}
@@ -189,7 +189,7 @@ export default function AdminReportsPage() {
         title={confirmTarget?.action === "ban" ? "ระงับเป้าหมาย" : "ปลดระงับเป้าหมาย"}
         message={`ต้องการ${confirmTarget?.action === "ban" ? "ระงับ" : "ปลดระงับ"} "${targetLabel}" หรือไม่?`}
         confirmLabel={confirmTarget?.action === "ban" ? "ระงับ" : "ปลดระงับ"}
-        confirmColor={confirmTarget?.action === "ban" ? "bg-red-600" : "bg-emerald-600"}
+        confirmColor={confirmTarget?.action === "ban" ? "bg-red-600" : "bg-kd-primary"}
         loading={actionLoading}
         onConfirm={handleAction}
         onCancel={() => setConfirmTarget(null)}

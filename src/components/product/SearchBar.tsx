@@ -20,15 +20,15 @@ export default function SearchBar({
     hotKeywords?: string[];
 }) {
     return (
-        <div className="mt-7 bg-white text-zinc-900 rounded-2xl p-4 md:p-5 shadow-xl shadow-emerald-900/10 border border-white/70">
+        <div className="mt-7 bg-white text-kd-text rounded-2xl p-4 md:p-5 shadow-xl shadow-kd-primary/10 border border-white/70">
             <form onSubmit={onSearch} className="grid grid-cols-1 md:grid-cols-[1fr_220px_140px] gap-3">
                 <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">🔎</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-kd-text-light">🔎</span>
                     <input
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="ค้นหาสินค้า เช่น 'จักรยาน', 'iPhone', 'คอนโด'..."
-                        className="w-full rounded-xl border border-zinc-200 pl-10 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                        className="w-full rounded-xl border border-kd-border pl-10 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-kd-primary/30 bg-white text-kd-text"
                     />
                 </div>
 
@@ -36,7 +36,7 @@ export default function SearchBar({
                     value={province}
                     onChange={(e) => setProvince(e.target.value)}
                     aria-label="เลือกจังหวัด"
-                    className="rounded-xl px-3 py-3 bg-white text-sm text-zinc-700 border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                    className="rounded-xl px-3 py-3 bg-white text-sm text-kd-text border border-kd-border focus:outline-none focus:ring-2 focus:ring-kd-primary/30"
                 >
                     <option value="">ทุกจังหวัด</option>
                     {PROVINCES.map((p) => (
@@ -46,20 +46,20 @@ export default function SearchBar({
 
                 <button
                     type="submit"
-                    className="rounded-xl bg-emerald-600 text-white text-sm font-semibold px-4 py-3 hover:opacity-95"
+                    className="rounded-xl bg-kd-primary text-white text-sm font-semibold px-4 py-3 hover:bg-kd-primary-hover transition-colors"
                 >
                     ค้นหา
                 </button>
             </form>
 
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-zinc-600">
-                <span className="font-semibold text-zinc-700">ฮิต:</span>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs text-kd-text-light">
+                <span className="font-semibold text-kd-text">ฮิต:</span>
                 {hotKeywords.map((t) => (
                     <button
                         key={t}
                         type="button"
                         onClick={() => setQuery(t)}
-                        className="px-2.5 py-1 rounded-full bg-zinc-100 hover:bg-zinc-200"
+                        className="px-2.5 py-1 rounded-full bg-kd-card hover:bg-kd-hover transition-colors text-kd-text"
                     >
                         {t}
                     </button>
