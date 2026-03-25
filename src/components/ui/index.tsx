@@ -10,7 +10,7 @@ export const FieldLabel: React.FC<{
     children: React.ReactNode;
     htmlFor?: string;
 }> = ({ children, htmlFor }) => (
-    <label htmlFor={htmlFor} className="block font-medium text-sm mb-1">
+    <label htmlFor={htmlFor} className="block font-medium text-sm mb-1 text-[#4A3B32]">
         {children}
     </label>
 );
@@ -29,7 +29,7 @@ export const Input = React.forwardRef<
         ref={ref}
         {...props}
         className={cn(
-            "w-full border border-zinc-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-indigo-200",
+            "w-full border border-[#DCD0C0] rounded-md px-4 py-2 focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]",
             props.className || ""
         )}
     />
@@ -45,7 +45,7 @@ export const Select = React.forwardRef<
         ref={ref}
         {...props}
         className={cn(
-            "w-full border border-zinc-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-indigo-200",
+            "w-full border border-[#DCD0C0] rounded-md px-4 py-2 focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]",
             props.className || ""
         )}
     />

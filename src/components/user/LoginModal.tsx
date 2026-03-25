@@ -86,14 +86,14 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
                         <button
                             type="button"
                             onClick={() => setMode("email")}
-                            className="w-full p-3.5 rounded-xl border border-zinc-200 bg-white text-base mb-3 cursor-pointer hover:bg-zinc-50 transition"
+                            className="w-full p-3.5 rounded-xl border border-[#DCD0C0] bg-white text-base mb-3 cursor-pointer hover:bg-[#E6D5C3] transition-colors"
                         >
                             ✉️ เข้าสู่ระบบด้วยอีเมล
                         </button>
 
                         <button
                             type="button"
-                            className="w-full p-3.5 rounded-xl border border-zinc-200 bg-white text-base flex justify-center items-center mb-5 cursor-pointer hover:bg-zinc-50 transition opacity-50"
+                            className="w-full p-3.5 rounded-xl border border-[#DCD0C0] bg-white text-base flex justify-center items-center mb-5 cursor-pointer hover:bg-[#E6D5C3] transition-colors opacity-50"
                             disabled
                         >
                             <img
@@ -109,55 +109,55 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
                         <button
                             type="button"
                             onClick={() => { setMode("choice"); setError(""); }}
-                            className="text-sm text-emerald-700 hover:underline mb-2"
+                            className="text-sm text-[#D9734E] hover:underline mb-2 transition-colors"
                         >
                             &larr; กลับ
                         </button>
 
                         <div>
-                            <label className="block text-sm font-medium text-zinc-700 mb-1">อีเมล</label>
+                            <label className="block text-sm font-medium text-[#4A3B32] mb-1">อีเมล</label>
                             <input
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="your@email.com"
-                                className="w-full p-3.5 rounded-xl border border-zinc-200 text-base focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                                className="w-full p-3.5 rounded-xl border border-[#DCD0C0] text-base focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-zinc-700 mb-1">รหัสผ่าน</label>
+                            <label className="block text-sm font-medium text-[#4A3B32] mb-1">รหัสผ่าน</label>
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="รหัสผ่าน"
-                                className="w-full p-3.5 rounded-xl border border-zinc-200 text-base focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                                className="w-full p-3.5 rounded-xl border border-[#DCD0C0] text-base focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]"
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full p-3.5 rounded-xl border-none bg-emerald-600 text-white text-base font-semibold cursor-pointer hover:bg-emerald-700 transition disabled:opacity-50"
+                            className="w-full p-3.5 rounded-xl border-none bg-[#D9734E] text-white text-base font-semibold cursor-pointer hover:bg-[#C25B38] transition-colors disabled:opacity-50"
                         >
                             {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
                         </button>
                     </form>
                 )}
 
-                <p className="text-sm text-zinc-600 mt-5">
+                <p className="text-sm text-[#A89F91] mt-5">
                     ยังไม่มีบัญชี?{" "}
-                    <Link href="/register" onClick={onClose} className="text-emerald-600 font-semibold hover:underline">
+                    <Link href="/register" onClick={onClose} className="text-[#D9734E] font-semibold hover:underline transition-colors">
                         สมัครสมาชิก
                     </Link>
                 </p>
 
-                <p className="text-xs text-zinc-500 mt-4">
+                <p className="text-xs text-[#A89F91] mt-4">
                     กด &quot;เข้าสู่ระบบ&quot; เพื่อยอมรับ{" "}
-                    <span className="text-blue-600 cursor-pointer hover:underline">เงื่อนไขการใช้บริการ</span>{" "}
+                    <span className="text-[#D9734E] cursor-pointer hover:underline transition-colors">เงื่อนไขการใช้บริการ</span>{" "}
                     และ{" "}
-                    <span className="text-blue-600 cursor-pointer hover:underline">นโยบายความเป็นส่วนตัว</span>
+                    <span className="text-[#D9734E] cursor-pointer hover:underline transition-colors">นโยบายความเป็นส่วนตัว</span>
                 </p>
             </div>
         </div>

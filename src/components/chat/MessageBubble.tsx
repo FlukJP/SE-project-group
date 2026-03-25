@@ -22,12 +22,12 @@ export default function MessageBubble({ message, isMine }: Props) {
             <div
                 className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${
                     isMine
-                        ? "bg-[#121E4D] text-white rounded-br-md"
-                        : "bg-white border border-gray-200 text-gray-900 rounded-bl-md"
+                        ? "bg-[#D9734E] text-white rounded-br-md"
+                        : "bg-[#E6D5C3] border border-[#DCD0C0] text-[#4A3B32] rounded-bl-md"
                 }`}
             >
                 {!isMine && (
-                    <div className="text-xs font-medium text-emerald-600 mb-1">
+                    <div className="text-xs font-medium text-[#D9734E] mb-1">
                         {message.SenderName}
                     </div>
                 )}
@@ -47,7 +47,7 @@ export default function MessageBubble({ message, isMine }: Props) {
                 )}
                 <div
                     className={`text-[10px] mt-1 text-right ${
-                        isMine ? "text-white/60" : "text-gray-400"
+                        isMine ? "text-white/60" : "text-[#A89F91]"
                     }`}
                 >
                     {time}

@@ -9,7 +9,7 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <span className="inline-flex gap-0.5">
       {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i} className={i <= rating ? "text-yellow-400" : "text-zinc-300"}>
+        <span key={i} className={i <= rating ? "text-yellow-400" : "text-[#DCD0C0]"}>
           ★
         </span>
       ))}
@@ -26,23 +26,23 @@ function ReviewCard({ review }: { review: ReviewData }) {
   });
 
   return (
-    <div className="bg-white rounded-xl border border-zinc-200 p-5">
+    <div className="bg-white rounded-xl border border-[#E6D5C3] p-5">
       <div className="flex items-center justify-between mb-2">
-        <div className="font-semibold text-zinc-800">
+        <div className="font-semibold text-[#4A3B32]">
           {review.ReviewerName || "ผู้ใช้"}
         </div>
-        <div className="text-xs text-zinc-400">{formatted}</div>
+        <div className="text-xs text-[#A89F91]">{formatted}</div>
       </div>
       <div className="mb-2">
         <StarRating rating={review.Rating} />
       </div>
       {review.ProductTitle && (
-        <div className="text-xs text-zinc-500 mb-1">
+        <div className="text-xs text-[#A89F91] mb-1">
           สินค้า: {review.ProductTitle}
         </div>
       )}
       {review.Comment && (
-        <p className="text-sm text-zinc-600 mt-2">{review.Comment}</p>
+        <p className="text-sm text-[#A89F91] mt-2">{review.Comment}</p>
       )}
     </div>
   );
@@ -76,32 +76,32 @@ export default function ReviewPage() {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-zinc-50">
+      <main className="min-h-screen bg-[#F9F6F0]">
         <div className="container mx-auto px-4 py-8 max-w-3xl">
-          <h1 className="text-2xl font-bold text-zinc-900 mb-6">
+          <h1 className="text-2xl font-bold text-[#4A3B32] mb-6">
             รีวิวและคะแนนผู้ขาย
           </h1>
 
           {!isLoggedIn ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-zinc-200">
+            <div className="text-center py-16 bg-white rounded-2xl border border-[#E6D5C3]">
               <div className="text-4xl mb-3">⭐</div>
-              <p className="text-zinc-500">กรุณาเข้าสู่ระบบเพื่อดูรีวิว</p>
+              <p className="text-[#A89F91]">กรุณาเข้าสู่ระบบเพื่อดูรีวิว</p>
             </div>
           ) : loading ? (
-            <div className="text-center py-16 text-zinc-500">กำลังโหลด...</div>
+            <div className="text-center py-16 text-[#A89F91]">กำลังโหลด...</div>
           ) : (
             <>
-              <div className="bg-white rounded-2xl border border-zinc-200 p-6 mb-6 flex items-center gap-6">
+              <div className="bg-white rounded-2xl border border-[#E6D5C3] p-6 mb-6 flex items-center gap-6">
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-emerald-700">
+                  <div className="text-4xl font-bold text-[#D9734E]">
                     {averageRating > 0 ? averageRating.toFixed(1) : "-"}
                   </div>
                   <StarRating rating={Math.round(averageRating)} />
-                  <div className="text-xs text-zinc-500 mt-1">
+                  <div className="text-xs text-[#A89F91] mt-1">
                     {Number(totalReviews).toLocaleString()} รีวิว
                   </div>
                 </div>
-                <div className="flex-1 text-sm text-zinc-600">
+                <div className="flex-1 text-sm text-[#A89F91]">
                   คะแนนเฉลี่ยจากผู้ซื้อที่รีวิวคุณในฐานะผู้ขาย
                 </div>
               </div>
@@ -113,10 +113,10 @@ export default function ReviewPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16 bg-white rounded-2xl border border-zinc-200">
+                <div className="text-center py-16 bg-white rounded-2xl border border-[#E6D5C3]">
                   <div className="text-4xl mb-3">⭐</div>
-                  <p className="text-zinc-600 font-medium">ยังไม่มีรีวิว</p>
-                  <p className="text-sm text-zinc-400 mt-1">
+                  <p className="text-[#A89F91] font-medium">ยังไม่มีรีวิว</p>
+                  <p className="text-sm text-[#A89F91] mt-1">
                     รีวิวจากผู้ซื้อจะปรากฏที่นี่เมื่อมีคนรีวิวคุณ
                   </p>
                 </div>

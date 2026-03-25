@@ -18,11 +18,11 @@ function getPasswordStrength(pw: string): { level: number; label: string; color:
   if (/\d/.test(pw)) score++;
   if (/[^a-zA-Z0-9]/.test(pw)) score++;
 
-  if (score <= 1) return { level: 1, label: "อ่อนมาก", color: "bg-red-500" };
+  if (score <= 1) return { level: 1, label: "อ่อนมาก", color: "bg-[#C45A5A]" };
   if (score === 2) return { level: 2, label: "อ่อน", color: "bg-orange-500" };
   if (score === 3) return { level: 3, label: "ปานกลาง", color: "bg-yellow-500" };
-  if (score === 4) return { level: 4, label: "แข็งแรง", color: "bg-emerald-400" };
-  return { level: 5, label: "แข็งแรงมาก", color: "bg-emerald-600" };
+  if (score === 4) return { level: 4, label: "แข็งแรง", color: "bg-[#D9734E]" };
+  return { level: 5, label: "แข็งแรงมาก", color: "bg-[#D9734E]" };
 }
 
 function validatePhone(phone: string): string | null {
@@ -146,16 +146,16 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-zinc-200 p-8">
+    <div className="min-h-screen bg-[#F9F6F0] flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-[#E6D5C3] p-8">
         {step === "form" && (
           <>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#E6D5C3] mb-4">
                 <span className="text-3xl">📝</span>
               </div>
-              <h1 className="text-2xl font-bold text-zinc-900">สมัครสมาชิก</h1>
-              <p className="text-sm text-zinc-500 mt-1">สร้างบัญชีเพื่อเริ่มซื้อขาย</p>
+              <h1 className="text-2xl font-bold text-[#4A3B32]">สมัครสมาชิก</h1>
+              <p className="text-sm text-[#A89F91] mt-1">สร้างบัญชีเพื่อเริ่มซื้อขาย</p>
             </div>
 
             {error && (
@@ -166,7 +166,7 @@ export default function RegisterPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">ชื่อผู้ใช้</label>
+                <label className="block text-sm font-medium text-[#4A3B32] mb-1">ชื่อผู้ใช้</label>
                 <input
                   type="text"
                   value={username}
@@ -174,13 +174,13 @@ export default function RegisterPage() {
                   onBlur={() => markTouched("username")}
                   placeholder="ชื่อที่แสดงให้ผู้อื่นเห็น"
                   autoComplete="username"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${usernameError ? "border-red-300" : "border-zinc-200"}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${usernameError ? "border-red-300" : "border-[#E6D5C3]"}`}
                 />
-                {usernameError && <p className="text-xs text-red-500 mt-1">{usernameError}</p>}
+                {usernameError && <p className="text-xs text-[#C45A5A] mt-1">{usernameError}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">อีเมล</label>
+                <label className="block text-sm font-medium text-[#4A3B32] mb-1">อีเมล</label>
                 <input
                   type="email"
                   value={email}
@@ -188,13 +188,13 @@ export default function RegisterPage() {
                   onBlur={() => markTouched("email")}
                   placeholder="your@email.com"
                   autoComplete="email"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${emailError ? "border-red-300" : "border-zinc-200"}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${emailError ? "border-red-300" : "border-[#E6D5C3]"}`}
                 />
-                {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
+                {emailError && <p className="text-xs text-[#C45A5A] mt-1">{emailError}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">เบอร์โทรศัพท์</label>
+                <label className="block text-sm font-medium text-[#4A3B32] mb-1">เบอร์โทรศัพท์</label>
                 <input
                   type="tel"
                   value={phone}
@@ -202,13 +202,13 @@ export default function RegisterPage() {
                   onBlur={() => markTouched("phone")}
                   placeholder="08x-xxx-xxxx"
                   autoComplete="tel"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${phoneError ? "border-red-300" : "border-zinc-200"}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${phoneError ? "border-red-300" : "border-[#E6D5C3]"}`}
                 />
-                {phoneError && <p className="text-xs text-red-500 mt-1">{phoneError}</p>}
+                {phoneError && <p className="text-xs text-[#C45A5A] mt-1">{phoneError}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">รหัสผ่าน</label>
+                <label className="block text-sm font-medium text-[#4A3B32] mb-1">รหัสผ่าน</label>
                 <input
                   type="password"
                   value={password}
@@ -216,9 +216,9 @@ export default function RegisterPage() {
                   onBlur={() => markTouched("password")}
                   placeholder="อย่างน้อย 8 ตัวอักษร"
                   autoComplete="new-password"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${passwordError ? "border-red-300" : "border-zinc-200"}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${passwordError ? "border-red-300" : "border-[#E6D5C3]"}`}
                 />
-                {passwordError && <p className="text-xs text-red-500 mt-1">{passwordError}</p>}
+                {passwordError && <p className="text-xs text-[#C45A5A] mt-1">{passwordError}</p>}
                 {password.length > 0 && (
                   <div className="mt-2">
                     <div className="flex gap-1">
@@ -226,18 +226,18 @@ export default function RegisterPage() {
                         <div
                           key={i}
                           className={`h-1.5 flex-1 rounded-full transition-colors ${
-                            i <= pwStrength.level ? pwStrength.color : "bg-zinc-200"
+                            i <= pwStrength.level ? pwStrength.color : "bg-[#E6D5C3]"
                           }`}
                         />
                       ))}
                     </div>
-                    <p className="text-xs text-zinc-500 mt-1">{pwStrength.label}</p>
+                    <p className="text-xs text-[#A89F91] mt-1">{pwStrength.label}</p>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">ยืนยันรหัสผ่าน</label>
+                <label className="block text-sm font-medium text-[#4A3B32] mb-1">ยืนยันรหัสผ่าน</label>
                 <input
                   type="password"
                   value={confirmPassword}
@@ -245,70 +245,72 @@ export default function RegisterPage() {
                   onBlur={() => markTouched("confirmPassword")}
                   placeholder="กรอกรหัสผ่านอีกครั้ง"
                   autoComplete="new-password"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${confirmError ? "border-red-300" : "border-zinc-200"}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${confirmError ? "border-red-300" : "border-[#E6D5C3]"}`}
                 />
-                {confirmError && <p className="text-xs text-red-500 mt-1">{confirmError}</p>}
+                {confirmError && <p className="text-xs text-[#C45A5A] mt-1">{confirmError}</p>}
               </div>
 
               <div className="pt-2">
-                <p className="text-sm font-semibold text-zinc-700 mb-3">ที่อยู่สำหรับจัดส่ง</p>
+                <p className="text-sm font-semibold text-[#4A3B32] mb-3">ที่อยู่สำหรับจัดส่ง</p>
 
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">บ้านเลขที่ / ซอย / ถนน</label>
+                    <label className="block text-sm font-medium text-[#4A3B32] mb-1">บ้านเลขที่ / ซอย / ถนน</label>
                     <input
                       type="text"
                       value={addressDetail}
                       onChange={(e) => setAddressDetail(e.target.value)}
                       onBlur={() => markTouched("addressDetail")}
                       placeholder="เช่น 123/4 ซอยสุขุมวิท 11 ถนนสุขุมวิท"
-                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 ${addressDetailError ? "border-red-300" : "border-zinc-200"}`}
+                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${addressDetailError ? "border-red-300" : "border-[#E6D5C3]"}`}
                     />
-                    {addressDetailError && <p className="text-xs text-red-500 mt-1">{addressDetailError}</p>}
+                    {addressDetailError && <p className="text-xs text-[#C45A5A] mt-1">{addressDetailError}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">จังหวัด</label>
+                    <label className="block text-sm font-medium text-[#4A3B32] mb-1">จังหวัด</label>
                     <select
+                      aria-label="เลือกจังหวัด"
                       value={province}
                       onChange={(e) => { setProvince(e.target.value); setDistrict(""); }}
                       onBlur={() => markTouched("province")}
-                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white ${provinceError ? "border-red-300" : "border-zinc-200"}`}
+                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] bg-white ${provinceError ? "border-red-300" : "border-[#E6D5C3]"}`}
                     >
                       <option value="">-- เลือกจังหวัด --</option>
                       {PROVINCES.map((p) => (
                         <option key={p.name} value={p.name}>{p.name}</option>
                       ))}
                     </select>
-                    {provinceError && <p className="text-xs text-red-500 mt-1">{provinceError}</p>}
+                    {provinceError && <p className="text-xs text-[#C45A5A] mt-1">{provinceError}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">เขต / อำเภอ</label>
+                    <label className="block text-sm font-medium text-[#4A3B32] mb-1">เขต / อำเภอ</label>
                     <select
+                      aria-label="เลือกเขต/อำเภอ"
                       value={district}
                       onChange={(e) => setDistrict(e.target.value)}
                       onBlur={() => markTouched("district")}
                       disabled={!province}
-                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white disabled:bg-zinc-50 disabled:text-zinc-400 ${districtError ? "border-red-300" : "border-zinc-200"}`}
+                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] bg-white disabled:bg-[#F9F6F0] disabled:text-[#A89F91] ${districtError ? "border-red-300" : "border-[#E6D5C3]"}`}
                     >
                       <option value="">-- เลือกเขต/อำเภอ --</option>
                       {selectedProvinceData?.districts.map((d) => (
                         <option key={d} value={d}>{d}</option>
                       ))}
                     </select>
-                    {districtError && <p className="text-xs text-red-500 mt-1">{districtError}</p>}
+                    {districtError && <p className="text-xs text-[#C45A5A] mt-1">{districtError}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">รหัสไปรษณีย์ <span className="text-zinc-400 font-normal">(ไม่บังคับ)</span></label>
+                    <label className="block text-sm font-medium text-[#4A3B32] mb-1">รหัสไปรษณีย์ <span className="text-[#A89F91] font-normal">(ไม่บังคับ)</span></label>
                     <input
                       type="text"
                       value={postalCode}
                       onChange={(e) => setPostalCode(e.target.value.replace(/\D/g, "").slice(0, 5))}
                       placeholder="เช่น 10110"
                       maxLength={5}
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                      className="w-full px-4 py-3 rounded-xl border border-[#E6D5C3] text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
                     />
                   </div>
                 </div>
@@ -317,21 +319,21 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
+                className="w-full py-3 rounded-xl bg-[#D9734E] text-white font-semibold hover:bg-[#C25B38] transition disabled:opacity-50"
               >
                 {loading ? "กำลังสมัคร..." : "สมัครสมาชิก"}
               </button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-zinc-500">
+            <div className="mt-6 text-center text-sm text-[#A89F91]">
               มีบัญชีอยู่แล้ว?{" "}
-              <Link href="/login" className="text-emerald-600 font-semibold hover:underline">
+              <Link href="/login" className="text-[#D9734E] font-semibold hover:underline">
                 เข้าสู่ระบบ
               </Link>
             </div>
 
             <div className="mt-4 text-center">
-              <Link href="/" className="text-sm text-zinc-400 hover:text-zinc-600">
+              <Link href="/" className="text-sm text-[#A89F91] hover:text-[#4A3B32]">
                 กลับหน้าแรก
               </Link>
             </div>
@@ -341,11 +343,11 @@ export default function RegisterPage() {
         {step === "email-otp" && (
           <>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#E6D5C3] mb-4">
                 <span className="text-3xl">📧</span>
               </div>
-              <h1 className="text-2xl font-bold text-zinc-900">ยืนยันอีเมล</h1>
-              <p className="text-sm text-zinc-500 mt-1">ยืนยันตัวตนด้วยรหัส OTP ทางอีเมล</p>
+              <h1 className="text-2xl font-bold text-[#4A3B32]">ยืนยันอีเมล</h1>
+              <p className="text-sm text-[#A89F91] mt-1">ยืนยันตัวตนด้วยรหัส OTP ทางอีเมล</p>
             </div>
 
             {error && (
@@ -363,7 +365,7 @@ export default function RegisterPage() {
             <div className="mt-6 text-center">
               <button
                 onClick={() => router.push("/login")}
-                className="text-sm text-zinc-400 hover:text-zinc-600"
+                className="text-sm text-[#A89F91] hover:text-[#4A3B32]"
               >
                 ข้ามขั้นตอนนี้ ไปหน้าเข้าสู่ระบบ
               </button>
@@ -377,8 +379,8 @@ export default function RegisterPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
                 <span className="text-3xl">📱</span>
               </div>
-              <h1 className="text-2xl font-bold text-zinc-900">ยืนยันเบอร์โทรศัพท์</h1>
-              <p className="text-sm text-zinc-500 mt-1">ยืนยันเบอร์โทรศัพท์เพื่อเริ่มซื้อขาย</p>
+              <h1 className="text-2xl font-bold text-[#4A3B32]">ยืนยันเบอร์โทรศัพท์</h1>
+              <p className="text-sm text-[#A89F91] mt-1">ยืนยันเบอร์โทรศัพท์เพื่อเริ่มซื้อขาย</p>
             </div>
 
             {error && (
@@ -396,7 +398,7 @@ export default function RegisterPage() {
             <div className="mt-6 text-center">
               <button
                 onClick={() => router.push("/")}
-                className="text-sm text-zinc-400 hover:text-zinc-600"
+                className="text-sm text-[#A89F91] hover:text-[#4A3B32]"
               >
                 ข้ามขั้นตอนนี้
               </button>

@@ -17,10 +17,10 @@ export default function CategoriesSection({
         <section className="mb-9">
             <div className="flex items-end justify-between mb-4">
                 <div>
-                    <h2 className="text-xl font-extrabold text-kd-text">{title}</h2>
-                    <p className="text-sm text-kd-text-light mt-1">{subtitle}</p>
+                    <h2 className="text-xl font-extrabold text-[#4A3B32]">{title}</h2>
+                    <p className="text-sm text-[#A89F91] mt-1">{subtitle}</p>
                 </div>
-                <Link href={viewAllHref} className="text-kd-primary text-sm font-semibold hover:underline transition-colors">
+                <Link href={viewAllHref} className="text-[#D9734E] text-sm font-semibold hover:underline transition-colors">
                     ดูหมวดทั้งหมด
                 </Link>
             </div>
@@ -30,15 +30,15 @@ export default function CategoriesSection({
                     <Link
                         key={c.id ?? c.href}
                         href={c.href}
-                        className="group bg-white rounded-2xl border border-kd-border p-4 hover:shadow-md hover:-translate-y-0.5 transition-all kd-hover-card"
+                        className="group bg-white rounded-2xl border border-[#DCD0C0] p-4 hover:shadow-md hover:-translate-y-0.5 transition-all"
                     >
                         <div className="flex items-center gap-3">
-                            <div className="h-11 w-11 rounded-2xl bg-kd-bg grid place-items-center text-2xl">
+                            <div className="h-11 w-11 rounded-2xl bg-[#E6D5C3] grid place-items-center text-2xl">
                                 {c.emoji}
                             </div>
                             <div>
-                                <div className="font-semibold text-kd-text group-hover:text-kd-primary transition-colors">{c.name}</div>
-                                <div className="text-xs text-kd-text-light">ดูประกาศ</div>
+                                <div className="font-semibold text-[#4A3B32] group-hover:text-[#D9734E] transition-colors">{c.name}</div>
+                                <div className="text-xs text-[#A89F91]">ดูประกาศ</div>
                             </div>
                         </div>
                     </Link>

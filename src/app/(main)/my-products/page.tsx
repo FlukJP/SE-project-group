@@ -18,9 +18,9 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  available: "bg-emerald-100 text-emerald-700",
+  available: "bg-[#E6D5C3] text-[#D9734E]",
   reserved: "bg-yellow-100 text-yellow-700",
-  sold: "bg-zinc-200 text-zinc-500",
+  sold: "bg-[#E6D5C3] text-[#A89F91]",
 };
 
 const ORDER_STATUS_LABEL: Record<string, string> = {
@@ -33,8 +33,8 @@ const ORDER_STATUS_LABEL: Record<string, string> = {
 const ORDER_STATUS_COLOR: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
   paid: "bg-blue-100 text-blue-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  cancelled: "bg-red-100 text-red-500",
+  completed: "bg-[#E6D5C3] text-[#D9734E]",
+  cancelled: "bg-red-100 text-[#C45A5A]",
 };
 
 export default function MyProductsPage() {
@@ -203,7 +203,7 @@ export default function MyProductsPage() {
     return (
       <>
         <Navbar />
-        <div className="text-center py-16 text-zinc-500">กำลังโหลด...</div>
+        <div className="text-center py-16 text-[#A89F91]">กำลังโหลด...</div>
       </>
     );
   }
@@ -217,7 +217,7 @@ export default function MyProductsPage() {
           <button
             type="button"
             onClick={() => router.push("/login")}
-            className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold"
+            className="bg-[#D9734E] text-white px-6 py-2 rounded-lg font-semibold"
           >
             เข้าสู่ระบบ
           </button>
@@ -235,24 +235,24 @@ export default function MyProductsPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-zinc-50">
+      <main className="min-h-screen bg-[#F9F6F0]">
         <div className="container mx-auto px-4 py-8 max-w-5xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-extrabold text-emerald-700">สินค้าของฉัน</h1>
-              <p className="text-sm text-zinc-500 mt-0.5">{user?.Username}</p>
+              <h1 className="text-2xl font-extrabold text-[#D9734E]">สินค้าของฉัน</h1>
+              <p className="text-sm text-[#A89F91] mt-0.5">{user?.Username}</p>
             </div>
             <Link
               href="/products/create"
-              className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition"
+              className="bg-[#D9734E] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#C25B38] transition"
             >
               + ลงขายสินค้าใหม่
             </Link>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 bg-white border border-zinc-200 rounded-xl p-1 mb-6">
+          <div className="flex gap-1 bg-white border border-[#E6D5C3] rounded-xl p-1 mb-6">
             {TABS.map((t) => (
               <button
                 key={t.key}
@@ -260,8 +260,8 @@ export default function MyProductsPage() {
                 onClick={() => setActiveTab(t.key)}
                 className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${
                   activeTab === t.key
-                    ? "bg-emerald-600 text-white"
-                    : "text-zinc-600 hover:bg-zinc-50"
+                    ? "bg-[#D9734E] text-white"
+                    : "text-[#A89F91] hover:bg-[#F9F6F0]"
                 }`}
               >
                 {t.label}
@@ -273,14 +273,14 @@ export default function MyProductsPage() {
           {activeTab === "products" && (
             <div>
               {productsLoading ? (
-                <div className="text-center text-zinc-500 py-16">กำลังโหลด...</div>
+                <div className="text-center text-[#A89F91] py-16">กำลังโหลด...</div>
               ) : products.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="text-4xl mb-3">📦</div>
-                  <p className="text-zinc-500 mb-4">ยังไม่มีสินค้า</p>
+                  <p className="text-[#A89F91] mb-4">ยังไม่มีสินค้า</p>
                   <Link
                     href="/products/create"
-                    className="text-emerald-600 hover:underline text-sm"
+                    className="text-[#D9734E] hover:underline text-sm"
                   >
                     ลงขายสินค้าแรกของคุณ
                   </Link>
@@ -290,10 +290,10 @@ export default function MyProductsPage() {
                   {products.map((p) => (
                     <div
                       key={p.id}
-                      className="bg-white border border-zinc-200 rounded-xl p-4 flex items-center gap-4"
+                      className="bg-white border border-[#E6D5C3] rounded-xl p-4 flex items-center gap-4"
                     >
                       {/* Thumbnail */}
-                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-zinc-100 shrink-0">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-[#E6D5C3] shrink-0">
                         {p.images[0] ? (
                           <img
                             src={p.images[0]}
@@ -301,7 +301,7 @@ export default function MyProductsPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="flex items-center justify-center h-full text-zinc-300 text-xl">
+                          <div className="flex items-center justify-center h-full text-[#DCD0C0] text-xl">
                             📷
                           </div>
                         )}
@@ -311,14 +311,14 @@ export default function MyProductsPage() {
                       <div className="flex-1 min-w-0">
                         <Link
                           href={`/products/${p.id}`}
-                          className="text-sm font-semibold text-zinc-800 hover:text-emerald-700 truncate block"
+                          className="text-sm font-semibold text-[#4A3B32] hover:text-[#D9734E] truncate block"
                         >
                           {p.title}
                         </Link>
-                        <div className="text-sm font-bold text-emerald-700 mt-0.5">
+                        <div className="text-sm font-bold text-[#D9734E] mt-0.5">
                           {p.price.toLocaleString()} ฿
                         </div>
-                        <div className="text-xs text-zinc-400 mt-0.5">{p.postedAt}</div>
+                        <div className="text-xs text-[#A89F91] mt-0.5">{p.postedAt}</div>
                       </div>
 
                       {/* Status selector */}
@@ -333,7 +333,7 @@ export default function MyProductsPage() {
                           value={p.status}
                           disabled={statusUpdating === p.id}
                           onChange={(e) => handleStatusChange(p.id, e.target.value)}
-                          className="block w-full text-xs border border-zinc-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:opacity-50"
+                          className="block w-full text-xs border border-[#DCD0C0] rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] disabled:opacity-50"
                         >
                           <option value="available">กำลังขาย</option>
                           <option value="reserved">จอง</option>
@@ -369,11 +369,11 @@ export default function MyProductsPage() {
           {activeTab === "selling" && (
             <div>
               {sellerOrdersLoading ? (
-                <div className="text-center text-zinc-500 py-16">กำลังโหลด...</div>
+                <div className="text-center text-[#A89F91] py-16">กำลังโหลด...</div>
               ) : sellerOrders.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="text-4xl mb-3">🛒</div>
-                  <p className="text-zinc-500">ยังไม่มีออเดอร์</p>
+                  <p className="text-[#A89F91]">ยังไม่มีออเดอร์</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -394,11 +394,11 @@ export default function MyProductsPage() {
           {activeTab === "buying" && (
             <div>
               {buyerOrdersLoading ? (
-                <div className="text-center text-zinc-500 py-16">กำลังโหลด...</div>
+                <div className="text-center text-[#A89F91] py-16">กำลังโหลด...</div>
               ) : buyerOrders.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="text-4xl mb-3">📋</div>
-                  <p className="text-zinc-500">ยังไม่มีประวัติการสั่งซื้อ</p>
+                  <p className="text-[#A89F91]">ยังไม่มีประวัติการสั่งซื้อ</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -422,30 +422,30 @@ export default function MyProductsPage() {
       {pendingStatus && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
-            <h3 className="text-base font-bold text-zinc-800 mb-1">
+            <h3 className="text-base font-bold text-[#4A3B32] mb-1">
               {pendingStatus.newStatus === "sold" ? "บันทึกการขาย" : "บันทึกการจอง"}
             </h3>
-            <p className="text-sm text-zinc-500 mb-4">กรุณาใส่ User ID ของผู้ซื้อ</p>
+            <p className="text-sm text-[#A89F91] mb-4">กรุณาใส่ User ID ของผู้ซื้อ</p>
             <input
               type="number"
               min={1}
               placeholder="User ID ผู้ซื้อ"
               value={buyerIdInput}
               onChange={(e) => setBuyerIdInput(e.target.value)}
-              className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 mb-4"
+              className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] mb-4"
               autoFocus
             />
             <div className="flex gap-2">
               <button
                 onClick={() => setPendingStatus(null)}
-                className="flex-1 py-2 rounded-lg border border-zinc-200 text-sm text-zinc-600 hover:bg-zinc-50 transition"
+                className="flex-1 py-2 rounded-lg border border-[#E6D5C3] text-sm text-[#A89F91] hover:bg-[#F9F6F0] transition"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={handleBuyerIdConfirm}
                 disabled={!buyerIdInput}
-                className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-[#D9734E] text-white text-sm font-semibold hover:bg-[#C25B38] transition disabled:opacity-50"
               >
                 ยืนยัน
               </button>
@@ -470,11 +470,11 @@ function formatOrderDate(order: OrderWithDetails): string {
 
 function OrderImage({ imageUrl }: { imageUrl: string | null }) {
   return (
-    <div className="w-16 h-16 rounded-lg overflow-hidden bg-zinc-100 shrink-0">
+    <div className="w-16 h-16 rounded-lg overflow-hidden bg-[#E6D5C3] shrink-0">
       {imageUrl ? (
         <img src={imageUrl} alt="" className="w-full h-full object-cover" />
       ) : (
-        <div className="flex items-center justify-center h-full text-zinc-300 text-xl">📷</div>
+        <div className="flex items-center justify-center h-full text-[#DCD0C0] text-xl">📷</div>
       )}
     </div>
   );
@@ -505,14 +505,14 @@ function SellerOrderCard({
   const imageUrl = resolveImageUrl(order.Image_URL);
 
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl p-4 flex items-center gap-4">
+    <div className="bg-white border border-[#E6D5C3] rounded-xl p-4 flex items-center gap-4">
       <OrderImage imageUrl={imageUrl} />
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold text-zinc-800 truncate">
+        <div className="text-sm font-semibold text-[#4A3B32] truncate">
           {order.Title || `สินค้า #${order.Product_ID}`}
         </div>
-        <div className="text-xs text-zinc-500 mt-0.5">ผู้ซื้อ: {order.BuyerName || "-"}</div>
-        <div className="text-xs text-zinc-400 mt-0.5">
+        <div className="text-xs text-[#A89F91] mt-0.5">ผู้ซื้อ: {order.BuyerName || "-"}</div>
+        <div className="text-xs text-[#A89F91] mt-0.5">
           {formatOrderDate(order)} · {order.Quantity} ชิ้น · {Number(order.Total_Price).toLocaleString()} ฿
         </div>
       </div>
@@ -525,12 +525,12 @@ function SellerOrderCard({
             type="button"
             disabled={updating}
             onClick={() => onConfirmShip(order.Order_ID)}
-            className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
+            className="text-xs bg-[#D9734E] text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-[#C25B38] transition disabled:opacity-50"
           >
             {updating ? "..." : "ยืนยันส่งสินค้า"}
           </button>
         )}
-        <Link href={`/products/${order.Product_ID}`} className="text-xs text-emerald-600 hover:underline">
+        <Link href={`/products/${order.Product_ID}`} className="text-xs text-[#D9734E] hover:underline">
           ดูสินค้า
         </Link>
       </div>
@@ -553,14 +553,14 @@ function BuyerOrderCard({
   const imageUrl = resolveImageUrl(order.Image_URL);
 
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl p-4 flex items-center gap-4">
+    <div className="bg-white border border-[#E6D5C3] rounded-xl p-4 flex items-center gap-4">
       <OrderImage imageUrl={imageUrl} />
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold text-zinc-800 truncate">
+        <div className="text-sm font-semibold text-[#4A3B32] truncate">
           {order.Title || `สินค้า #${order.Product_ID}`}
         </div>
-        <div className="text-xs text-zinc-500 mt-0.5">ผู้ขาย: {order.SellerName || "-"}</div>
-        <div className="text-xs text-zinc-400 mt-0.5">
+        <div className="text-xs text-[#A89F91] mt-0.5">ผู้ขาย: {order.SellerName || "-"}</div>
+        <div className="text-xs text-[#A89F91] mt-0.5">
           {formatOrderDate(order)} · {order.Quantity} ชิ้น · {Number(order.Total_Price).toLocaleString()} ฿
         </div>
       </div>
@@ -588,7 +588,7 @@ function BuyerOrderCard({
             </button>
           </>
         )}
-        <Link href={`/products/${order.Product_ID}`} className="text-xs text-emerald-600 hover:underline">
+        <Link href={`/products/${order.Product_ID}`} className="text-xs text-[#D9734E] hover:underline">
           ดูสินค้า
         </Link>
       </div>

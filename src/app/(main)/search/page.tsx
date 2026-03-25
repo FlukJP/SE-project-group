@@ -4,10 +4,11 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/src/components/layout/Navbar";
 import ProductCard from "@/src/components/product/ProductCard";
-import { productApi, categoryApi, type CategoryData } from "@/src/lib/api";
-import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
+import { ProductGridSkeleton } from "@/src/components/ui/Skeleton";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { PROVINCES } from "@/src/data/provinces";
+import { useProducts } from "@/src/hooks/useProducts";
+import { useCategories } from "@/src/hooks/useCategories";
 
 type SortOption = "newest" | "price_asc" | "price_desc";
 
@@ -23,7 +24,12 @@ export default function SearchPage() {
       fallback={
         <>
           <Navbar />
-          <div className="text-center py-16 text-zinc-500">กำลังโหลด...</div>
+          <main className="min-h-screen bg-[#F9F6F0]">
+            <div className="bg-[#D9734E] h-20" />
+            <div className="container mx-auto px-4 py-6">
+              <ProductGridSkeleton count={8} />
+            </div>
+          </main>
         </>
       }
     >
@@ -49,15 +55,9 @@ function SearchPageContent() {
 
   const [query, setQuery] = useState(q);
   const [debouncedQuery, setDebouncedQuery] = useState(q);
-  const [results, setResults] = useState<ProductDisplay[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [page, setPage] = useState(1);
 
   const ITEMS_PER_PAGE = 20;
-
-  // Categories
-  const [categories, setCategories] = useState<CategoryData[]>([]);
 
   // Filter state
   const [showFilter, setShowFilter] = useState(false);
@@ -67,46 +67,33 @@ function SearchPageContent() {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load categories once on mount
-  useEffect(() => {
-    categoryApi.list().then((res) => setCategories(res.data)).catch(() => {});
-  }, []);
+  // SWR: categories loaded once and cached globally
+  const { data: categories = [] } = useCategories();
 
-  // Sync input when URL param changes
+  // Build product query params from current filter state
+  const productParams = useMemo<Record<string, string>>(() => {
+    const p: Record<string, string> = { limit: "9999" };
+    if (debouncedQuery.trim()) p.q = debouncedQuery.trim();
+    if (province) p.province = province;
+    if (district) p.district = district;
+    return p;
+  }, [debouncedQuery, province, district]);
+
+  // SWR: products — auto-refetches when productParams key changes
+  const { data: results = [], isLoading: loading, error: fetchError } = useProducts(productParams);
+  const error = fetchError instanceof Error ? fetchError.message : fetchError ? "เกิดข้อผิดพลาดในการค้นหา" : "";
+
+  // Sync local input when URL param changes
   useEffect(() => {
     setQuery(q);
     setDebouncedQuery(q);
   }, [q]);
 
-  // Debounce query input
   const handleQueryChange = (value: string) => {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setDebouncedQuery(value);
-    }, 400);
+    debounceRef.current = setTimeout(() => setDebouncedQuery(value), 400);
   };
-
-  // Fetch results — category filtering is done client-side
-  useEffect(() => {
-    setLoading(true);
-    setError("");
-    const params: Record<string, string> = { limit: "9999" };
-    if (debouncedQuery.trim()) params.q = debouncedQuery.trim();
-    if (province) params.province = province;
-    if (district) params.district = district;
-
-    productApi
-      .list(params)
-      .then((res) => {
-        setResults(res.data.map(toProductDisplay));
-      })
-      .catch((err) => {
-        setResults([]);
-        setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการค้นหา");
-      })
-      .finally(() => setLoading(false));
-  }, [debouncedQuery, province, district]);
 
   // Build URL with updated params
   const buildUrl = (overrides: { q?: string; cats?: string[]; province?: string; district?: string }) => {
@@ -205,24 +192,24 @@ function SearchPageContent() {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-zinc-50">
+      <main className="min-h-screen bg-[#F9F6F0]">
         {/* Search bar */}
-        <div className="bg-emerald-600">
+        <div className="bg-[#D9734E]">
           <div className="container mx-auto px-4 py-6">
             <form onSubmit={handleSearch} className="flex gap-3 max-w-2xl mx-auto">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">🔎</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A89F91]">🔎</span>
                 <input
                   value={query}
                   onChange={(e) => handleQueryChange(e.target.value)}
                   placeholder="พิมพ์ชื่อสินค้าที่ต้องการค้นหา..."
-                  className="w-full rounded-xl border border-white/20 bg-white pl-10 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  className="w-full rounded-xl border border-white/20 bg-white pl-10 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] placeholder-[#A89F91]"
                 />
                 {query && (
                   <button
                     type="button"
                     onClick={() => handleQueryChange("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A89F91] hover:text-[#4A3B32]"
                   >
                     ✕
                   </button>
@@ -230,7 +217,7 @@ function SearchPageContent() {
               </div>
               <button
                 type="submit"
-                className="rounded-xl bg-white text-emerald-700 font-semibold px-6 py-3 text-sm hover:bg-zinc-50 transition"
+                className="rounded-xl bg-white text-[#D9734E] font-semibold px-6 py-3 text-sm hover:bg-[#F9F6F0] transition"
               >
                 ค้นหา
               </button>
@@ -241,12 +228,12 @@ function SearchPageContent() {
         <div className="container mx-auto px-4 py-6">
           {/* Header + filter toggle */}
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-lg font-bold text-zinc-900">
+            <h1 className="text-lg font-bold text-[#4A3B32]">
               {headerTitle}
               {debouncedQuery && selectedCats.length > 0 && (
-                <span className="text-zinc-500 font-normal"> · &quot;{debouncedQuery}&quot;</span>
+                <span className="text-[#A89F91] font-normal"> · &quot;{debouncedQuery}&quot;</span>
               )}
-              <span className="text-sm font-normal text-zinc-500 ml-2">
+              <span className="text-sm font-normal text-[#A89F91] ml-2">
                 ({Number(filteredResults.length).toLocaleString()} รายการ)
               </span>
             </h1>
@@ -256,8 +243,8 @@ function SearchPageContent() {
               onClick={() => setShowFilter((v) => !v)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold transition ${
                 hasActiveFilter
-                  ? "bg-emerald-600 text-white border-emerald-600"
-                  : "bg-white text-zinc-700 border-zinc-300 hover:border-emerald-400"
+                  ? "bg-[#D9734E] text-white border-[#D9734E]"
+                  : "bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
               }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -265,7 +252,7 @@ function SearchPageContent() {
               </svg>
               ตัวกรอง
               {hasActiveFilter && (
-                <span className="bg-white text-emerald-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                <span className="bg-white text-[#D9734E] rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                   {filterCount}
                 </span>
               )}
@@ -274,17 +261,17 @@ function SearchPageContent() {
 
           {/* Filter panel */}
           {showFilter && (
-            <div className="bg-white border border-zinc-200 rounded-2xl p-5 mb-5 shadow-sm space-y-5">
+            <div className="bg-white border border-[#E6D5C3] rounded-2xl p-5 mb-5 shadow-sm space-y-5">
 
               {/* Province / District */}
               <div>
-                <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">พื้นที่</div>
+                <div className="text-xs font-semibold text-[#A89F91] uppercase tracking-wide mb-2">พื้นที่</div>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <select
                     aria-label="เลือกจังหวัด"
                     value={province}
                     onChange={(e) => navigate({ province: e.target.value, district: "" })}
-                    className="flex-1 border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                    className="flex-1 border border-[#DCD0C0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
                   >
                     <option value="">ทุกจังหวัด</option>
                     {PROVINCES.map((p) => (
@@ -296,7 +283,7 @@ function SearchPageContent() {
                       aria-label="เลือกอำเภอ"
                       value={district}
                       onChange={(e) => navigate({ district: e.target.value })}
-                      className="flex-1 border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                      className="flex-1 border border-[#DCD0C0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
                     >
                       <option value="">ทุกอำเภอ</option>
                       {PROVINCES.find((p) => p.name === province)?.districts.map((d) => (
@@ -310,10 +297,10 @@ function SearchPageContent() {
               {/* Category — multi-select */}
               {categories.length > 0 && (
                 <div>
-                  <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">
+                  <div className="text-xs font-semibold text-[#A89F91] uppercase tracking-wide mb-2">
                     หมวดหมู่
                     {selectedCats.length > 0 && (
-                      <span className="ml-2 text-emerald-600 font-bold normal-case">
+                      <span className="ml-2 text-[#D9734E] font-bold normal-case">
                         ({selectedCats.length} ที่เลือก)
                       </span>
                     )}
@@ -328,8 +315,8 @@ function SearchPageContent() {
                           onClick={() => toggleCategory(cat.category_key)}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
                             isActive
-                              ? "bg-emerald-600 text-white border-emerald-600"
-                              : "bg-white text-zinc-700 border-zinc-300 hover:border-emerald-400"
+                              ? "bg-[#D9734E] text-white border-[#D9734E]"
+                              : "bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
                           }`}
                         >
                           {isActive && (
@@ -349,7 +336,7 @@ function SearchPageContent() {
               <div className="flex flex-col sm:flex-row gap-6">
                 {/* Sort */}
                 <div className="flex-1">
-                  <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">
+                  <div className="text-xs font-semibold text-[#A89F91] uppercase tracking-wide mb-2">
                     เรียงตาม
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -360,8 +347,8 @@ function SearchPageContent() {
                         onClick={() => setSort(key)}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
                           sort === key
-                            ? "bg-emerald-600 text-white border-emerald-600"
-                            : "bg-white text-zinc-700 border-zinc-300 hover:border-emerald-400"
+                            ? "bg-[#D9734E] text-white border-[#D9734E]"
+                            : "bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
                         }`}
                       >
                         {SORT_LABELS[key]}
@@ -372,7 +359,7 @@ function SearchPageContent() {
 
                 {/* Price range */}
                 <div className="flex-1">
-                  <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">
+                  <div className="text-xs font-semibold text-[#A89F91] uppercase tracking-wide mb-2">
                     ช่วงราคา (฿)
                   </div>
                   <div className="flex items-center gap-2">
@@ -382,27 +369,27 @@ function SearchPageContent() {
                       placeholder="ต่ำสุด"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
-                      className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                      className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
                     />
-                    <span className="text-zinc-400 shrink-0">–</span>
+                    <span className="text-[#A89F91] shrink-0">–</span>
                     <input
                       type="number"
                       min={0}
                       placeholder="สูงสุด"
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
-                      className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                      className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
                     />
                   </div>
                 </div>
               </div>
 
               {hasActiveFilter && (
-                <div className="pt-3 border-t border-zinc-100 flex justify-end">
+                <div className="pt-3 border-t border-[#E6D5C3] flex justify-end">
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="text-sm text-red-500 hover:underline font-medium"
+                    className="text-sm text-[#C45A5A] hover:underline font-medium"
                   >
                     ล้างตัวกรองทั้งหมด
                   </button>
@@ -416,12 +403,12 @@ function SearchPageContent() {
             <div className="flex flex-wrap gap-2 mb-4">
               {/* Province / District chip */}
               {province && (
-                <span className="flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                <span className="flex items-center gap-1 bg-[#E6D5C3] text-[#4A3B32] text-xs font-semibold px-3 py-1.5 rounded-full">
                   📍 {province}{district && ` · ${district}`}
                   <button
                     type="button"
                     onClick={() => navigate({ province: "", district: "" })}
-                    className="hover:text-emerald-900 ml-1"
+                    className="hover:text-[#D9734E] ml-1"
                   >
                     ✕
                   </button>
@@ -433,13 +420,13 @@ function SearchPageContent() {
                 return (
                   <span
                     key={key}
-                    className="flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full"
+                    className="flex items-center gap-1 bg-[#E6D5C3] text-[#4A3B32] text-xs font-semibold px-3 py-1.5 rounded-full"
                   >
                     {cat?.emoji} {cat?.name || key}
                     <button
                       type="button"
                       onClick={() => toggleCategory(key)}
-                      className="hover:text-emerald-900 ml-1"
+                      className="hover:text-[#D9734E] ml-1"
                     >
                       ✕
                     </button>
@@ -447,21 +434,21 @@ function SearchPageContent() {
                 );
               })}
               {sort !== "newest" && (
-                <span className="flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                <span className="flex items-center gap-1 bg-[#E6D5C3] text-[#4A3B32] text-xs font-semibold px-3 py-1.5 rounded-full">
                   {SORT_LABELS[sort]}
-                  <button type="button" onClick={() => setSort("newest")} className="hover:text-emerald-900 ml-1">✕</button>
+                  <button type="button" onClick={() => setSort("newest")} className="hover:text-[#D9734E] ml-1">✕</button>
                 </span>
               )}
               {minPrice !== "" && (
-                <span className="flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                <span className="flex items-center gap-1 bg-[#E6D5C3] text-[#4A3B32] text-xs font-semibold px-3 py-1.5 rounded-full">
                   ราคา ≥ {Number(minPrice).toLocaleString()} ฿
-                  <button type="button" onClick={() => setMinPrice("")} className="hover:text-emerald-900 ml-1">✕</button>
+                  <button type="button" onClick={() => setMinPrice("")} className="hover:text-[#D9734E] ml-1">✕</button>
                 </span>
               )}
               {maxPrice !== "" && (
-                <span className="flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                <span className="flex items-center gap-1 bg-[#E6D5C3] text-[#4A3B32] text-xs font-semibold px-3 py-1.5 rounded-full">
                   ราคา ≤ {Number(maxPrice).toLocaleString()} ฿
-                  <button type="button" onClick={() => setMaxPrice("")} className="hover:text-emerald-900 ml-1">✕</button>
+                  <button type="button" onClick={() => setMaxPrice("")} className="hover:text-[#D9734E] ml-1">✕</button>
                 </span>
               )}
             </div>
@@ -469,12 +456,12 @@ function SearchPageContent() {
 
           {/* Results */}
           {loading ? (
-            <div className="text-center text-zinc-500 py-16">กำลังค้นหา...</div>
+            <ProductGridSkeleton count={8} />
           ) : error ? (
             <div className="text-center py-16">
               <div className="text-4xl mb-3">&#9888;&#65039;</div>
-              <p className="text-red-500">{error}</p>
-              <button type="button" onClick={() => window.location.reload()} className="mt-3 text-emerald-600 hover:underline text-sm">
+              <p className="text-[#C45A5A]">{error}</p>
+              <button type="button" onClick={() => window.location.reload()} className="mt-3 text-[#D9734E] hover:underline text-sm">
                 ลองใหม่อีกครั้ง
               </button>
             </div>
@@ -493,7 +480,7 @@ function SearchPageContent() {
                     type="button"
                     onClick={() => { setPage((p) => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     disabled={page <= 1}
-                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-zinc-700 border-zinc-300 hover:border-emerald-400"
+                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
                   >
                     ก่อนหน้า
                   </button>
@@ -507,7 +494,7 @@ function SearchPageContent() {
                     }, [])
                     .map((item, idx) =>
                       item === "..." ? (
-                        <span key={`ellipsis-${idx}`} className="px-2 text-zinc-400 select-none">…</span>
+                        <span key={`ellipsis-${idx}`} className="px-2 text-[#A89F91] select-none">…</span>
                       ) : (
                         <button
                           key={item}
@@ -515,8 +502,8 @@ function SearchPageContent() {
                           onClick={() => { setPage(item as number); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                           className={`w-9 h-9 rounded-lg border text-sm font-medium transition ${
                             page === item
-                              ? "bg-emerald-600 text-white border-emerald-600"
-                              : "bg-white text-zinc-700 border-zinc-300 hover:border-emerald-400"
+                              ? "bg-[#D9734E] text-white border-[#D9734E]"
+                              : "bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
                           }`}
                         >
                           {item}
@@ -528,7 +515,7 @@ function SearchPageContent() {
                     type="button"
                     onClick={() => { setPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     disabled={page >= totalPages}
-                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-zinc-700 border-zinc-300 hover:border-emerald-400"
+                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
                   >
                     ถัดไป
                   </button>
@@ -538,8 +525,8 @@ function SearchPageContent() {
           ) : (
             <div className="text-center py-16">
               <div className="text-4xl mb-3">🔍</div>
-              <p className="text-zinc-500">ไม่พบสินค้าที่ค้นหา</p>
-              <p className="text-sm text-zinc-400 mt-1">ลองค้นหาด้วยคำอื่น หรือปรับตัวกรอง</p>
+              <p className="text-[#A89F91]">ไม่พบสินค้าที่ค้นหา</p>
+              <p className="text-sm text-[#A89F91] mt-1">ลองค้นหาด้วยคำอื่น หรือปรับตัวกรอง</p>
             </div>
           )}
         </div>

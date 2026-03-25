@@ -27,7 +27,7 @@ export default function ProductCard({
     return (
         <Link
             href={to}
-            className="group bg-white rounded-2xl overflow-hidden border border-kd-border hover:shadow-lg transition-colors"
+            className="group bg-white rounded-2xl overflow-hidden border border-[#DCD0C0] hover:shadow-lg transition-colors"
         >
             <div className="relative h-44">
                 {image && !imgError ? (
@@ -42,13 +42,13 @@ export default function ProductCard({
                         onError={() => setImgError(true)}
                     />
                 ) : (
-                    <div className="flex items-center justify-center h-full bg-kd-bg text-kd-text-light text-4xl">
+                    <div className="flex items-center justify-center h-full bg-[#E6D5C3] text-[#A89F91] text-4xl">
                         📷
                     </div>
                 )}
                 {badgeText && (
                     <div className="absolute top-3 left-3">
-                        <span className="text-[11px] font-semibold bg-white/95 border border-kd-border px-2 py-1 rounded-full text-kd-text">
+                        <span className="text-[11px] font-semibold bg-white/95 border border-[#DCD0C0] px-2 py-1 rounded-full text-[#4A3B32]">
                             {badgeText}
                         </span>
                     </div>
@@ -56,17 +56,17 @@ export default function ProductCard({
             </div>
 
             <div className="p-4">
-                <div className="line-clamp-2 font-semibold text-kd-text group-hover:text-kd-primary transition-colors">
+                <div className="line-clamp-2 font-semibold text-[#4A3B32] group-hover:text-[#D9734E] transition-colors">
                     {product.title}
                 </div>
 
                 <div className="mt-2 flex items-center justify-between">
-                    <div className="text-kd-primary font-extrabold">{priceStr}</div>
-                    <span className="text-[11px] text-kd-text-light">{timeAgo}</span>
+                    <div className="text-[#D9734E] font-extrabold">{priceStr}</div>
+                    <span className="text-[11px] text-[#A89F91]">{timeAgo}</span>
                 </div>
 
-                <div className="mt-2 text-xs text-kd-text-light truncate">
-                    {product.location ? `📍 ${product.location}` : <span className="text-kd-text-light opacity-60">📍 ไม่ระบุพื้นที่</span>}
+                <div className="mt-2 text-xs text-[#A89F91] truncate">
+                    {product.location ? `📍 ${product.location}` : <span className="text-[#A89F91] opacity-60">📍 ไม่ระบุพื้นที่</span>}
                 </div>
             </div>
         </Link>

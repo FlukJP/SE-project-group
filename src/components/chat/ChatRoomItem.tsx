@@ -23,20 +23,20 @@ export default function ChatRoomItem({ room, isActive }: Props) {
             href={`/chat/${room.Chat_ID}`}
             className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
                 isActive
-                    ? "bg-white border border-gray-200 shadow-sm"
-                    : "hover:bg-white/60"
+                    ? "bg-white border border-[#DCD0C0] shadow-sm"
+                    : "hover:bg-[#E6D5C3]"
             }`}
         >
-            <div className="h-10 w-10 rounded-full bg-[#121E4D] text-white flex items-center justify-center font-bold text-sm shrink-0">
+            <div className="h-10 w-10 rounded-full bg-[#D9734E] text-white flex items-center justify-center font-bold text-sm shrink-0">
                 {room.PartnerName?.charAt(0)?.toUpperCase() || "?"}
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm text-gray-900 truncate">
+                    <span className="font-medium text-sm text-[#4A3B32] truncate">
                         {room.PartnerName}
                     </span>
                     <div className="flex items-center gap-2 shrink-0 ml-2">
-                        <span className="text-[11px] text-gray-400">
+                        <span className="text-[11px] text-[#A89F91]">
                             {timeStr}
                         </span>
                         {!!room.UnreadCount && room.UnreadCount > 0 && (
@@ -47,7 +47,7 @@ export default function ChatRoomItem({ room, isActive }: Props) {
                     </div>
                 </div>
                 {room.LastMessage && (
-                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                    <p className="text-xs text-[#A89F91] truncate mt-0.5">
                         {room.LastMessage}
                     </p>
                 )}

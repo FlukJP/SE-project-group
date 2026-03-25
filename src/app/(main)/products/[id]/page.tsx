@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
-import { productApi, reviewApi, reportApi, type SellerRatingData } from "@/src/lib/api";
-import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
+import { reportApi } from "@/src/lib/api";
+import { ProductDetailSkeleton } from "@/src/components/ui/Skeleton";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useProduct } from "@/src/hooks/useProducts";
+import { useSellerRating } from "@/src/hooks/useReviews";
 
 function ReportProductModal({
   onClose,
@@ -31,23 +33,23 @@ function ReportProductModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-red-500 text-xl">🚩</span>
-          <h2 className="text-lg font-bold text-zinc-800">รายงานสินค้านี้</h2>
+          <span className="text-[#C45A5A] text-xl">🚩</span>
+          <h2 className="text-lg font-bold text-[#4A3B32]">รายงานสินค้านี้</h2>
         </div>
-        <label className="block text-sm font-medium text-zinc-700 mb-1">เหตุผลในการรายงาน</label>
+        <label className="block text-sm font-medium text-[#4A3B32] mb-1">เหตุผลในการรายงาน</label>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={4}
           placeholder="อธิบายเหตุผลที่ต้องการรายงานสินค้านี้..."
-          className="w-full border border-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+          className="w-full border border-[#DCD0C0] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C45A5A]/30 focus:border-[#C45A5A] resize-none"
         />
-        {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+        {error && <p className="text-[#C45A5A] text-xs mt-1">{error}</p>}
         <div className="flex gap-3 mt-4">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 border border-zinc-300 rounded-xl py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50"
+            className="flex-1 border border-[#DCD0C0] rounded-xl py-2 text-sm font-medium text-[#4A3B32] hover:bg-[#E6D5C3]"
           >
             ยกเลิก
           </button>
@@ -55,7 +57,7 @@ function ReportProductModal({
             type="button"
             onClick={handleSubmit}
             disabled={loading || !reason.trim()}
-            className="flex-1 bg-red-500 text-white rounded-xl py-2 text-sm font-semibold hover:bg-red-600 disabled:opacity-50"
+            className="flex-1 bg-[#C45A5A] text-white rounded-xl py-2 text-sm font-semibold hover:bg-[#A84040] disabled:opacity-50"
           >
             {loading ? "กำลังส่ง..." : "ส่งรายงาน"}
           </button>
@@ -68,51 +70,24 @@ function ReportProductModal({
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user, isLoggedIn } = useAuth();
-  const [product, setProduct] = useState<ProductDisplay | null>(null);
-  const [loading, setLoading] = useState(true);
   const [mainImage, setMainImage] = useState("");
-  const [sellerRating, setSellerRating] = useState<SellerRatingData | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [reportDone, setReportDone] = useState(false);
   const [reportError, setReportError] = useState("");
-  const cancelledRef = useRef(false);
 
+  const { data: product, isLoading: loading } = useProduct(id);
+  const { data: sellerRating } = useSellerRating(product?.seller.id);
+
+  // Set first image once product data arrives
   useEffect(() => {
-    if (!id) return;
-    cancelledRef.current = false;
-
-    productApi
-      .getById(id)
-      .then((res) => {
-        if (cancelledRef.current) return;
-        const display = toProductDisplay(res.data);
-        setProduct(display);
-        setMainImage(display.images[0] || "");
-        reviewApi.getSellerRating(Number(display.seller.id))
-          .then((r) => {
-            if (!cancelledRef.current) setSellerRating(r.data);
-          })
-          .catch(() => {});
-      })
-      .catch(() => {
-        if (!cancelledRef.current) setProduct(null);
-      })
-      .finally(() => {
-        if (!cancelledRef.current) setLoading(false);
-      });
-
-    return () => {
-      cancelledRef.current = true;
-    };
-  }, [id]);
+    if (product?.images[0]) setMainImage(product.images[0]);
+  }, [product?.images[0]]);
 
   if (loading) {
     return (
       <>
         <Navbar />
-        <div className="container mx-auto px-4 py-16 text-center text-zinc-500">
-          กำลังโหลด...
-        </div>
+        <ProductDetailSkeleton />
       </>
     );
   }
@@ -123,7 +98,7 @@ export default function ProductDetailPage() {
         <Navbar />
         <div className="container mx-auto px-4 py-16 text-center">
           <p className="text-lg mb-4">ไม่พบประกาศ</p>
-          <Link href="/" className="text-emerald-700 hover:underline">
+          <Link href="/" className="text-[#D9734E] hover:underline">
             กลับไปหน้าหลัก
           </Link>
         </div>
@@ -131,12 +106,11 @@ export default function ProductDetailPage() {
     );
   }
 
-  // P-7: Clamp star rating to 0-5
+  // Clamp star rating to 0-5
   const safeRating = sellerRating
     ? Math.min(5, Math.max(0, Math.round(sellerRating.averageRating)))
     : 0;
 
-  // P-1: Determine if chat button should be shown / disabled
   const isSelfProduct = isLoggedIn && user && String(user.User_ID) === product.seller.id;
 
   const handleReport = async (reason: string) => {
@@ -154,7 +128,6 @@ export default function ProductDetailPage() {
     <>
       <Navbar />
 
-      {/* Report Modal */}
       {showReport && (
         <ReportProductModal
           onClose={() => { setShowReport(false); setReportError(""); }}
@@ -164,14 +137,14 @@ export default function ProductDetailPage() {
       )}
       <div className="container mx-auto px-4 py-8">
         <div className="mb-4">
-          <Link href="/" className="text-sm text-emerald-700 hover:underline">
+          <Link href="/" className="text-sm text-[#D9734E] hover:underline">
             &larr; กลับไปหน้าหลัก
           </Link>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="flex-1">
-            <div className="w-full aspect-video bg-zinc-100 rounded-2xl overflow-hidden">
+            <div className="w-full aspect-video bg-[#F9F6F0] rounded-2xl overflow-hidden">
               {mainImage ? (
                 <img
                   src={mainImage}
@@ -179,7 +152,7 @@ export default function ProductDetailPage() {
                   className="object-cover w-full h-full"
                 />
               ) : (
-                <div className="flex items-center justify-center h-full text-zinc-400 text-sm">
+                <div className="flex items-center justify-center h-full text-[#A89F91] text-sm">
                   ไม่มีรูปภาพ
                 </div>
               )}
@@ -193,8 +166,8 @@ export default function ProductDetailPage() {
                     onClick={() => setMainImage(img)}
                     className={`w-20 h-20 rounded-xl overflow-hidden border ${
                       img === mainImage
-                        ? "border-emerald-600"
-                        : "border-zinc-200"
+                        ? "border-[#D9734E]"
+                        : "border-[#DCD0C0]"
                     }`}
                   >
                     <img
@@ -213,18 +186,18 @@ export default function ProductDetailPage() {
             {product.categoryKey && (
               <Link
                 href={`/search?cat=${product.categoryKey}`}
-                className="inline-flex items-center gap-1.5 text-sm bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1 mb-4 hover:bg-emerald-100 transition"
+                className="inline-flex items-center gap-1.5 text-sm bg-[#E6D5C3] text-[#4A3B32] border border-[#DCD0C0] rounded-full px-3 py-1 mb-4 hover:bg-[#DCD0C0] transition"
               >
                 <span>🏷️</span>
                 {product.categoryName || product.categoryKey}
               </Link>
             )}
 
-            <div className="text-3xl font-bold text-emerald-700 mb-4">
+            <div className="text-3xl font-bold text-[#D9734E] mb-4">
               {Number(product.price ?? 0).toLocaleString()} ฿
             </div>
 
-            <div className="flex items-center gap-4 text-xs text-zinc-500 mb-6">
+            <div className="flex items-center gap-4 text-xs text-[#A89F91] mb-6">
               {product.location && <span>📍 {product.location}</span>}
               {product.location && product.postedAt && <span>•</span>}
               {product.postedAt && <span>{product.postedAt}</span>}
@@ -236,9 +209,9 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            <div className="border-t border-zinc-200 pt-6">
+            <div className="border-t border-[#E6D5C3] pt-6">
               <Link href={`/users/${product.seller.id}`} className="flex items-center gap-4 mb-4 hover:opacity-80 transition-opacity">
-                <div className="h-12 w-12 rounded-full bg-zinc-200 overflow-hidden">
+                <div className="h-12 w-12 rounded-full bg-[#E6D5C3] overflow-hidden">
                   {product.seller.avatarUrl ? (
                     <img
                       src={product.seller.avatarUrl}
@@ -250,17 +223,17 @@ export default function ProductDetailPage() {
                   )}
                 </div>
                 <div>
-                  <div className="font-semibold hover:text-emerald-700 transition-colors">{product.seller.name}</div>
-                  <div className="text-sm text-zinc-500">ผู้ขาย</div>
+                  <div className="font-semibold hover:text-[#D9734E] transition-colors">{product.seller.name}</div>
+                  <div className="text-sm text-[#A89F91]">ผู้ขาย</div>
                   {sellerRating && sellerRating.totalReviews > 0 && (
                     <div className="flex items-center gap-1 mt-0.5">
                       <span className="text-yellow-400 text-sm">
                         {"★".repeat(safeRating)}
-                        <span className="text-zinc-300">
+                        <span className="text-[#DCD0C0]">
                           {"★".repeat(5 - safeRating)}
                         </span>
                       </span>
-                      <span className="text-xs text-zinc-500">
+                      <span className="text-xs text-[#A89F91]">
                         {sellerRating.averageRating.toFixed(1)} ({sellerRating.totalReviews} รีวิว)
                       </span>
                     </div>
@@ -269,20 +242,20 @@ export default function ProductDetailPage() {
               </Link>
               <div className="flex gap-3">
                 {isSelfProduct ? (
-                  <span className="flex-1 text-center bg-zinc-300 text-zinc-500 px-4 py-3 rounded-lg font-semibold cursor-not-allowed">
+                  <span className="flex-1 text-center bg-[#DCD0C0] text-[#A89F91] px-4 py-3 rounded-lg font-semibold cursor-not-allowed">
                     สินค้าของคุณ
                   </span>
                 ) : isLoggedIn ? (
                   <Link
                     href={`/chat?seller=${product.seller.id}&product=${product.id}`}
-                    className="flex-1 text-center bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-emerald-700"
+                    className="flex-1 text-center bg-[#D9734E] text-white px-4 py-3 rounded-lg font-semibold hover:bg-[#C25B38]"
                   >
                     แชท
                   </Link>
                 ) : (
                   <Link
                     href="/login"
-                    className="flex-1 text-center bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-emerald-700"
+                    className="flex-1 text-center bg-[#D9734E] text-white px-4 py-3 rounded-lg font-semibold hover:bg-[#C25B38]"
                   >
                     เข้าสู่ระบบเพื่อแชท
                   </Link>
@@ -290,25 +263,24 @@ export default function ProductDetailPage() {
                 {product.seller.phone && (
                   <a
                     href={`tel:${product.seller.phone}`}
-                    className="flex-1 text-center border border-zinc-300 px-4 py-3 rounded-lg font-semibold hover:bg-zinc-50"
+                    className="flex-1 text-center border border-[#4A3B32] text-[#4A3B32] px-4 py-3 rounded-lg font-semibold hover:bg-[#E6D5C3]"
                   >
                     โทร
                   </a>
                 )}
               </div>
 
-              {/* Report product button */}
               {isLoggedIn && !isSelfProduct && (
                 <div className="mt-3">
                   {reportDone ? (
-                    <p className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                    <p className="text-xs text-[#4A3B32] bg-[#E6D5C3] border border-[#DCD0C0] rounded-lg px-3 py-2">
                       ส่งรายงานเรียบร้อยแล้ว ขอบคุณที่แจ้งให้เราทราบ
                     </p>
                   ) : (
                     <button
                       type="button"
                       onClick={() => setShowReport(true)}
-                      className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-red-500 border border-zinc-200 hover:border-red-300 rounded-lg px-3 py-1.5 transition"
+                      className="flex items-center gap-1.5 text-xs text-[#A89F91] hover:text-[#C45A5A] border border-[#DCD0C0] hover:border-[#C45A5A] rounded-lg px-3 py-1.5 transition"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 01.832 1.555L13.382 10l3.45 5.445A1 1 0 0116 17H4a1 1 0 01-1-1V4z" clipRule="evenodd" />

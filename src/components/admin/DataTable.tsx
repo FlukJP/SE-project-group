@@ -33,13 +33,36 @@ export default function DataTable<T>({
 }: DataTableProps<T>) {
     if (loading) {
         return (
-            <div className="text-center text-kd-text-light py-16">กำลังโหลด...</div>
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="border-b border-[#DCD0C0] bg-[#E6D5C3]">
+                            {columns.map((col) => (
+                                <th key={col.key} className={cn("px-4 py-3", col.className)}>
+                                    <div className="animate-pulse h-3.5 bg-white rounded w-20" />
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {Array.from({ length: 6 }).map((_, rowIdx) => (
+                            <tr key={rowIdx} className="border-b border-[#DCD0C0]">
+                                {columns.map((col) => (
+                                    <td key={col.key} className={cn("px-4 py-3.5", col.className)}>
+                                        <div className="animate-pulse h-3.5 bg-white rounded" />
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         );
     }
 
     if (data.length === 0) {
         return (
-            <div className="text-center text-kd-text-light py-16">{emptyText}</div>
+            <div className="text-center text-[#A89F91] py-16">{emptyText}</div>
         );
     }
 
@@ -48,12 +71,12 @@ export default function DataTable<T>({
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="border-b border-kd-border bg-kd-bg">
+                        <tr className="border-b border-[#DCD0C0] bg-[#E6D5C3]">
                             {columns.map((col) => (
                                 <th
                                     key={col.key}
                                     className={cn(
-                                        "text-left px-4 py-3 font-semibold text-kd-text-light",
+                                        "text-left px-4 py-3 font-semibold text-[#4A3B32]",
                                         col.className
                                     )}
                                 >
@@ -66,7 +89,7 @@ export default function DataTable<T>({
                         {data.map((row, idx) => (
                             <tr
                                 key={idx}
-                                className="border-b border-kd-border hover:bg-kd-hover transition-colors"
+                                className="border-b border-[#DCD0C0] hover:bg-[#F9F6F0] transition-colors"
                             >
                                 {columns.map((col) => (
                                     <td key={col.key} className={cn("px-4 py-3", col.className)}>
@@ -79,11 +102,11 @@ export default function DataTable<T>({
                 </table>
             </div>
 
-            <div className="flex items-center justify-center gap-2 px-4 py-3 border-t border-kd-border">
+            <div className="flex items-center justify-center gap-2 px-4 py-3 border-t border-[#DCD0C0]">
                 <button
                     onClick={() => onPageChange(page - 1)}
                     disabled={page <= 1}
-                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-kd-text border-kd-border hover:border-kd-primary"
+                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
                 >
                     ก่อนหน้า
                 </button>
@@ -100,7 +123,7 @@ export default function DataTable<T>({
                             }, [])
                             .map((item, idx) =>
                                 item === "..." ? (
-                                    <span key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-sm text-kd-text-light">
+                                    <span key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-sm text-[#A89F91]">
                                         ...
                                     </span>
                                 ) : (
@@ -110,8 +133,8 @@ export default function DataTable<T>({
                                         onClick={() => onPageChange(item as number)}
                                         className={`w-9 h-9 rounded-lg border text-sm font-medium transition ${
                                             page === item
-                                                ? "bg-kd-primary text-white border-kd-primary"
-                                                : "bg-white text-kd-text border-kd-border hover:border-kd-primary"
+                                                ? "bg-[#D9734E] text-white border-[#D9734E]"
+                                                : "bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
                                         }`}
                                     >
                                         {item}
@@ -120,7 +143,7 @@ export default function DataTable<T>({
                             );
                     })()
                     : (
-                        <button className="w-9 h-9 rounded-lg border text-sm font-medium bg-kd-primary text-white border-kd-primary" disabled>
+                        <button className="w-9 h-9 rounded-lg border text-sm font-medium bg-[#D9734E] text-white border-[#D9734E]" disabled>
                             {page}
                         </button>
                     )}
@@ -128,7 +151,7 @@ export default function DataTable<T>({
                 <button
                     onClick={() => onPageChange(page + 1)}
                     disabled={total !== undefined ? page >= Math.ceil(total / limit) : data.length < limit}
-                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-kd-text border-kd-border hover:border-kd-primary"
+                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
                 >
                     ถัดไป
                 </button>

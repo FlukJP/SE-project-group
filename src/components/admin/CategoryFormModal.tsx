@@ -70,7 +70,7 @@ export default function CategoryFormModal({ open, category, onSave, onClose }: C
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
             <div className="relative bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
-                <h3 className="text-lg font-bold text-kd-primary mb-4">
+                <h3 className="text-lg font-bold text-[#D9734E] mb-4">
                     {isEdit ? "แก้ไขหมวดหมู่" : "เพิ่มหมวดหมู่ใหม่"}
                 </h3>
 
@@ -82,7 +82,7 @@ export default function CategoryFormModal({ open, category, onSave, onClose }: C
                             value={key}
                             onChange={(e) => setKey(e.target.value)}
                             placeholder="เช่น cars, phones"
-                            className="kd-input"
+                            className="w-full border border-[#DCD0C0] rounded-md px-4 py-2 focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]"
                         />
                     </div>
                     <div>
@@ -92,7 +92,7 @@ export default function CategoryFormModal({ open, category, onSave, onClose }: C
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="เช่น รถยนต์, โทรศัพท์"
-                            className="kd-input"
+                            className="w-full border border-[#DCD0C0] rounded-md px-4 py-2 focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]"
                         />
                     </div>
                     <div>
@@ -102,7 +102,7 @@ export default function CategoryFormModal({ open, category, onSave, onClose }: C
                             value={emoji}
                             onChange={(e) => setEmoji(e.target.value)}
                             placeholder="เช่น 🚗, 📱"
-                            className="kd-input"
+                            className="w-full border border-[#DCD0C0] rounded-md px-4 py-2 focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]"
                         />
                     </div>
                     <div>
@@ -113,7 +113,7 @@ export default function CategoryFormModal({ open, category, onSave, onClose }: C
                             value={sortOrder}
                             onChange={(e) => setSortOrder(Number(e.target.value))}
                             placeholder="0"
-                            className="kd-input"
+                            className="w-full border border-[#DCD0C0] rounded-md px-4 py-2 focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]"
                         />
                     </div>
 
@@ -123,14 +123,14 @@ export default function CategoryFormModal({ open, category, onSave, onClose }: C
                         <button
                             onClick={onClose}
                             disabled={saving}
-                            className="px-4 py-2 text-sm border border-kd-border rounded-lg hover:bg-kd-hover transition-colors"
+                            className="px-4 py-2 text-sm border border-[#DCD0C0] rounded-lg hover:bg-[#E6D5C3] transition-colors"
                         >
                             ยกเลิก
                         </button>
                         <button
                             onClick={handleSubmit}
                             disabled={saving}
-                            className="bg-kd-primary text-white px-4 py-2 text-sm rounded-lg hover:bg-kd-primary-hover disabled:opacity-50 transition-colors"
+                            className="bg-[#D9734E] text-white px-4 py-2 text-sm rounded-lg hover:bg-[#C25B38] disabled:opacity-50 transition-colors"
                         >
                             {saving ? "กำลังบันทึก..." : isEdit ? "บันทึก" : "เพิ่ม"}
                         </button>

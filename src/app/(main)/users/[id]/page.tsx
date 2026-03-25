@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
-import { userApi, productApi, reviewApi, reportApi, orderApi, type ReviewData, type SellerRatingData, API_BASE } from "@/src/lib/api";
+import { reviewApi, reportApi, orderApi, API_BASE } from "@/src/lib/api";
+import { UserProfileSkeleton } from "@/src/components/ui/Skeleton";
 import type { OrderWithDetails } from "@/src/types/Order";
 import { useAuth } from "@/src/contexts/AuthContext";
-import type { User } from "@/src/types/User";
-import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 import ProductCard from "@/src/components/product/ProductCard";
+import { useUser } from "@/src/hooks/useUsers";
+import { useProductsBySeller } from "@/src/hooks/useProducts";
+import { useSellerReviews, useSellerRating } from "@/src/hooks/useReviews";
 
 type Tab = "products" | "reviews";
 
@@ -19,10 +21,10 @@ function StarDisplay({ score, total }: { score: number; total: number }) {
     <div className="flex items-center gap-1.5 mt-1">
       <span className="text-yellow-400 text-base leading-none">
         {"★".repeat(filled)}
-        <span className="text-zinc-300">{"★".repeat(5 - filled)}</span>
+        <span className="text-[#DCD0C0]">{"★".repeat(5 - filled)}</span>
       </span>
-      <span className="text-sm font-semibold text-zinc-700">{score.toFixed(1)}</span>
-      <span className="text-sm text-zinc-400">({total} คน)</span>
+      <span className="text-sm font-semibold text-[#4A3B32]">{score.toFixed(1)}</span>
+      <span className="text-sm text-[#A89F91]">({total} คน)</span>
     </div>
   );
 }
@@ -54,26 +56,26 @@ function ReportModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-red-500 text-xl">🚩</span>
-          <h2 className="text-lg font-bold text-zinc-800">รายงานผู้ใช้นี้</h2>
+          <span className="text-[#C45A5A] text-xl">🚩</span>
+          <h2 className="text-lg font-bold text-[#4A3B32]">รายงานผู้ใช้นี้</h2>
         </div>
 
-        <label className="block text-sm font-medium text-zinc-700 mb-1">เหตุผลในการรายงาน</label>
+        <label className="block text-sm font-medium text-[#4A3B32] mb-1">เหตุผลในการรายงาน</label>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={4}
           placeholder="อธิบายเหตุผลที่ต้องการรายงานผู้ใช้นี้..."
-          className="w-full border border-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+          className="w-full border border-[#DCD0C0] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C45A5A]/30 focus:border-[#C45A5A] resize-none"
         />
 
-        {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+        {error && <p className="text-[#C45A5A] text-xs mt-1">{error}</p>}
 
         <div className="flex gap-3 mt-4">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 border border-zinc-300 rounded-xl py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50"
+            className="flex-1 border border-[#DCD0C0] rounded-xl py-2 text-sm font-medium text-[#4A3B32] hover:bg-[#E6D5C3]"
           >
             ยกเลิก
           </button>
@@ -81,7 +83,7 @@ function ReportModal({
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-1 bg-red-500 text-white rounded-xl py-2 text-sm font-semibold hover:bg-red-600 disabled:opacity-50"
+            className="flex-1 bg-[#C45A5A] text-white rounded-xl py-2 text-sm font-semibold hover:bg-[#A84040] disabled:opacity-50"
           >
             {loading ? "กำลังส่ง..." : "ส่งรายงาน"}
           </button>
@@ -124,16 +126,17 @@ function ReviewModal({
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-yellow-400 text-xl">★</span>
-          <h2 className="text-lg font-bold text-zinc-800">รีวิวผู้ขาย</h2>
+          <h2 className="text-lg font-bold text-[#4A3B32]">รีวิวผู้ขาย</h2>
         </div>
 
         {orders.length > 1 && (
           <div className="mb-4">
-            <label className="block text-sm font-medium text-zinc-700 mb-1">เลือกออเดอร์ที่ต้องการรีวิว</label>
+            <label className="block text-sm font-medium text-[#4A3B32] mb-1">เลือกออเดอร์ที่ต้องการรีวิว</label>
             <select
+              aria-label="เลือกออเดอร์ที่ต้องการรีวิว"
               value={selectedOrderId}
               onChange={(e) => setSelectedOrderId(Number(e.target.value))}
-              className="w-full border border-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300"
+              className="w-full border border-[#DCD0C0] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
             >
               {orders.map((o) => (
                 <option key={o.Order_ID} value={o.Order_ID}>
@@ -144,7 +147,7 @@ function ReviewModal({
           </div>
         )}
 
-        <label className="block text-sm font-medium text-zinc-700 mb-2">คะแนน</label>
+        <label className="block text-sm font-medium text-[#4A3B32] mb-2">คะแนน</label>
         <div className="flex gap-1 mb-4">
           {[1, 2, 3, 4, 5].map((s) => (
             <button
@@ -155,29 +158,29 @@ function ReviewModal({
               onMouseLeave={() => setHoverRating(0)}
               className="text-4xl leading-none transition-transform hover:scale-110"
             >
-              <span className={(hoverRating || rating) >= s ? "text-yellow-400" : "text-zinc-300"}>★</span>
+              <span className={(hoverRating || rating) >= s ? "text-yellow-400" : "text-[#DCD0C0]"}>★</span>
             </button>
           ))}
         </div>
 
-        <label className="block text-sm font-medium text-zinc-700 mb-1">
-          ความคิดเห็น <span className="text-zinc-400 font-normal">(ไม่บังคับ)</span>
+        <label className="block text-sm font-medium text-[#4A3B32] mb-1">
+          ความคิดเห็น <span className="text-[#A89F91] font-normal">(ไม่บังคับ)</span>
         </label>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows={3}
           placeholder="แบ่งปันประสบการณ์การซื้อของคุณ..."
-          className="w-full border border-zinc-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300 resize-none"
+          className="w-full border border-[#DCD0C0] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] resize-none"
         />
 
-        {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+        {error && <p className="text-[#C45A5A] text-xs mt-1">{error}</p>}
 
         <div className="flex gap-3 mt-4">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 border border-zinc-300 rounded-xl py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50"
+            className="flex-1 border border-[#DCD0C0] rounded-xl py-2 text-sm font-medium text-[#4A3B32] hover:bg-[#E6D5C3]"
           >
             ยกเลิก
           </button>
@@ -185,7 +188,7 @@ function ReviewModal({
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-50"
+            className="flex-1 bg-[#D9734E] hover:bg-[#C25B38] text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-50"
           >
             {loading ? "กำลังส่ง..." : "ส่งรีวิว"}
           </button>
@@ -199,11 +202,12 @@ export default function PublicProfilePage() {
   const { id } = useParams<{ id: string }>();
   const { user: me, isLoggedIn } = useAuth();
 
-  const [seller, setSeller] = useState<User | null>(null);
-  const [products, setProducts] = useState<ProductDisplay[]>([]);
-  const [reviews, setReviews] = useState<ReviewData[]>([]);
-  const [rating, setRating] = useState<SellerRatingData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // SWR data fetching
+  const { data: seller, isLoading: loading } = useUser(id);
+  const { data: products = [] } = useProductsBySeller(id);
+  const { data: reviews = [], mutate: mutateReviews } = useSellerReviews(id);
+  const { data: rating, mutate: mutateRating } = useSellerRating(id);
+
   const [activeTab, setActiveTab] = useState<Tab>("products");
   const [showReport, setShowReport] = useState(false);
   const [reportDone, setReportDone] = useState(false);
@@ -229,29 +233,11 @@ export default function PublicProfilePage() {
     }).catch(() => {});
   }, [isLoggedIn, id, me, reviews]);
 
-  useEffect(() => {
-    if (!id) return;
-    Promise.all([
-      userApi.getById(id),
-      productApi.getBySeller(Number(id)),
-      reviewApi.getReviewsForSeller(Number(id)),
-      reviewApi.getSellerRating(Number(id)),
-    ])
-      .then(([userRes, productsRes, reviewsRes, ratingRes]) => {
-        setSeller(userRes.data);
-        setProducts(productsRes.data.map(toProductDisplay));
-        setReviews(reviewsRes.data);
-        setRating(ratingRes.data);
-      })
-      .catch(() => setSeller(null))
-      .finally(() => setLoading(false));
-  }, [id]);
-
   if (loading) {
     return (
       <>
         <Navbar />
-        <div className="container mx-auto px-4 py-16 text-center text-zinc-500">กำลังโหลด...</div>
+        <UserProfileSkeleton />
       </>
     );
   }
@@ -262,7 +248,7 @@ export default function PublicProfilePage() {
         <Navbar />
         <div className="container mx-auto px-4 py-16 text-center">
           <p className="text-lg mb-4">ไม่พบผู้ใช้</p>
-          <Link href="/" className="text-emerald-700 hover:underline">กลับไปหน้าหลัก</Link>
+          <Link href="/" className="text-[#D9734E] hover:underline">กลับไปหน้าหลัก</Link>
         </div>
       </>
     );
@@ -276,14 +262,9 @@ export default function PublicProfilePage() {
     setReportDone(true);
   };
 
-  const handleReview = async (orderId: number, rating: number, comment: string) => {
-    await reviewApi.create({ orderId, rating, comment: comment || undefined });
-    const [reviewsRes, ratingRes] = await Promise.all([
-      reviewApi.getReviewsForSeller(Number(id)),
-      reviewApi.getSellerRating(Number(id)),
-    ]);
-    setReviews(reviewsRes.data);
-    setRating(ratingRes.data);
+  const handleReview = async (orderId: number, ratingValue: number, comment: string) => {
+    await reviewApi.create({ orderId, rating: ratingValue, comment: comment || undefined });
+    await Promise.all([mutateReviews(), mutateRating()]);
     setShowReview(false);
   };
 
@@ -299,16 +280,16 @@ export default function PublicProfilePage() {
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-4">
-          <Link href="/" className="text-sm text-emerald-700 hover:underline">
+          <Link href="/" className="text-sm text-[#D9734E] hover:underline">
             &larr; กลับไปหน้าหลัก
           </Link>
         </div>
 
         {/* Profile header card */}
-        <div className="bg-white border border-zinc-200 rounded-t-2xl p-6 border-b-0">
+        <div className="bg-white border border-[#E6D5C3] rounded-t-2xl p-6 border-b-0">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-5">
-              <div className="h-20 w-20 rounded-full bg-zinc-200 overflow-hidden shrink-0">
+              <div className="h-20 w-20 rounded-full bg-[#E6D5C3] overflow-hidden shrink-0">
                 {seller.Avatar_URL ? (
                   <img
                     src={`${API_BASE}${seller.Avatar_URL}`}
@@ -320,13 +301,13 @@ export default function PublicProfilePage() {
                 )}
               </div>
               <div>
-                <h1 className="text-xl font-bold text-zinc-900">{seller.Username}</h1>
+                <h1 className="text-xl font-bold text-[#4A3B32]">{seller.Username}</h1>
                 {rating && rating.totalReviews > 0 ? (
                   <StarDisplay score={rating.averageRating} total={rating.totalReviews} />
                 ) : (
                   <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-zinc-300 text-base">{"★".repeat(5)}</span>
-                    <span className="text-sm text-zinc-400">ยังไม่มีรีวิว</span>
+                    <span className="text-[#DCD0C0] text-base">{"★".repeat(5)}</span>
+                    <span className="text-sm text-[#A89F91]">ยังไม่มีรีวิว</span>
                   </div>
                 )}
               </div>
@@ -339,7 +320,7 @@ export default function PublicProfilePage() {
                   <button
                     type="button"
                     onClick={() => setShowReview(true)}
-                    className="flex items-center gap-1.5 text-xs text-yellow-600 hover:text-yellow-700 border border-yellow-300 hover:border-yellow-400 hover:bg-yellow-50 rounded-lg px-3 py-1.5 transition font-medium"
+                    className="flex items-center gap-1.5 text-xs text-[#4A3B32] hover:text-[#D9734E] border border-[#DCD0C0] hover:border-[#D9734E] hover:bg-[#E6D5C3] rounded-lg px-3 py-1.5 transition font-medium"
                   >
                     <span className="text-sm leading-none">★</span>
                     รีวิวผู้ขาย
@@ -350,7 +331,7 @@ export default function PublicProfilePage() {
                   onClick={() => setShowReport(true)}
                   title="รายงานผู้ใช้นี้"
                   disabled={reportDone}
-                  className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-red-500 transition border border-zinc-200 hover:border-red-300 rounded-lg px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 text-xs text-[#A89F91] hover:text-[#C45A5A] transition border border-[#DCD0C0] hover:border-[#C45A5A] rounded-lg px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 01.832 1.555L13.382 10l3.45 5.445A1 1 0 0116 17H4a1 1 0 01-1-1V4z" clipRule="evenodd" />
@@ -362,21 +343,21 @@ export default function PublicProfilePage() {
           </div>
 
           {reportDone && (
-            <div className="mt-3 text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+            <div className="mt-3 text-xs text-[#4A3B32] bg-[#E6D5C3] border border-[#DCD0C0] rounded-lg px-3 py-2">
               ส่งรายงานเรียบร้อยแล้ว ขอบคุณที่แจ้งให้เราทราบ
             </div>
           )}
         </div>
 
         {/* Tab menu */}
-        <div className="bg-white border border-zinc-200 rounded-b-2xl flex overflow-hidden mb-6">
+        <div className="bg-white border border-[#E6D5C3] rounded-b-2xl flex overflow-hidden mb-6">
           <button
             type="button"
             onClick={() => setActiveTab("products")}
             className={`flex-1 py-3 text-sm font-semibold transition border-b-2 ${
               activeTab === "products"
-                ? "border-emerald-500 text-emerald-700 bg-emerald-50"
-                : "border-transparent text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50"
+                ? "border-[#D9734E] text-[#D9734E] bg-[#F9F6F0]"
+                : "border-transparent text-[#A89F91] hover:text-[#4A3B32] hover:bg-[#F9F6F0]"
             }`}
           >
             สินค้า ({products.length})
@@ -386,8 +367,8 @@ export default function PublicProfilePage() {
             onClick={() => setActiveTab("reviews")}
             className={`flex-1 py-3 text-sm font-semibold transition border-b-2 ${
               activeTab === "reviews"
-                ? "border-emerald-500 text-emerald-700 bg-emerald-50"
-                : "border-transparent text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50"
+                ? "border-[#D9734E] text-[#D9734E] bg-[#F9F6F0]"
+                : "border-transparent text-[#A89F91] hover:text-[#4A3B32] hover:bg-[#F9F6F0]"
             }`}
           >
             รีวิว ({reviews.length})
@@ -407,7 +388,7 @@ export default function PublicProfilePage() {
                   <button
                     type="button"
                     onClick={() => setVisibleCount((c) => c + 28)}
-                    className="px-6 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition"
+                    className="px-6 py-2 bg-[#D9734E] text-white text-sm font-semibold rounded-xl hover:bg-[#C25B38] transition"
                   >
                     โหลดเพิ่มเติม ({products.length - visibleCount} รายการ)
                   </button>
@@ -415,7 +396,7 @@ export default function PublicProfilePage() {
               )}
             </>
           ) : (
-            <div className="text-center text-zinc-400 py-16">ยังไม่มีสินค้า</div>
+            <div className="text-center text-[#A89F91] py-16">ยังไม่มีสินค้า</div>
           )
         )}
 
@@ -424,10 +405,10 @@ export default function PublicProfilePage() {
           reviews.length > 0 ? (
             <div className="space-y-3">
               {reviews.map((r) => (
-                <div key={r.Review_ID} className="border border-zinc-200 rounded-xl p-4 bg-white">
+                <div key={r.Review_ID} className="border border-[#E6D5C3] rounded-xl p-4 bg-white">
                   <div className="flex items-center justify-between mb-1">
-                    <div className="text-sm font-semibold text-zinc-800">{r.ReviewerName || "ผู้ซื้อ"}</div>
-                    <div className="text-xs text-zinc-400">
+                    <div className="text-sm font-semibold text-[#4A3B32]">{r.ReviewerName || "ผู้ซื้อ"}</div>
+                    <div className="text-xs text-[#A89F91]">
                       {new Date(r.Created_at).toLocaleDateString("th-TH", {
                         year: "numeric",
                         month: "short",
@@ -437,14 +418,14 @@ export default function PublicProfilePage() {
                   </div>
                   <div className="text-yellow-400 text-sm mb-1">
                     {"★".repeat(r.Rating)}
-                    <span className="text-zinc-300">{"★".repeat(5 - r.Rating)}</span>
+                    <span className="text-[#DCD0C0]">{"★".repeat(5 - r.Rating)}</span>
                   </div>
-                  {r.Comment && <p className="text-sm text-zinc-600">{r.Comment}</p>}
+                  {r.Comment && <p className="text-sm text-[#4A3B32]">{r.Comment}</p>}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center text-zinc-400 py-16">ยังไม่มีรีวิว</div>
+            <div className="text-center text-[#A89F91] py-16">ยังไม่มีรีวิว</div>
           )
         )}
       </div>
@@ -453,7 +434,7 @@ export default function PublicProfilePage() {
         <button
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 z-50 bg-emerald-600 hover:bg-emerald-700 text-white w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition"
+          className="fixed bottom-6 right-6 z-50 bg-[#D9734E] hover:bg-[#C25B38] text-white w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition"
           title="เลื่อนไปบนสุด"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">

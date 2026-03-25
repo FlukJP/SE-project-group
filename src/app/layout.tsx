@@ -5,6 +5,7 @@ import Footer from "@/src/components/layout/Footer";
 import { AuthProvider } from "@/src/contexts/AuthContext";
 import { ErrorProvider } from "@/src/contexts/ErrorContext";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import SWRProvider from "@/src/lib/swrConfig";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,11 +23,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body
         className={`${geistSans.variable} antialiased`}
       >
-          <AuthProvider>
-              <ErrorProvider>
+          <ErrorProvider>
+            <AuthProvider>
+              <SWRProvider>
                 {children}
-              </ErrorProvider>
+              </SWRProvider>
             </AuthProvider>
+          </ErrorProvider>
           <Footer />
         <SpeedInsights />
       </body>

@@ -28,7 +28,11 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const imagesRef = useRef(images);
-    imagesRef.current = images;
+
+    // Keep ref in sync with images prop
+    useEffect(() => {
+        imagesRef.current = images;
+    }, [images]);
 
     // Only revoke all URLs on unmount to prevent memory leaks
     useEffect(() => {
@@ -89,7 +93,7 @@ export default function ImageUploader({
                         key={img.url}
                         className={cn(
                             "relative w-24 h-24 rounded-lg overflow-hidden border",
-                            idx === coverIndex ? "border-emerald-600" : "border-zinc-200"
+                            idx === coverIndex ? "border-[#D9734E]" : "border-[#DCD0C0]"
                         )}
                     >
                         <img
@@ -106,7 +110,7 @@ export default function ImageUploader({
                             ×
                         </button>
                         {idx === coverIndex && (
-                            <span className="absolute bottom-1 left-1 bg-emerald-600 text-white text-[10px] px-1 rounded">
+                            <span className="absolute bottom-1 left-1 bg-[#D9734E] text-white text-[10px] px-1 rounded">
                                 ปก
                             </span>
                         )}
@@ -116,7 +120,7 @@ export default function ImageUploader({
                     <button
                         type="button"
                         onClick={openFilePicker}
-                        className="w-24 h-24 flex items-center justify-center rounded-lg border border-zinc-300 text-zinc-500 hover:bg-zinc-100"
+                        className="w-24 h-24 flex items-center justify-center rounded-lg border border-[#DCD0C0] text-[#A89F91] hover:bg-[#E6D5C3] transition-colors"
                     >
                         +
                     </button>

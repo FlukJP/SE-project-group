@@ -17,8 +17,8 @@ export default function AdminSidebar() {
     const pathname = usePathname();
 
     return (
-        <aside className="bg-white border border-kd-border rounded-xl p-4 h-fit sticky top-24">
-            <div className="text-sm font-bold text-kd-primary mb-4 px-4">
+        <aside className="bg-white border border-[#DCD0C0] rounded-xl p-4 h-fit sticky top-24">
+            <div className="text-sm font-bold text-[#D9734E] mb-4 px-4">
                 ระบบจัดการ
             </div>
             <nav className="flex flex-col gap-1">
@@ -31,8 +31,8 @@ export default function AdminSidebar() {
                             className={cn(
                                 "px-4 py-2.5 rounded-lg flex items-center gap-3 text-sm transition-colors",
                                 isActive
-                                    ? "bg-kd-card text-kd-text font-semibold"
-                                    : "hover:bg-kd-hover text-kd-text"
+                                    ? "bg-[#E6D5C3] text-[#4A3B32] font-semibold"
+                                    : "hover:bg-[#F9F6F0] text-[#4A3B32]"
                             )}
                         >
                             <span>{item.emoji}</span>

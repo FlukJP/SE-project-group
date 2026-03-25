@@ -57,10 +57,10 @@ function ErrorModal({ message, onClose }: { message: string; onClose: () => void
                 </div>
 
                 {/* Title */}
-                <h2 className="text-base font-bold text-zinc-800 text-center">เกิดข้อผิดพลาด</h2>
+                <h2 className="text-base font-bold text-kd-text text-center">เกิดข้อผิดพลาด</h2>
 
                 {/* Message */}
-                <p className="text-sm text-zinc-600 text-center leading-relaxed">{message}</p>
+                <p className="text-sm text-kd-text-light text-center leading-relaxed">{message}</p>
 
                 {/* Dismiss button */}
                 <button

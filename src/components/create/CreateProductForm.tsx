@@ -135,14 +135,14 @@ export default function CreateProductForm({
             <button
                 type="button"
                 onClick={onBackToPickCategory}
-                className="text-sm text-emerald-700 hover:underline mb-2"
+                className="text-sm text-[#D9734E] hover:underline mb-2 transition-colors"
             >
                 ← เปลี่ยนหมวดหมู่
             </button>
 
             <div ref={refs.category}>
                 <FieldLabel>หมวดหมู่ *</FieldLabel>
-                <Select value={categoryKey} onChange={handleCategoryChange}>
+                <Select aria-label="เลือกหมวดหมู่" value={categoryKey} onChange={handleCategoryChange}>
                     <option value="">-- เลือกหมวด --</option>
                     {categories.map((c) => (
                         <option key={c.key} value={c.key}>
@@ -161,7 +161,7 @@ export default function CreateProductForm({
                     maxLength={255}
                     placeholder="ชื่อสินค้า เช่น ไอโฟน X 64GB สภาพเหมือนใหม่"
                 />
-                <div className="text-xs text-zinc-400 text-right mt-1">{title.length}/255</div>
+                <div className="text-xs text-[#A89F91] text-right mt-1">{title.length}/255</div>
                 {errors.title && <ErrorText>{errors.title}</ErrorText>}
             </div>
 
@@ -203,16 +203,16 @@ export default function CreateProductForm({
                     onChange={(e) => setDescription(e.target.value)}
                     maxLength={2000}
                     rows={5}
-                    className="w-full border border-zinc-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-indigo-200"
+                    className="w-full border border-[#DCD0C0] rounded-md px-4 py-2 focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]"
                     placeholder="ข้อมูลเพิ่มเติม เช่น สภาพสินค้า สี อายุการใช้งาน"
                 />
-                <div className="text-xs text-zinc-400 text-right mt-1">{description.length}/2000</div>
+                <div className="text-xs text-[#A89F91] text-right mt-1">{description.length}/2000</div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div ref={refs.province}>
                     <FieldLabel>จังหวัด *</FieldLabel>
-                    <Select value={province} onChange={(e) => { setProvince(e.target.value); setDistrict(""); }}>
+                    <Select aria-label="เลือกจังหวัด" value={province} onChange={(e) => { setProvince(e.target.value); setDistrict(""); }}>
                         <option value="">-- เลือกจังหวัด --</option>
                         {provinceOptions.map((p) => (
                             <option key={p.value} value={p.value}>
@@ -225,6 +225,7 @@ export default function CreateProductForm({
                 <div ref={refs.district}>
                     <FieldLabel>อำเภอ/เขต *</FieldLabel>
                     <Select
+                        aria-label="เลือกอำเภอ/เขต"
                         value={district}
                         onChange={(e) => setDistrict(e.target.value)}
                         disabled={!province}

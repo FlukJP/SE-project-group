@@ -75,13 +75,13 @@ export default function EmailOTP({ email, onVerified, onError }: EmailOTPProps) 
         <div className="space-y-4">
             {step === "send" && (
                 <div className="space-y-3">
-                    <p className="text-sm text-zinc-600">
+                    <p className="text-sm text-[#A89F91]">
                         ระบบจะส่งรหัส OTP ไปที่อีเมล <span className="font-semibold">{email}</span>
                     </p>
                     <button
                         onClick={handleSendOTP}
                         disabled={loading}
-                        className="w-full py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
+                        className="w-full py-3 rounded-xl bg-[#D9734E] text-white font-semibold hover:bg-[#C25B38] transition disabled:opacity-50"
                     >
                         {loading ? "กำลังส่ง..." : "ส่งรหัส OTP ทางอีเมล"}
                     </button>
@@ -90,7 +90,7 @@ export default function EmailOTP({ email, onVerified, onError }: EmailOTPProps) 
 
             {step === "verify" && (
                 <div className="space-y-3">
-                    <p className="text-sm text-zinc-600">
+                    <p className="text-sm text-[#A89F91]">
                         กรอกรหัส OTP 6 หลักที่ส่งไปยังอีเมล <span className="font-semibold">{email}</span>
                     </p>
                     <input
@@ -99,12 +99,12 @@ export default function EmailOTP({ email, onVerified, onError }: EmailOTPProps) 
                         onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                         placeholder="กรอกรหัส OTP 6 หลัก"
                         maxLength={6}
-                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 text-sm text-center tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                        className="w-full px-4 py-3 rounded-xl border border-[#E6D5C3] text-sm text-center tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
                     />
                     <button
                         onClick={handleVerifyOTP}
                         disabled={loading || otp.length !== 6}
-                        className="w-full py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
+                        className="w-full py-3 rounded-xl bg-[#D9734E] text-white font-semibold hover:bg-[#C25B38] transition disabled:opacity-50"
                     >
                         {loading ? "กำลังยืนยัน..." : "ยืนยัน OTP"}
                     </button>
@@ -112,7 +112,7 @@ export default function EmailOTP({ email, onVerified, onError }: EmailOTPProps) 
                     <button
                         onClick={handleSendOTP}
                         disabled={loading || countdown > 0}
-                        className="w-full py-2 text-sm text-emerald-600 hover:underline disabled:text-zinc-400 disabled:no-underline"
+                        className="w-full py-2 text-sm text-[#D9734E] hover:underline disabled:text-[#A89F91] disabled:no-underline"
                     >
                         {countdown > 0 ? `ส่งใหม่ได้ใน ${countdown} วินาที` : "ส่งรหัส OTP อีกครั้ง"}
                     </button>

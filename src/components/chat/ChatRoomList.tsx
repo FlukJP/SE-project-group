@@ -30,7 +30,7 @@ export default function ChatRoomList({ rooms, activeTab }: Props) {
 
     if (filteredRooms.length === 0) {
         return (
-            <div className="flex-1 flex items-center justify-center text-sm text-gray-400 py-8">
+            <div className="flex-1 flex items-center justify-center text-sm text-[#A89F91] py-8">
                 ไม่มีแชท
             </div>
         );

@@ -40,7 +40,7 @@ function CreatePageContent() {
       ) : (
         <div className="py-10">
           <div className="container mx-auto px-4 max-w-3xl">
-            <h1 className="text-2xl font-bold text-zinc-900 mb-6">
+            <h1 className="text-2xl font-bold text-[#4A3B32] mb-6">
               ลงประกาศในหมวด: {cat}
             </h1>
 
@@ -59,7 +59,7 @@ function CreatePageContent() {
 
 export default function CreatePage() {
   return (
-    <Suspense fallback={<div className="text-center py-16 text-zinc-500">กำลังโหลด...</div>}>
+    <Suspense fallback={<div className="text-center py-16 text-[#A89F91]">กำลังโหลด...</div>}>
       <CreatePageContent />
     </Suspense>
   );

@@ -22,7 +22,7 @@ function isTabKey(v: string | null): v is TabKey {
 
 export default function ProfilePage() {
   return (
-    <Suspense fallback={<><Navbar /><div className="text-center py-16 text-zinc-500">กำลังโหลด...</div></>}>
+    <Suspense fallback={<><Navbar /><div className="text-center py-16 text-[#A89F91]">กำลังโหลด...</div></>}>
       <ProfilePageContent />
     </Suspense>
   );
@@ -62,7 +62,7 @@ useEffect(() => {
     return (
       <>
         <Navbar />
-        <div className="text-center py-16 text-zinc-500">กำลังโหลด...</div>
+        <div className="text-center py-16 text-[#A89F91]">กำลังโหลด...</div>
       </>
     );
   }
@@ -82,14 +82,14 @@ useEffect(() => {
     <>
       <Navbar />
 
-      <main className="bg-zinc-50 min-h-screen">
+      <main className="bg-[#F9F6F0] min-h-screen">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-2xl font-extrabold text-emerald-700 mb-6">
+          <h1 className="text-2xl font-extrabold text-[#D9734E] mb-6">
             {tabTitles[activeTab]}
           </h1>
 
-          <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-6 flex items-center gap-6 mb-8">
-            <div className="h-20 w-20 rounded-full bg-emerald-200 grid place-items-center text-3xl overflow-hidden">
+          <div className="bg-[#E6D5C3] border border-[#DCD0C0] rounded-xl p-6 flex items-center gap-6 mb-8">
+            <div className="h-20 w-20 rounded-full bg-[#E6D5C3] grid place-items-center text-3xl overflow-hidden">
               {user?.Avatar_URL ? (
                 <img
                   src={`${API_BASE}${user.Avatar_URL}`}
@@ -102,14 +102,14 @@ useEffect(() => {
             </div>
 
             <div>
-              <div className="text-sm text-zinc-600">ชื่อผู้ใช้</div>
-              <div className="text-lg font-bold text-emerald-800">
+              <div className="text-sm text-[#A89F91]">ชื่อผู้ใช้</div>
+              <div className="text-lg font-bold text-[#4A3B32]">
                 {user?.Username || "..."}
               </div>
 
-              <div className="text-sm text-zinc-600 mt-1">
+              <div className="text-sm text-[#A89F91] mt-1">
                 หมายเลขสมาชิก{" "}
-                <span className="font-semibold text-zinc-800">
+                <span className="font-semibold text-[#4A3B32]">
                   {user?.User_ID || "..."}
                 </span>
               </div>
@@ -117,7 +117,7 @@ useEffect(() => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
-            <aside className="bg-white border border-zinc-200 rounded-xl p-4">
+            <aside className="bg-white border border-[#E6D5C3] rounded-xl p-4">
               {[
                 { key: "profile", label: "ข้อมูลส่วนตัว" },
                 { key: "autoReply", label: "ข้อความตอบกลับอัตโนมัติ" },
@@ -132,8 +132,8 @@ useEffect(() => {
                   className={`w-full text-left px-4 py-2 rounded-lg mb-1 flex justify-between items-center
                     ${
                       activeTab === item.key
-                        ? "bg-emerald-100 text-emerald-800 font-semibold"
-                        : "hover:bg-zinc-50"
+                        ? "bg-[#E6D5C3] text-[#4A3B32] font-semibold"
+                        : "hover:bg-[#F9F6F0]"
                     }
                   `}
                 >
@@ -143,7 +143,7 @@ useEffect(() => {
               ))}
             </aside>
 
-            <section className="bg-white border border-zinc-200 rounded-xl p-6">
+            <section className="bg-white border border-[#E6D5C3] rounded-xl p-6">
               {/* Fix #9: Use key to force remount when user data changes, preventing stale sync */}
               {activeTab === "profile" && (
                 <ProfileInfo
@@ -173,14 +173,14 @@ useEffect(() => {
 }
 
 function Label({ children }: { children: string }) {
-  return <label className="block text-sm font-semibold text-zinc-700 mb-1">{children}</label>;
+  return <label className="block text-sm font-semibold text-[#4A3B32] mb-1">{children}</label>;
 }
 
 function InputField(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-300 focus:outline-none"
+      className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] focus:outline-none"
     />
   );
 }
@@ -268,17 +268,17 @@ function ProfileInfo({
 
   return (
     <>
-      <h2 className="text-lg font-bold text-emerald-700 mb-6">ข้อมูลส่วนตัว</h2>
+      <h2 className="text-lg font-bold text-[#D9734E] mb-6">ข้อมูลส่วนตัว</h2>
 
       {/* Verification Status */}
-      <div className="mb-6 p-4 rounded-xl border border-zinc-200 bg-zinc-50">
-        <h3 className="text-base font-bold text-zinc-700 mb-3">สถานะการยืนยันตัวตน</h3>
+      <div className="mb-6 p-4 rounded-xl border border-[#E6D5C3] bg-[#F9F6F0]">
+        <h3 className="text-base font-bold text-[#4A3B32] mb-3">สถานะการยืนยันตัวตน</h3>
         <div className="space-y-2">
           {/* Email verification */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-zinc-600">อีเมล ({email})</span>
+            <span className="text-sm text-[#A89F91]">อีเมล ({email})</span>
             {isEmailVerified ? (
-              <span className="text-sm font-semibold text-emerald-600">ยืนยันแล้ว</span>
+              <span className="text-sm font-semibold text-[#D9734E]">ยืนยันแล้ว</span>
             ) : (
               <button
                 type="button"
@@ -291,13 +291,13 @@ function ProfileInfo({
           </div>
           {/* Phone verification */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-zinc-600">เบอร์โทรศัพท์ ({phone || "ยังไม่ได้กรอก"})</span>
+            <span className="text-sm text-[#A89F91]">เบอร์โทรศัพท์ ({phone || "ยังไม่ได้กรอก"})</span>
             {isPhoneVerified ? (
-              <span className="text-sm font-semibold text-emerald-600">ยืนยันแล้ว</span>
+              <span className="text-sm font-semibold text-[#D9734E]">ยืนยันแล้ว</span>
             ) : !isEmailVerified ? (
-              <span className="text-sm text-zinc-400">รอยืนยันอีเมลก่อน</span>
+              <span className="text-sm text-[#A89F91]">รอยืนยันอีเมลก่อน</span>
             ) : !phone ? (
-              <span className="text-sm text-zinc-400">กรุณากรอกเบอร์โทรก่อน</span>
+              <span className="text-sm text-[#A89F91]">กรุณากรอกเบอร์โทรก่อน</span>
             ) : (
               <button
                 type="button"
@@ -318,8 +318,8 @@ function ProfileInfo({
 
         {/* Email OTP form */}
         {showEmailOTP && !isEmailVerified && (
-          <div className="mt-4 p-4 bg-white border border-emerald-200 rounded-xl">
-            <h4 className="text-sm font-semibold text-emerald-700 mb-3">ยืนยันอีเมลด้วย OTP</h4>
+          <div className="mt-4 p-4 bg-white border border-[#DCD0C0] rounded-xl">
+            <h4 className="text-sm font-semibold text-[#D9734E] mb-3">ยืนยันอีเมลด้วย OTP</h4>
             {otpError && (
               <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2 mb-3">
                 {otpError}
@@ -333,7 +333,7 @@ function ProfileInfo({
             <button
               type="button"
               onClick={() => setShowEmailOTP(false)}
-              className="mt-3 text-sm text-zinc-400 hover:text-zinc-600"
+              className="mt-3 text-sm text-[#A89F91] hover:text-[#4A3B32]"
             >
               ยกเลิก
             </button>
@@ -357,7 +357,7 @@ function ProfileInfo({
             <button
               type="button"
               onClick={() => setShowPhoneOTP(false)}
-              className="mt-3 text-sm text-zinc-400 hover:text-zinc-600"
+              className="mt-3 text-sm text-[#A89F91] hover:text-[#4A3B32]"
             >
               ยกเลิก
             </button>
@@ -373,12 +373,12 @@ function ProfileInfo({
 
         <div>
           <Label>อีเมล</Label>
-          <InputField value={email} readOnly className="bg-zinc-50 text-zinc-500 cursor-not-allowed" />
-          <p className="text-xs text-zinc-400 mt-1">อีเมลไม่สามารถเปลี่ยนแปลงได้</p>
+          <InputField value={email} readOnly className="bg-[#F9F6F0] text-[#A89F91] cursor-not-allowed" />
+          <p className="text-xs text-[#A89F91] mt-1">อีเมลไม่สามารถเปลี่ยนแปลงได้</p>
         </div>
 
-        <div className="border-t border-zinc-300 pt-6 mt-6">
-          <h3 className="text-base font-bold text-emerald-700 mb-4">ข้อมูลการติดต่อ</h3>
+        <div className="border-t border-[#DCD0C0] pt-6 mt-6">
+          <h3 className="text-base font-bold text-[#D9734E] mb-4">ข้อมูลการติดต่อ</h3>
 
           <div className="space-y-4">
             <div>
@@ -397,14 +397,14 @@ function ProfileInfo({
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="เช่น 123/4 ซอยสุขุมวิท 11 พระนคร กรุงเทพมหานคร 10200"
                 rows={3}
-                className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-300 focus:outline-none resize-none text-sm"
+                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] focus:outline-none resize-none text-sm"
               />
             </div>
           </div>
         </div>
 
         {message && (
-          <div className={`text-sm ${message === "บันทึกสำเร็จ" ? "text-emerald-600" : "text-red-600"}`}>
+          <div className={`text-sm ${message === "บันทึกสำเร็จ" ? "text-[#D9734E]" : "text-red-600"}`}>
             {message}
           </div>
         )}
@@ -413,7 +413,7 @@ function ProfileInfo({
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold disabled:opacity-50"
+          className="bg-[#D9734E] text-white px-6 py-2 rounded-lg font-semibold disabled:opacity-50"
         >
           {saving ? "กำลังบันทึก..." : "บันทึก"}
         </button>
@@ -434,20 +434,20 @@ function AutoReply() {
 
   return (
     <>
-      <h2 className="text-lg font-bold text-emerald-700 mb-6">ข้อความตอบกลับอัตโนมัติ</h2>
+      <h2 className="text-lg font-bold text-[#D9734E] mb-6">ข้อความตอบกลับอัตโนมัติ</h2>
 
       <Label>ข้อความที่ส่งอัตโนมัติเมื่อมีคนทักแชท</Label>
 
       <textarea
-        className="w-full border border-zinc-300 rounded-lg px-3 py-2 h-32 focus:ring-2 focus:ring-emerald-300"
+        className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 h-32 focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         aria-label="ข้อความตอบกลับอัตโนมัติ"
       />
 
-      {saved && <p className="text-sm text-emerald-600 mt-2">บันทึกสำเร็จ</p>}
+      {saved && <p className="text-sm text-[#D9734E] mt-2">บันทึกสำเร็จ</p>}
 
-      <button type="button" onClick={handleSave} className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold mt-4">บันทึก</button>
+      <button type="button" onClick={handleSave} className="bg-[#D9734E] text-white px-6 py-2 rounded-lg font-semibold mt-4">บันทึก</button>
     </>
   );
 }
@@ -465,7 +465,7 @@ function StarSelector({ value, onChange }: { value: number; onChange: (v: number
           onMouseLeave={() => setHovered(0)}
           className="text-2xl transition-colors leading-none"
         >
-          <span className={(hovered ? star <= hovered : star <= value) ? "text-yellow-400" : "text-zinc-300"}>
+          <span className={(hovered ? star <= hovered : star <= value) ? "text-yellow-400" : "text-[#DCD0C0]"}>
             ★
           </span>
         </button>
@@ -493,23 +493,23 @@ function WriteReviewCard({ order, onSubmitted }: { order: OrderWithDetails; onSu
   };
 
   return (
-    <div className="border border-emerald-200 bg-emerald-50 rounded-xl p-4">
+    <div className="border border-[#DCD0C0] bg-[#E6D5C3] rounded-xl p-4">
       <div className="flex items-center gap-3 mb-3">
         {order.Image_URL && (
           <img
             src={order.Image_URL.startsWith("/") ? `${API_BASE}${order.Image_URL}` : order.Image_URL}
             alt={order.Title}
-            className="w-12 h-12 object-cover rounded-lg border border-zinc-200 shrink-0"
+            className="w-12 h-12 object-cover rounded-lg border border-[#E6D5C3] shrink-0"
           />
         )}
         <div className="min-w-0">
-          <div className="font-semibold text-zinc-800 text-sm truncate">{order.Title || "สินค้า"}</div>
-          <div className="text-xs text-zinc-500">ผู้ขาย: {order.SellerName || "—"}</div>
+          <div className="font-semibold text-[#4A3B32] text-sm truncate">{order.Title || "สินค้า"}</div>
+          <div className="text-xs text-[#A89F91]">ผู้ขาย: {order.SellerName || "—"}</div>
         </div>
       </div>
 
       <div className="mb-2">
-        <div className="text-xs font-medium text-zinc-600 mb-1">ให้คะแนน</div>
+        <div className="text-xs font-medium text-[#A89F91] mb-1">ให้คะแนน</div>
         <StarSelector value={rating} onChange={setRating} />
       </div>
 
@@ -518,16 +518,16 @@ function WriteReviewCard({ order, onSubmitted }: { order: OrderWithDetails; onSu
         onChange={(e) => setComment(e.target.value)}
         placeholder="แสดงความคิดเห็น (ไม่บังคับ)..."
         rows={2}
-        className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white mt-2"
+        className="w-full border border-[#E6D5C3] rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] bg-white mt-2"
       />
 
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-[#C45A5A] text-xs mt-1">{error}</p>}
 
       <button
         type="button"
         onClick={handleSubmit}
         disabled={submitting}
-        className="mt-2 bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50"
+        className="mt-2 bg-[#D9734E] text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-[#C25B38] disabled:opacity-50"
       >
         {submitting ? "กำลังส่ง..." : "ส่งรีวิว"}
       </button>
@@ -559,18 +559,18 @@ function MyReview() {
 
   return (
     <>
-      <h2 className="text-lg font-bold text-emerald-700 mb-5">รีวิวของฉัน</h2>
+      <h2 className="text-lg font-bold text-[#D9734E] mb-5">รีวิวของฉัน</h2>
 
       {loading ? (
-        <div className="text-center text-zinc-500 py-16">กำลังโหลด...</div>
+        <div className="text-center text-[#A89F91] py-16">กำลังโหลด...</div>
       ) : (
         <>
           {/* Pending reviews */}
           {pendingOrders.length > 0 && (
             <div className="mb-7">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-base font-bold text-zinc-700">รอรีวิว</span>
-                <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                <span className="text-base font-bold text-[#4A3B32]">รอรีวิว</span>
+                <span className="bg-[#E6D5C3] text-[#D9734E] text-xs font-bold px-2 py-0.5 rounded-full">
                   {pendingOrders.length}
                 </span>
               </div>
@@ -589,8 +589,8 @@ function MyReview() {
           {/* Written reviews */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-base font-bold text-zinc-700">รีวิวที่เขียนแล้ว</span>
-              <span className="bg-zinc-100 text-zinc-600 text-xs font-bold px-2 py-0.5 rounded-full">
+              <span className="text-base font-bold text-[#4A3B32]">รีวิวที่เขียนแล้ว</span>
+              <span className="bg-[#E6D5C3] text-[#A89F91] text-xs font-bold px-2 py-0.5 rounded-full">
                 {reviews.length}
               </span>
             </div>
@@ -598,10 +598,10 @@ function MyReview() {
             {reviews.length > 0 ? (
               <div className="space-y-3">
                 {reviews.map((r) => (
-                  <div key={r.Review_ID} className="border border-zinc-200 rounded-xl p-4 bg-white">
+                  <div key={r.Review_ID} className="border border-[#E6D5C3] rounded-xl p-4 bg-white">
                     <div className="flex items-center justify-between mb-1">
-                      <div className="text-sm font-semibold text-zinc-800">{r.ProductTitle || "สินค้า"}</div>
-                      <div className="text-xs text-zinc-400">
+                      <div className="text-sm font-semibold text-[#4A3B32]">{r.ProductTitle || "สินค้า"}</div>
+                      <div className="text-xs text-[#A89F91]">
                         {new Date(r.Created_at).toLocaleDateString("th-TH", {
                           year: "numeric",
                           month: "short",
@@ -611,14 +611,14 @@ function MyReview() {
                     </div>
                     <div className="mb-1 text-yellow-400 text-sm">
                       {"★".repeat(r.Rating)}
-                      <span className="text-zinc-300">{"★".repeat(5 - r.Rating)}</span>
+                      <span className="text-[#DCD0C0]">{"★".repeat(5 - r.Rating)}</span>
                     </div>
-                    {r.Comment && <p className="text-sm text-zinc-600">{r.Comment}</p>}
+                    {r.Comment && <p className="text-sm text-[#A89F91]">{r.Comment}</p>}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-zinc-400 py-10">ยังไม่มีรายการรีวิว</div>
+              <div className="text-center text-[#A89F91] py-10">ยังไม่มีรายการรีวิว</div>
             )}
           </div>
         </>
@@ -645,22 +645,22 @@ function ManageProfile() {
 
   return (
     <>
-      <h2 className="text-lg font-bold text-emerald-700 mb-6">จัดการโปรไฟล์ร้าน</h2>
+      <h2 className="text-lg font-bold text-[#D9734E] mb-6">จัดการโปรไฟล์ร้าน</h2>
 
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-zinc-700">
+        <h3 className="text-base font-semibold text-[#4A3B32]">
           สินค้าของฉัน ({products.length})
         </h3>
         <Link
           href="/products/create"
-          className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition"
+          className="bg-[#D9734E] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#C25B38] transition"
         >
           + ลงขายสินค้าใหม่
         </Link>
       </div>
 
       {loading ? (
-        <div className="text-center text-zinc-500 py-16">กำลังโหลด...</div>
+        <div className="text-center text-[#A89F91] py-16">กำลังโหลด...</div>
       ) : products.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {products.map((p) => (
@@ -668,10 +668,10 @@ function ManageProfile() {
           ))}
         </div>
       ) : (
-        <div className="text-center text-zinc-500 py-16">
+        <div className="text-center text-[#A89F91] py-16">
           <div className="text-4xl mb-3">📦</div>
           <p>ยังไม่มีสินค้า</p>
-          <Link href="/products/create" className="text-emerald-600 hover:underline text-sm mt-2 inline-block">
+          <Link href="/products/create" className="text-[#D9734E] hover:underline text-sm mt-2 inline-block">
             ลงขายสินค้าแรกของคุณ
           </Link>
         </div>
@@ -683,12 +683,12 @@ function ManageProfile() {
 function Account({ email }: { email: string }) {
   return (
     <>
-      <h2 className="text-lg font-bold text-emerald-700 mb-6">การเข้าสู่ระบบ</h2>
+      <h2 className="text-lg font-bold text-[#D9734E] mb-6">การเข้าสู่ระบบ</h2>
 
       <div className="space-y-4 max-w-xl">
         <div className="flex items-center justify-between">
           <span>Google</span>
-          <button type="button" disabled className="border border-zinc-300 px-4 py-1.5 rounded-lg opacity-50 cursor-not-allowed">เชื่อมต่อ (เร็วๆ นี้)</button>
+          <button type="button" disabled className="border border-[#DCD0C0] px-4 py-1.5 rounded-lg opacity-50 cursor-not-allowed">เชื่อมต่อ (เร็วๆ นี้)</button>
         </div>
 
         <div>
@@ -696,7 +696,7 @@ function Account({ email }: { email: string }) {
           <InputField value={email} readOnly />
         </div>
 
-        <button type="button" disabled className="border border-emerald-600 text-emerald-700 px-4 py-2 rounded-lg opacity-50 cursor-not-allowed">เปลี่ยนรหัสผ่าน (เร็วๆ นี้)</button>
+        <button type="button" disabled className="border border-[#D9734E] text-[#D9734E] px-4 py-2 rounded-lg opacity-50 cursor-not-allowed">เปลี่ยนรหัสผ่าน (เร็วๆ นี้)</button>
       </div>
     </>
   );

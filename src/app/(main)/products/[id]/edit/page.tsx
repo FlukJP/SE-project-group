@@ -177,7 +177,7 @@ export default function EditProductPage() {
     return (
       <>
         <Navbar />
-        <div className="text-center py-16 text-zinc-500">กำลังโหลด...</div>
+        <div className="text-center py-16 text-[#A89F91]">กำลังโหลด...</div>
       </>
     );
   }
@@ -188,7 +188,7 @@ export default function EditProductPage() {
         <Navbar />
         <div className="text-center py-16">
           <p className="mb-4">กรุณาเข้าสู่ระบบก่อน</p>
-          <Link href="/login" className="text-emerald-600 hover:underline">
+          <Link href="/login" className="text-[#D9734E] hover:underline">
             เข้าสู่ระบบ
           </Link>
         </div>
@@ -202,7 +202,7 @@ export default function EditProductPage() {
         <Navbar />
         <div className="text-center py-16">
           <p className="mb-4 text-lg">ไม่พบสินค้า</p>
-          <Link href="/" className="text-emerald-700 hover:underline">
+          <Link href="/" className="text-[#D9734E] hover:underline">
             กลับหน้าหลัก
           </Link>
         </div>
@@ -216,7 +216,7 @@ export default function EditProductPage() {
         <Navbar />
         <div className="text-center py-16">
           <p className="mb-4 text-lg">คุณไม่มีสิทธิ์แก้ไขสินค้านี้</p>
-          <Link href="/" className="text-emerald-700 hover:underline">
+          <Link href="/" className="text-[#D9734E] hover:underline">
             กลับหน้าหลัก
           </Link>
         </div>
@@ -229,33 +229,33 @@ export default function EditProductPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-zinc-50">
+      <main className="min-h-screen bg-[#F9F6F0]">
         <div className="container mx-auto px-4 py-8 max-w-2xl">
           <div className="mb-4">
-            <Link href="/my-products" className="text-sm text-emerald-700 hover:underline">
+            <Link href="/my-products" className="text-sm text-[#D9734E] hover:underline">
               &larr; กลับหน้าสินค้าของฉัน
             </Link>
           </div>
 
-          <h1 className="text-2xl font-extrabold text-emerald-700 mb-6">แก้ไขสินค้า</h1>
+          <h1 className="text-2xl font-extrabold text-[#D9734E] mb-6">แก้ไขสินค้า</h1>
 
           {submitSuccess && (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 mb-6 font-semibold">
+            <div className="bg-[#E6D5C3] border border-[#DCD0C0] text-[#D9734E] rounded-xl px-4 py-3 mb-6 font-semibold">
               บันทึกสำเร็จ กำลังกลับไปหน้าสินค้าของฉัน...
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-zinc-200 p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-[#E6D5C3] p-6 space-y-5">
             {/* Category */}
             <div>
-              <label className="block text-sm font-semibold text-zinc-700 mb-1">
+              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
                 หมวดหมู่ *
               </label>
               <select
                 title="เลือกหมวดหมู่"
                 value={categoryKey}
                 onChange={(e) => setCategoryKey(e.target.value)}
-                className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
               >
                 <option value="">-- เลือกหมวด --</option>
                 {categories.map((c) => (
@@ -268,7 +268,7 @@ export default function EditProductPage() {
 
             {/* Title */}
             <div>
-              <label className="block text-sm font-semibold text-zinc-700 mb-1">
+              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
                 ชื่อสินค้า *
               </label>
               <input
@@ -276,15 +276,15 @@ export default function EditProductPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={255}
                 placeholder="ชื่อสินค้า"
-                className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
               />
-              <div className="text-xs text-zinc-400 text-right mt-0.5">{title.length}/255</div>
+              <div className="text-xs text-[#A89F91] text-right mt-0.5">{title.length}/255</div>
               {errors.title && <p className="text-red-600 text-xs mt-1">{errors.title}</p>}
             </div>
 
             {/* Price */}
             <div>
-              <label className="block text-sm font-semibold text-zinc-700 mb-1">
+              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
                 ราคา (฿) *
               </label>
               <input
@@ -293,21 +293,21 @@ export default function EditProductPage() {
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder="ราคา"
-                className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
               />
               {errors.price && <p className="text-red-600 text-xs mt-1">{errors.price}</p>}
             </div>
 
             {/* Condition */}
             <div>
-              <label className="block text-sm font-semibold text-zinc-700 mb-1">
+              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
                 สภาพสินค้า
               </label>
               <select
                 title="เลือกสภาพสินค้า"
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
-                className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
               >
                 <option value="มือสอง">มือสอง</option>
                 <option value="มือหนึ่ง">มือหนึ่ง</option>
@@ -317,7 +317,7 @@ export default function EditProductPage() {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-semibold text-zinc-700 mb-1">
+              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
                 รายละเอียดสินค้า
               </label>
               <textarea
@@ -326,9 +326,9 @@ export default function EditProductPage() {
                 maxLength={2000}
                 rows={5}
                 placeholder="รายละเอียดเพิ่มเติม"
-                className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
               />
-              <div className="text-xs text-zinc-400 text-right mt-0.5">
+              <div className="text-xs text-[#A89F91] text-right mt-0.5">
                 {description.length}/2000
               </div>
             </div>
@@ -336,7 +336,7 @@ export default function EditProductPage() {
             {/* Province / District */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="province-select" className="block text-sm font-semibold text-zinc-700 mb-1">
+                <label htmlFor="province-select" className="block text-sm font-semibold text-[#4A3B32] mb-1">
                   จังหวัด *
                 </label>
                 <select
@@ -347,7 +347,7 @@ export default function EditProductPage() {
                     setProvince(e.target.value);
                     setDistrict("");
                   }}
-                  className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
                 >
                   <option value="">-- เลือกจังหวัด --</option>
                   {provinceOptions.map((p) => (
@@ -361,7 +361,7 @@ export default function EditProductPage() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-semibold text-zinc-700 mb-1">
+                <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
                   อำเภอ/เขต *
                 </label>
                 <select
@@ -369,7 +369,7 @@ export default function EditProductPage() {
                   value={district}
                   disabled={!province}
                   onChange={(e) => setDistrict(e.target.value)}
-                  className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:opacity-50"
+                  className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] disabled:opacity-50"
                 >
                   <option value="">-- เลือกอำเภอ/เขต --</option>
                   {districtOptions.map((d) => (
@@ -386,21 +386,21 @@ export default function EditProductPage() {
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-semibold text-zinc-700 mb-1">
+              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
                 เบอร์โทรศัพท์ *
               </label>
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="08XXXXXXXX"
-                className="w-full border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
               />
               {errors.phone && <p className="text-red-600 text-xs mt-1">{errors.phone}</p>}
             </div>
 
             {/* Images */}
             <div>
-              <label className="block text-sm font-semibold text-zinc-700 mb-2">
+              <label className="block text-sm font-semibold text-[#4A3B32] mb-2">
                 รูปภาพ ({totalImages} รูป)
               </label>
 
@@ -411,7 +411,7 @@ export default function EditProductPage() {
                   return (
                     <div
                       key={path}
-                      className="relative w-24 h-24 rounded-lg overflow-hidden border border-zinc-200"
+                      className="relative w-24 h-24 rounded-lg overflow-hidden border border-[#E6D5C3]"
                     >
                       <img src={src} alt="" className="w-full h-full object-cover" />
                       <button
@@ -421,7 +421,7 @@ export default function EditProductPage() {
                       >
                         ×
                       </button>
-                      <span className="absolute bottom-1 left-1 bg-zinc-700/70 text-white text-[9px] px-1 rounded">
+                      <span className="absolute bottom-1 left-1 bg-[#4A3B32]/70 text-white text-[9px] px-1 rounded">
                         เดิม
                       </span>
                     </div>
@@ -432,7 +432,7 @@ export default function EditProductPage() {
                 {newFiles.map((f) => (
                   <div
                     key={f.preview}
-                    className="relative w-24 h-24 rounded-lg overflow-hidden border border-emerald-400"
+                    className="relative w-24 h-24 rounded-lg overflow-hidden border border-[#D9734E]"
                   >
                     <img src={f.preview} alt="" className="w-full h-full object-cover" />
                     <button
@@ -442,7 +442,7 @@ export default function EditProductPage() {
                     >
                       ×
                     </button>
-                    <span className="absolute bottom-1 left-1 bg-emerald-600 text-white text-[9px] px-1 rounded">
+                    <span className="absolute bottom-1 left-1 bg-[#D9734E] text-white text-[9px] px-1 rounded">
                       ใหม่
                     </span>
                   </div>
@@ -450,7 +450,7 @@ export default function EditProductPage() {
 
                 {/* Add button */}
                 {totalImages < 5 && (
-                  <label className="w-24 h-24 flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 text-zinc-500 hover:bg-zinc-50 cursor-pointer text-xs gap-1">
+                  <label className="w-24 h-24 flex flex-col items-center justify-center rounded-lg border border-dashed border-[#DCD0C0] text-[#A89F91] hover:bg-[#F9F6F0] cursor-pointer text-xs gap-1">
                     <span className="text-2xl leading-none">+</span>
                     <span>เพิ่มรูป</span>
                     <input
@@ -476,13 +476,13 @@ export default function EditProductPage() {
               <button
                 type="submit"
                 disabled={submitting || submitSuccess}
-                className="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700 transition disabled:opacity-50"
+                className="flex-1 bg-[#D9734E] text-white py-3 rounded-xl font-semibold hover:bg-[#C25B38] transition disabled:opacity-50"
               >
                 {submitting ? "กำลังบันทึก..." : "บันทึก"}
               </button>
               <Link
                 href="/my-products"
-                className="px-6 py-3 rounded-xl border border-zinc-300 text-zinc-700 font-semibold hover:bg-zinc-50 transition text-center"
+                className="px-6 py-3 rounded-xl border border-[#DCD0C0] text-[#4A3B32] font-semibold hover:bg-[#F9F6F0] transition text-center"
               >
                 ยกเลิก
               </Link>

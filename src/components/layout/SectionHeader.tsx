@@ -17,12 +17,12 @@ export default function SectionHeader({
     return (
         <div className="flex items-end justify-between mb-4">
             <div>
-                <h2 className="text-xl font-extrabold text-zinc-900">{title}</h2>
-                {subtitle && <p className="text-sm text-zinc-500 mt-1">{subtitle}</p>}
+                <h2 className="text-xl font-extrabold text-[#4A3B32]">{title}</h2>
+                {subtitle && <p className="text-sm text-[#A89F91] mt-1">{subtitle}</p>}
             </div>
             <Link
                 href={viewAllHref}
-                className="text-emerald-700 text-sm font-semibold hover:underline"
+                className="text-[#D9734E] text-sm font-semibold hover:underline transition-colors"
             >
                 {viewAllText}
             </Link>

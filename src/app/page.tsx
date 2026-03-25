@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/src/components/layout/Navbar";
 import LoginModal from "@/src/components/user/LoginModal";
 import CategoriesSection from "@/src/components/product/CategoriesSection";
-import { toCategory, toPopularCategory } from "@/src/data/categoriesData";
+import { toPopularCategory } from "@/src/data/categoriesData";
 import type { Category } from "@/src/data/categoriesData";
-import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 import SearchBar from "@/src/components/product/SearchBar";
 import FeaturedSection from "@/src/components/product/FeaturedSection";
-import { productApi, categoryApi } from "@/src/lib/api";
+import { CategoriesSkeleton, ProductGridSkeleton } from "@/src/components/ui/Skeleton";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useProducts } from "@/src/hooks/useProducts";
+import { usePopularCategories } from "@/src/hooks/useCategories";
 
 export default function HomePage() {
   const router = useRouter();
@@ -20,46 +21,25 @@ export default function HomePage() {
   const [query, setQuery] = useState("");
   const [province, setProvince] = useState("");
   const [showLogin, setShowLogin] = useState(false);
-  const [featured, setFeatured] = useState<ProductDisplay[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch products once on mount — always works regardless of auth state
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      productApi.list({ limit: "20", sortBy: "random" }).then((res) => res.data.map(toProductDisplay)),
-      categoryApi.popular(10).then((res) => res.data.map(toPopularCategory))
-        .catch(() => categoryApi.list().then((res) => res.data.map(toCategory))),
-    ])
-      .then(([products, cats]) => {
-        setFeatured(products);
-        setCategories(cats);
-      })
-      .catch(() => {
-        setFeatured([]);
-        setCategories([]);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  // Key changes when user logs in → SWR auto-revalidates to exclude own listings
+  const userId = user?.User_ID;
+  const params = useMemo<Record<string, string>>(() => {
+    const p: Record<string, string> = { limit: "20", sortBy: "random" };
+    if (userId) p.excludeSeller = String(userId);
+    return p;
+  }, [userId]);
 
-  // Re-fetch with excludeSeller when user logs in
-  useEffect(() => {
-    if (!user?.User_ID) return;
-    productApi
-      .list({ limit: "20", sortBy: "random", excludeSeller: String(user.User_ID) })
-      .then((res) => setFeatured(res.data.map(toProductDisplay)))
-      .catch(() => {});
-  }, [user?.User_ID]);
-
-  const visibleFeatured = featured;
+  const { data: featured = [], isLoading: loading } = useProducts(params);
+  const { data: popularCats = [] } = usePopularCategories();
+  const categories: Category[] = popularCats.map(toPopularCategory);
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams();
-    if (query.trim()) params.set("q", query.trim());
-    if (province) params.set("province", province);
-    router.push(`/search?${params.toString()}`);
+    const searchParams = new URLSearchParams();
+    if (query.trim()) searchParams.set("q", query.trim());
+    if (province) searchParams.set("province", province);
+    router.push(`/search?${searchParams.toString()}`);
   };
 
   return (
@@ -97,16 +77,19 @@ export default function HomePage() {
 
       <div className="container mx-auto px-4 py-8">
         {loading ? (
-          <div className="text-center text-kd-text-light py-12">กำลังโหลดสินค้า...</div>
+          <>
+            <CategoriesSkeleton count={8} />
+            <ProductGridSkeleton count={8} />
+          </>
         ) : (
           <>
             <CategoriesSection categories={categories} />
 
-            {visibleFeatured.length > 0 ? (
+            {featured.length > 0 ? (
               <FeaturedSection
                 title="สินค้าแนะนำวันนี้"
                 subtitle="ประกาศล่าสุด"
-                products={visibleFeatured}
+                products={featured}
               />
             ) : (
               <div className="text-center text-kd-text-light py-12">ยังไม่มีประกาศในขณะนี้</div>
