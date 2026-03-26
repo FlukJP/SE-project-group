@@ -199,8 +199,7 @@ export const OrderModel = {
             if (!lockedOrder || lockedOrder.length === 0) throw new Error('Order not found');
             if (lockedOrder[0].Status === 'cancelled') throw new Error('Order is already cancelled');
 
-            const currentQty = lockedRows[0].Quantity;
-            const actualRestoredQuantity = currentQty + (restoredQuantity - currentQty);
+            const actualRestoredQuantity = restoredQuantity;
 
             const updateProductSql = `
                 UPDATE Product SET Quantity = ?, Status = 'available' WHERE Product_ID = ?

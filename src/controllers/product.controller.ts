@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
-import { uploadToStorage, deleteStorageImages, generateUniqueFilename } from '../services/storage.Service';
+import { uploadToStorage, deleteStorageImages, generateUniqueFilename } from '../services/storage.service';
 import { ProductService } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
 import { AuthRequest } from '../middleware/auth.middleware';

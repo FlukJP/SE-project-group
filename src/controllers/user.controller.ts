@@ -3,7 +3,7 @@ import { AppError } from '../errors/AppError';
 import { UserService } from '../services/user.service';
 import { UserModel } from '../models/UserModel';
 import { AuthRequest } from '../middleware/auth.middleware';
-import { uploadToStorage, deleteFromStorage, generateUniqueFilename } from '../services/storage.Service';
+import { uploadToStorage, deleteFromStorage, generateUniqueFilename } from '../services/storage.service';
 
 export const UserController = {
     /** Return the full profile of the currently authenticated user */

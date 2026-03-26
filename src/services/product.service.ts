@@ -2,7 +2,7 @@ import { Product, ProductFilters, pickProductUpdateFields } from "@/src/types/Pr
 import { ProductModel } from "@/src/models/productModel";
 import { AppError } from "@/src/errors/AppError";
 import { CategoryService } from "@/src/services/category.service";
-import { deleteStorageImages } from "@/src/services/storage.Service";
+import { deleteStorageImages } from "@/src/services/storage.service";
 
 export const ProductService = {
     /** Search products with optional filters and record category popularity for search events */

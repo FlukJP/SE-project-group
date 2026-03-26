@@ -2,6 +2,11 @@ import { Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
 import { AuthRequest } from './auth.middleware';
 
+interface HttpError extends Error {
+    code?: string;
+    type?: string;
+}
+
 // Map well-known status codes to a short error code string
 const STATUS_CODE_MAP: Record<number, string> = {
     400: 'BAD_REQUEST',
@@ -15,7 +20,7 @@ const STATUS_CODE_MAP: Record<number, string> = {
 };
 
 /** Classify errors, log them, and return a normalized JSON error response */
-export const errorHandler = (err: any, req: AuthRequest, res: Response, _next: NextFunction) => {
+export const errorHandler = (err: HttpError, req: AuthRequest, res: Response, _next: NextFunction) => {
     let statusCode = 500;
     let message = 'Internal Server Error';
 

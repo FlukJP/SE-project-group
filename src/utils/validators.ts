@@ -12,9 +12,14 @@ export const validateEmail = (email: string): boolean => {
     return emailRegex.test(email);
 };
 
-// Returns true if the password is at least 8 characters long.
+// Returns true if the password is at least 8 characters and contains uppercase, lowercase, digit, and special character.
 export const validatePassword = (password: string): boolean => {
-    return password.length >= 8;
+    if (password.length < 8) return false;
+    if (!/[A-Z]/.test(password)) return false;
+    if (!/[a-z]/.test(password)) return false;
+    if (!/[0-9]/.test(password)) return false;
+    if (!/[^A-Za-z0-9]/.test(password)) return false;
+    return true;
 };
 
 // Returns true if the phone number consists of exactly 10 digits.
