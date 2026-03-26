@@ -4,7 +4,7 @@ import { uploadToStorage, deleteStorageImages, generateUniqueFilename } from '..
 import { ProductService } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
 import { AuthRequest } from '../middleware/auth.middleware';
-import { Product } from '../types/Product';
+import { Product, pickProductUpdateFields } from '../types/Product';
 
 export const ProductController = {
     /** Parse and validate the multipart form, reorder images by coverIndex, then create a new product listing */
@@ -126,9 +126,10 @@ export const ProductController = {
             const isAdmin = req.user.role === 'admin';
             const files = req.files as Express.Multer.File[] | undefined;
 
-            const updateData: Partial<Product> = { ...req.body };
-            if (req.body.province) updateData.Province = String(req.body.province).trim();
-            if (req.body.district) updateData.District = String(req.body.district).trim();
+            const rawBody = { ...req.body };
+            if (rawBody.province) rawBody.Province = String(rawBody.province).trim();
+            if (rawBody.district) rawBody.District = String(rawBody.district).trim();
+            const updateData = pickProductUpdateFields(rawBody);
 
             if (files && files.length > 0) {
                 const imageUrls = await Promise.all(

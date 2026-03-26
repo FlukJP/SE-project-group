@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import http from 'http';
-import { Server as SocketIOServer } from 'socket.io';
+import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 
 import apiRoutes from './routes';
@@ -15,6 +15,10 @@ import { connectRedis, disconnectRedis, isRedisAvailable } from './config/redis'
 import { ENV } from './config/env';
 import pool from './lib/mysql';
 import { ChatModel } from './models/chatModel';
+
+interface AuthenticatedSocket extends Socket {
+    user?: { userID: number; role: string };
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -43,7 +47,7 @@ io.use((socket, next) => {
             issuer: ENV.JWT_ISSUER,
             audience: ENV.JWT_AUDIENCE,
         }) as { userID: number; role: string };
-        (socket as unknown as Record<string, unknown>).user = decoded;
+        (socket as AuthenticatedSocket).user = decoded;
         next();
     } catch {
         next(new Error("Invalid token"));
@@ -52,7 +56,7 @@ io.use((socket, next) => {
 
 // Handles Socket.IO connection lifecycle — joining/leaving chat rooms and broadcasting messages.
 io.on('connection', (socket) => {
-    const socketUser = (socket as unknown as Record<string, unknown>).user as { userID: number } | undefined;
+    const socketUser = (socket as AuthenticatedSocket).user;
     console.log(`[Socket] connected: ${socket.id}, user: ${socketUser?.userID}`);
 
     socket.on('join', async (roomId: string) => {
@@ -75,7 +79,7 @@ io.on('connection', (socket) => {
     socket.on('sendMessage', (data: { roomId: string; message: unknown }) => {
         if (!socketUser) return;
         const msg = data.message as Record<string, unknown> | undefined;
-        if (!msg || msg.Sender_ID !== socketUser.userID) return;
+        if (!msg || msg.Sender_ID !== socketUser.userID || !msg.Message_ID) return;
         socket.to(data.roomId).emit('newMessage', data.message);
     });
 
