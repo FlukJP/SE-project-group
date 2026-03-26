@@ -70,6 +70,7 @@ export default function EditProductPage() {
         setCategories(catRes.data);
 
         const parsed = parseDescription(p.Description || "");
+
         setTitle(p.Title);
         setPrice(String(p.Price));
         setDescription(parsed.cleanDescription);

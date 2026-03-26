@@ -162,6 +162,7 @@ export const ProductModel = {
                 && key !== 'Seller_ID'
                 && ALLOWED_FIELDS.includes(key)
         );
+
         if (keys.length === 0) return false;
         const setClause = keys.map((key) => `\`${key}\` = ?`).join(", ");
         const values = keys.map((key) => productData[key as keyof Product]);

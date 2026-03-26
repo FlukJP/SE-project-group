@@ -14,6 +14,13 @@ const nextConfig = {
         hostname: "images.unsplash.com",
       },
       {
+        // Firebase Storage public URLs
+        protocol: "https",
+        hostname: "storage.googleapis.com",
+        pathname: "/**",
+      },
+      {
+        // Local dev Express server (backward compat for existing DB records)
         protocol: "http",
         hostname: "localhost",
         port: "5000",

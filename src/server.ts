@@ -3,7 +3,6 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
-import path from 'path';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import jwt from 'jsonwebtoken';
@@ -19,6 +18,7 @@ import { ChatModel } from './models/chatModel';
 
 const app = express();
 const server = http.createServer(app);
+app.set('trust proxy', 1);
 
 const CLIENT_URLS = (process.env.CLIENT_URL || 'http://localhost:3000')
     .split(',')
@@ -103,8 +103,6 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(globalLimiter);
-
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 app.get('/health', (_req, res) => {
     res.json({ status: 'ok', uptime: process.uptime() });

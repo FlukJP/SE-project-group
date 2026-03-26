@@ -3,8 +3,7 @@ import { AppError } from '../errors/AppError';
 import { UserService } from '../services/user.service';
 import { UserModel } from '../models/UserModel';
 import { AuthRequest } from '../middleware/auth.middleware';
-import { deleteUploadedFile } from '../utils/uploadHelpers';
-import { UploadFolderType } from '../types/upload';
+import { uploadToStorage, deleteFromStorage, generateUniqueFilename } from '../services/storage.Service';
 
 export const UserController = {
     /** Return the full profile of the currently authenticated user */
@@ -68,11 +67,16 @@ export const UserController = {
             const file = req.file as Express.Multer.File | undefined;
             if (!file) throw new AppError("Image file is required", 400);
 
-            const avatarUrl = `/uploads/users/${file.filename}`;
+            const avatarUrl = await uploadToStorage(
+                file.buffer,
+                file.mimetype,
+                'users',
+                generateUniqueFilename('avatar', file.mimetype),
+            );
+
             const currentUser = await UserModel.findByIDSafe(req.user.userID);
             if (currentUser?.Avatar_URL) {
-                const oldFilename = currentUser.Avatar_URL.split('/').pop();
-                if (oldFilename) deleteUploadedFile(oldFilename, UploadFolderType.USER);
+                deleteFromStorage(currentUser.Avatar_URL).catch(() => {});
             }
 
             await UserModel.updateUser(req.user.userID, { Avatar_URL: avatarUrl });
@@ -83,10 +87,6 @@ export const UserController = {
                 avatar_url: avatarUrl,
             });
         } catch (error) {
-            const file = req.file as Express.Multer.File | undefined;
-            if (file) {
-                deleteUploadedFile(file.filename, UploadFolderType.USER);
-            }
             next(error);
         }
     },

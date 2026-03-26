@@ -2,7 +2,7 @@ import { Product, ProductFilters, pickProductUpdateFields } from "@/src/types/Pr
 import { ProductModel } from "@/src/models/productModel";
 import { AppError } from "@/src/errors/AppError";
 import { CategoryService } from "@/src/services/category.service";
-import { cleanupImages } from "@/src/utils/uploadHelpers";
+import { deleteStorageImages } from "@/src/services/storage.Service";
 
 export const ProductService = {
     /** Search products with optional filters and record category popularity for search events */
@@ -95,7 +95,7 @@ export const ProductService = {
         if (!product) throw new AppError("Product not found", 404);
         if (product.Seller_ID !== userID && !isAdmin) throw new AppError("Forbidden: You are not the owner of this product", 403);
 
-        if (product.Image_URL) cleanupImages(product.Image_URL);
+        if (product.Image_URL) deleteStorageImages(product.Image_URL).catch(() => {});
         return await ProductModel.deleteProduct(productID);
     }
 };

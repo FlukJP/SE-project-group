@@ -1,7 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
-import { deleteUploadedFile, cleanupImages } from '../utils/uploadHelpers';
-import { UploadFolderType } from '../types/upload';
+import { uploadToStorage, deleteStorageImages, generateUniqueFilename } from '../services/storage.Service';
 import { ProductService } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
 import { AuthRequest } from '../middleware/auth.middleware';
@@ -10,7 +9,6 @@ import { Product } from '../types/Product';
 export const ProductController = {
     /** Parse and validate the multipart form, reorder images by coverIndex, then create a new product listing */
     createProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
-        const files = req.files as Express.Multer.File[] | undefined;
         try {
             if (!req.user) throw new AppError("Unauthorized: Please login first", 401);
             const { title, price, description, categoryKey, province, district, phone, condition, quantity } = req.body;
@@ -25,6 +23,7 @@ export const ProductController = {
             const numQuantity = quantity ? Number(quantity) : 1;
             if (isNaN(numQuantity) || numQuantity <= 0) throw new AppError("Quantity must be a positive integer", 400);
 
+            const files = req.files as Express.Multer.File[] | undefined;
             if (!files || files.length === 0) throw new AppError("At least one image is required", 400);
 
             // Reorder images so the coverIndex image is first
@@ -34,10 +33,14 @@ export const ProductController = {
                 const [cover] = orderedFiles.splice(coverIdx, 1);
                 orderedFiles.unshift(cover);
             }
-            const imageUrls = orderedFiles.map(file => `/uploads/products/${file.filename}`);
+
+            const imageUrls = await Promise.all(
+                orderedFiles.map(file =>
+                    uploadToStorage(file.buffer, file.mimetype, 'products', generateUniqueFilename('product', file.mimetype))
+                )
+            );
 
             const fullDescription = description ? description.trim() : '';
-
             const category = await CategoryService.getByKey(categoryKey.trim());
 
             const newProductData: Omit<Product, 'Product_ID'> = {
@@ -62,11 +65,6 @@ export const ProductController = {
                 product: { ...newProductData, Product_ID: insertId }
             });
         } catch (error) {
-            if (files && files.length > 0) {
-                files.forEach(file => {
-                    deleteUploadedFile(file.filename, UploadFolderType.PRODUCT);
-                });
-            }
             next(error);
         }
     },
@@ -75,6 +73,7 @@ export const ProductController = {
     getAllProducts: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { q, category, minPrice, maxPrice, limit, page, sortBy, sortOrder, province, district, excludeSeller } = req.query;
+
             const result = await ProductService.getAllProducts({
                 keyword: q as string,
                 category: category as string,
@@ -118,35 +117,36 @@ export const ProductController = {
         }
     },
 
-    /** Update product fields; if new images are uploaded, replace existing images and clean up old files */
+    /** Update product fields; if new images are uploaded, replace existing images and delete old ones from storage */
     updateProduct: async (req: AuthRequest, res: Response, next: NextFunction) => {
-        const files = req.files as Express.Multer.File[] | undefined;
         try {
             if (!req.user) throw new AppError("Unauthorized", 401);
 
             const productId = Number(req.params.id);
             const isAdmin = req.user.role === 'admin';
+            const files = req.files as Express.Multer.File[] | undefined;
 
             const updateData: Partial<Product> = { ...req.body };
-            // Map lowercase form fields to the correct Product field names
             if (req.body.province) updateData.Province = String(req.body.province).trim();
             if (req.body.district) updateData.District = String(req.body.district).trim();
+
             if (files && files.length > 0) {
-                const imageUrls = files.map(file => `/uploads/products/${file.filename}`);
+                const imageUrls = await Promise.all(
+                    files.map(file =>
+                        uploadToStorage(file.buffer, file.mimetype, 'products', generateUniqueFilename('product', file.mimetype))
+                    )
+                );
                 updateData.Image_URL = JSON.stringify(imageUrls);
             }
 
             const result = await ProductService.updateProduct(productId, req.user.userID, updateData, isAdmin);
 
-            if (files && files.length > 0 && result.oldImageURL) cleanupImages(result.oldImageURL);
+            if (files && files.length > 0 && result.oldImageURL) {
+                deleteStorageImages(result.oldImageURL).catch(() => {});
+            }
 
             res.status(200).json({ success: true, message: "Product updated successfully" });
         } catch (error) {
-            if (files && files.length > 0) {
-                files.forEach(file => {
-                    deleteUploadedFile(file.filename, UploadFolderType.PRODUCT);
-                });
-            }
             next(error);
         }
     },

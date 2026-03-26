@@ -9,9 +9,11 @@ vi.mock('@/src/services/category.service', () => ({
         recordPopularity: vi.fn(async () => {}),
     },
 }));
-vi.mock('@/src/utils/uploadHelpers', () => ({
-    cleanupImages: vi.fn(),
-    deleteUploadedFile: vi.fn(),
+vi.mock('@/src/services/storageService', () => ({
+    deleteStorageImages: vi.fn(async () => {}),
+    deleteFromStorage: vi.fn(async () => {}),
+    uploadToStorage: vi.fn(async () => 'https://storage.googleapis.com/test/img.jpg'),
+    generateUniqueFilename: vi.fn(() => 'test-filename.jpg'),
 }));
 
 const sampleProduct: ProductWithSeller = {

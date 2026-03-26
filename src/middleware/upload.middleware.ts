@@ -1,12 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-import fs from 'fs/promises';
 import { MULTER_CONFIG } from '../config/upload';
 import { UPLOAD_CONFIG } from '../config/constants';
 import { validateUploadedFile } from '../utils/uploadHelpers';
 import { AppError } from '../errors/AppError';
 
-/** MIME type filter: validate the file using the upload helper before accepting it */
 const fileFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     try {
         validateUploadedFile(file);
@@ -16,39 +14,36 @@ const fileFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer
     }
 };
 
-/** Multer middleware configured for product image uploads */
+/** Multer middleware configured for product image uploads (memory storage) */
 export const uploadProductImage = multer({
     storage: MULTER_CONFIG.product.storage,
     limits: MULTER_CONFIG.product.limits,
     fileFilter,
 });
 
-/** Multer middleware configured for user avatar uploads */
+/** Multer middleware configured for user avatar uploads (memory storage) */
 export const uploadUserAvatar = multer({
     storage: MULTER_CONFIG.user.storage,
     limits: MULTER_CONFIG.user.limits,
     fileFilter,
 });
 
-/** Verify file signatures (magic bytes) after Multer has written files to disk; deletes all files and rejects the request if any signature is invalid */
+/** Verify file signatures (magic bytes) from the in-memory buffer before uploading to Firebase */
 export const validateImageMagicBytes = async (req: Request, _res: Response, next: NextFunction) => {
     const files: Express.Multer.File[] = req.file ? [req.file] : (req.files as Express.Multer.File[]) || [];
     if (files.length === 0) return next();
 
     try {
-        const { fileTypeFromFile } = await import('file-type');
+        const { fileTypeFromBuffer } = await import('file-type');
 
         for (const file of files) {
-            const meta = await fileTypeFromFile(file.path);
+            const meta = await fileTypeFromBuffer(file.buffer);
             if (!meta || !UPLOAD_CONFIG.ALLOWED_MIMES.includes(meta.mime)) {
-                await Promise.all(files.map(f => fs.unlink(f.path).catch(() => {})));
                 throw new AppError('Invalid image file. File signature does not match allowed types.', 400);
             }
         }
         next();
     } catch (err) {
-        if (err instanceof AppError) return next(err);
-        await Promise.all(files.map(f => fs.unlink(f.path).catch(() => {})));
         next(err);
     }
 };

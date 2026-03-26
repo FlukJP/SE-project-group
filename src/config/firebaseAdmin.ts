@@ -5,16 +5,27 @@ import fs from "fs";
 // Initializes Firebase Admin SDK using a local service account file if present,
 // otherwise falls back to default initialization (e.g., Application Default Credentials).
 const serviceAccountPath = path.resolve(process.cwd(), "firebase-service-account.json");
+const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
 
 if (!admin.apps.length) {
-    if (fs.existsSync(serviceAccountPath)) {
-        const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf-8"));
+    let serviceAccount: object | undefined;
+
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        // Production: loaded from environment variable (JSON string)
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } else if (fs.existsSync(serviceAccountPath)) {
+        // Local dev: loaded from file
+        serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf-8"));
+    }
+
+    if (serviceAccount) {
         admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
+            credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+            storageBucket,
         });
     } else {
-        console.warn("firebase-service-account.json not found. Firebase Admin initialized without credentials.");
-        admin.initializeApp();
+        console.warn("No Firebase service account found. Firebase Admin initialized without credentials.");
+        admin.initializeApp({ storageBucket });
     }
 }
 
