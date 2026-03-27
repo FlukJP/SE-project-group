@@ -2,11 +2,17 @@ import nodemailer from 'nodemailer';
 
 // Nodemailer transport configured with Gmail credentials from environment variables.
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, 
+    requireTLS: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
+    tls: {
+        rejectUnauthorized: false
+    }
 });
 
 // Sends an email with the given recipient, subject, and plain-text body.
