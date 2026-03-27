@@ -2,7 +2,11 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
     "outDir": "./dist",
     "isolatedModules": false,
     "noEmit": false,
@@ -10,20 +14,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
     "rootDir": "."
   },
   "include": [
-    "src/server.ts",
-    "src/routes/**/*",
-    "src/controllers/**/*",
-    "src/services/**/*",
-    "src/models/**/*",
-    "src/middleware/**/*",
-    "src/utils/**/*",
-    "src/config/**/*",
-    "src/lib/**/*",
-    "src/types/**/*"
+    "src/**/*.ts"
   ],
   "exclude": [
     "src/app/**/*",
