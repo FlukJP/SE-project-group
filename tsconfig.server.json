@@ -15,10 +15,12 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "ignoreDeprecations": "6.0",
-    "rootDir": "."
+    "rootDir": ".",
+    "jsx": "preserve" 
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ],
   "exclude": [
     "src/app/**/*",
