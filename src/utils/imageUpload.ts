@@ -19,13 +19,13 @@ if (!fs.existsSync(UPLOAD_DIR)) {
     fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-let fileTypeFromFile: typeof import('file-type').fileTypeFromFile;
+let fileTypeFromFile: typeof import('file-type').fromFile;
 
 // Lazily loads and caches the file-type module for magic byte inspection.
 const getFileTypeLoader = async () => {
     if (!fileTypeFromFile) {
-        const module = await import('file-type');
-        fileTypeFromFile = module.fileTypeFromFile;
+        const fileTypeModule = await import('file-type');
+        fileTypeFromFile = fileTypeModule.fromFile;
     }
     return fileTypeFromFile;
 };
