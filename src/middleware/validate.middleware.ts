@@ -93,7 +93,7 @@ export function validateParams(schema: Schema) {
 export const registerSchema: Schema = {
     username: { required: true, type: 'string', custom: (v) => validateUsername(v as string) ? null : 'Username must be 2-50 characters (letters, numbers, spaces, underscores, hyphens, Thai)' },
     email:    { required: true, type: 'string', custom: (v) => validateEmail(v as string) ? null : 'Invalid email format' },
-    password: { required: true, type: 'string', custom: (v) => validatePassword(v as string) ? null : 'Password must be at least 8 characters' },
+    password: { required: true, type: 'string', custom: (v) => validatePassword(v as string) ? null : 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character' },
     phone:    { required: true, type: 'string', custom: (v) => validatePhoneNumber(v as string) ? null : 'Phone number must be 10 digits' },
 };
 
@@ -108,7 +108,7 @@ export const refreshTokenSchema: Schema = {
 
 export const changePasswordSchema: Schema = {
     oldPassword: { required: true, type: 'string' },
-    newPassword: { required: true, type: 'string', custom: (v) => validatePassword(v as string) ? null : 'New password must be at least 8 characters' },
+    newPassword: { required: true, type: 'string', custom: (v) => validatePassword(v as string) ? null : 'New password must be at least 8 characters and include uppercase, lowercase, number, and special character' },
 };
 
 export const requestOtpSchema: Schema = {
@@ -123,7 +123,7 @@ export const verifyOtpSchema: Schema = {
 export const resetPasswordSchema: Schema = {
     email:       { required: true, type: 'string', custom: (v) => validateEmail(v as string) ? null : 'Invalid email format' },
     otp:         { required: true, type: 'string' },
-    newPassword: { required: true, type: 'string', custom: (v) => validatePassword(v as string) ? null : 'New password must be at least 8 characters' },
+    newPassword: { required: true, type: 'string', custom: (v) => validatePassword(v as string) ? null : 'New password must be at least 8 characters and include uppercase, lowercase, number, and special character' },
 };
 
 export const requestPhoneOtpSchema: Schema = {

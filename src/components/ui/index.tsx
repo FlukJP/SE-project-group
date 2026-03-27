@@ -1,4 +1,5 @@
 import React from "react";
+import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 
 // Merges class names, filtering out falsy values
 export function cn(...classes: (string | false | undefined | null)[]) {
@@ -29,7 +30,7 @@ export const Input = React.forwardRef<
         ref={ref}
         {...props}
         className={cn(
-            "w-full border border-[#DCD0C0] rounded-md px-4 py-2 focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]",
+            getFormFieldClassName({ size: "md" }),
             props.className || ""
         )}
     />
@@ -45,9 +46,19 @@ export const Select = React.forwardRef<
         ref={ref}
         {...props}
         className={cn(
-            "w-full border border-[#DCD0C0] rounded-md px-4 py-2 focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]",
+            getFormFieldClassName({ size: "md" }),
             props.className || ""
         )}
     />
 ));
 Select.displayName = "Select";
+
+export { PasswordInput } from "@/src/components/ui/PasswordInput";
+export { PasswordField } from "@/src/components/ui/PasswordField";
+export { FormField } from "@/src/components/ui/FormField";
+export { TextField } from "@/src/components/ui/TextField";
+export { SelectField } from "@/src/components/ui/SelectField";
+export { TextareaField } from "@/src/components/ui/TextareaField";
+export { AuthErrorAlert } from "@/src/components/ui/AuthErrorAlert";
+export { FormErrorNotice } from "@/src/components/ui/FormErrorNotice";
+export { FormSuccessNotice } from "@/src/components/ui/FormSuccessNotice";

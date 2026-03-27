@@ -64,12 +64,12 @@ describe('AuthService', () => {
         it('should throw when password is too short', async () => {
             await expect(
                 AuthService.register({ Username: 'Test User', Email: 'test@email.com', Password: '1234', Phone_number: '0812345678', Role: 'customer' })
-            ).rejects.toThrow('Password must be at least 8 characters');
+            ).rejects.toThrow('Password must be at least 8 characters and include uppercase, lowercase, number, and special character');
         });
 
         it('should throw on invalid phone number', async () => {
             await expect(
-                AuthService.register({ Username: 'Test User', Email: 'test@email.com', Password: '12345678', Phone_number: '123', Role: 'customer' })
+                AuthService.register({ Username: 'Test User', Email: 'test@email.com', Password: 'Password1!', Phone_number: '123', Role: 'customer' })
             ).rejects.toThrow('Phone number must be 10 digits');
         });
 
@@ -80,7 +80,7 @@ describe('AuthService', () => {
             });
 
             await expect(
-                AuthService.register({ Username: 'New User', Email: 'test@email.com', Password: '12345678', Phone_number: '0812345678', Role: 'customer' })
+                AuthService.register({ Username: 'New User', Email: 'test@email.com', Password: 'Password1!', Phone_number: '0812345678', Role: 'customer' })
             ).rejects.toThrow('Email already in use');
         });
 
@@ -91,7 +91,7 @@ describe('AuthService', () => {
             });
 
             await expect(
-                AuthService.register({ Username: 'New User', Email: 'new@email.com', Password: '12345678', Phone_number: '0812345678', Role: 'customer' })
+                AuthService.register({ Username: 'New User', Email: 'new@email.com', Password: 'Password1!', Phone_number: '0812345678', Role: 'customer' })
             ).rejects.toThrow('Phone number already in use');
         });
 
@@ -103,7 +103,7 @@ describe('AuthService', () => {
             const result = await AuthService.register({
                 Username: 'New User',
                 Email: 'new@email.com',
-                Password: '12345678',
+                Password: 'Password1!',
                 Phone_number: '0812345678',
                 Role: 'customer',
             });
@@ -135,13 +135,13 @@ describe('AuthService', () => {
         });
 
         it('should throw when new password is too short', async () => {
-            await expect(AuthService.changePassword(1, 'oldpass12', 'short')).rejects.toThrow('New password must be at least 8 characters');
+            await expect(AuthService.changePassword(1, 'oldpass12', 'short')).rejects.toThrow('New password must be at least 8 characters and include uppercase, lowercase, number, and special character');
         });
 
         it('should throw when user not found', async () => {
             vi.mocked(UserModel.findByID).mockResolvedValue(null);
 
-            await expect(AuthService.changePassword(999, 'oldpass12', 'newpass12')).rejects.toThrow('User not found');
+            await expect(AuthService.changePassword(999, 'oldpass12', 'Newpass12!')).rejects.toThrow('User not found');
         });
 
         it('should throw when old password is incorrect', async () => {
@@ -152,7 +152,7 @@ describe('AuthService', () => {
                 Is_Email_Verified: false, Is_Phone_Verified: false,
             });
 
-            await expect(AuthService.changePassword(1, 'wrongpassword', 'newpassword123')).rejects.toThrow('Old password is incorrect');
+            await expect(AuthService.changePassword(1, 'wrongpassword', 'Newpassword123!')).rejects.toThrow('Old password is incorrect');
         });
 
         it('should update password successfully', async () => {
@@ -164,7 +164,7 @@ describe('AuthService', () => {
             });
             vi.mocked(UserModel.updateUser).mockResolvedValue(true);
 
-            const result = await AuthService.changePassword(1, 'correctpassword', 'newpassword123');
+            const result = await AuthService.changePassword(1, 'correctpassword', 'Newpassword123!');
             expect(result).toBe(true);
         });
     });
@@ -327,18 +327,18 @@ describe('AuthService', () => {
         });
 
         it('should throw when new password is too short', async () => {
-            await expect(AuthService.resetPasswordWithOTP('a@b.com', '123456', 'short')).rejects.toThrow('New password must be at least 8 characters');
+            await expect(AuthService.resetPasswordWithOTP('a@b.com', '123456', 'short')).rejects.toThrow('New password must be at least 8 characters and include uppercase, lowercase, number, and special character');
         });
 
         it('should throw when OTP is expired or not found', async () => {
-            await expect(AuthService.resetPasswordWithOTP('noreset@email.com', '123456', 'newpass12')).rejects.toThrow('OTP expired or not found');
+            await expect(AuthService.resetPasswordWithOTP('noreset@email.com', '123456', 'Newpass12!')).rejects.toThrow('OTP expired or not found');
         });
 
         it('should throw when OTP is invalid', async () => {
             const hashedOtp = crypto.createHash('sha256').update('112233').digest('hex');
             await redisClient.setEx('otp:resettest@email.com', 300, hashedOtp);
 
-            await expect(AuthService.resetPasswordWithOTP('resettest@email.com', '000000', 'newpass12')).rejects.toThrow('Invalid OTP');
+            await expect(AuthService.resetPasswordWithOTP('resettest@email.com', '000000', 'Newpass12!')).rejects.toThrow('Invalid OTP');
         });
 
         it('should reset password successfully', async () => {
@@ -351,7 +351,7 @@ describe('AuthService', () => {
             });
             vi.mocked(UserModel.updateUser).mockResolvedValue(true);
 
-            await expect(AuthService.resetPasswordWithOTP('resetok@email.com', otp, 'newpass12')).resolves.toBeUndefined();
+            await expect(AuthService.resetPasswordWithOTP('resetok@email.com', otp, 'Newpass12!')).resolves.toBeUndefined();
             expect(UserModel.updateUser).toHaveBeenCalledTimes(1);
         });
     });

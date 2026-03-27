@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import type { CreateCategory } from "@/src/data/categoriesData";
 import { PROVINCES } from "@/src/data/provinces";
 import ImageUploader, { UploadedImage } from "./ImageUploader";
-import { FieldLabel, ErrorText, Input, Select } from "@/src/components/ui";
+import { FieldLabel, ErrorText, FormErrorNotice, Input, Select, TextareaField } from "@/src/components/ui";
+import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 import { productApi } from "@/src/lib/api";
 
 interface CreateProductFormProps {
@@ -198,12 +199,12 @@ export default function CreateProductForm({
 
             <div>
                 <FieldLabel>รายละเอียดสินค้า</FieldLabel>
-                <textarea
+                <TextareaField
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     maxLength={2000}
                     rows={5}
-                    className="w-full border border-[#DCD0C0] rounded-md px-4 py-2 focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]"
+                    textareaClassName={getFormFieldClassName({ size: "md" })}
                     placeholder="ข้อมูลเพิ่มเติม เช่น สภาพสินค้า สี อายุการใช้งาน"
                 />
                 <div className="text-xs text-[#A89F91] text-right mt-1">{description.length}/2000</div>
@@ -251,11 +252,7 @@ export default function CreateProductForm({
                 {errors.phone && <ErrorText>{errors.phone}</ErrorText>}
             </div>
 
-            {submitError && (
-                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2">
-                    {submitError}
-                </div>
-            )}
+            {submitError && <FormErrorNotice message={submitError} />}
 
             <button
                 type="submit"

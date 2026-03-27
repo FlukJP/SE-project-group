@@ -6,6 +6,7 @@ import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
 import { reportApi } from "@/src/lib/api";
 import { ProductDetailSkeleton } from "@/src/components/ui/Skeleton";
+import { TextareaField } from "@/src/components/ui";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useProduct } from "@/src/hooks/useProducts";
 import { useSellerRating } from "@/src/hooks/useReviews";
@@ -37,12 +38,12 @@ function ReportProductModal({
           <h2 className="text-lg font-bold text-[#4A3B32]">รายงานสินค้านี้</h2>
         </div>
         <label className="block text-sm font-medium text-[#4A3B32] mb-1">เหตุผลในการรายงาน</label>
-        <textarea
+        <TextareaField
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={4}
           placeholder="อธิบายเหตุผลที่ต้องการรายงานสินค้านี้..."
-          className="w-full border border-[#DCD0C0] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C45A5A]/30 focus:border-[#C45A5A] resize-none"
+          textareaClassName="w-full border border-[#DCD0C0] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C45A5A]/30 focus:border-[#C45A5A] resize-none"
         />
         {error && <p className="text-[#C45A5A] text-xs mt-1">{error}</p>}
         <div className="flex gap-3 mt-4">

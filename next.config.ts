@@ -27,6 +27,16 @@ const nextConfig = {
         hostname: "se-project-group.onrender.com",
         pathname: "/uploads/**",
       },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        pathname: '/v0/b/your-project.appspot.com/o/**',
+      }
     ],
   },
 };

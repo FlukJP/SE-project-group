@@ -6,12 +6,14 @@ import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
 import { reviewApi, reportApi, orderApi, API_BASE } from "@/src/lib/api";
 import { UserProfileSkeleton } from "@/src/components/ui/Skeleton";
+import { FormErrorNotice, FormSuccessNotice, TextareaField } from "@/src/components/ui";
 import type { OrderWithDetails } from "@/src/types/Order";
 import { useAuth } from "@/src/contexts/AuthContext";
 import ProductCard from "@/src/components/product/ProductCard";
 import { useUser } from "@/src/hooks/useUsers";
 import { useProductsBySeller } from "@/src/hooks/useProducts";
 import { useSellerReviews, useSellerRating } from "@/src/hooks/useReviews";
+import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 
 type Tab = "products" | "reviews";
 
@@ -61,15 +63,15 @@ function ReportModal({
         </div>
 
         <label className="block text-sm font-medium text-[#4A3B32] mb-1">เหตุผลในการรายงาน</label>
-        <textarea
+        <TextareaField
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={4}
           placeholder="อธิบายเหตุผลที่ต้องการรายงานผู้ใช้นี้..."
-          className="w-full border border-[#DCD0C0] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C45A5A]/30 focus:border-[#C45A5A] resize-none"
+          textareaClassName={getFormFieldClassName({ size: "xl", tone: "danger", resize: "none" })}
         />
 
-        {error && <p className="text-[#C45A5A] text-xs mt-1">{error}</p>}
+        {error && <FormErrorNotice message={error} className="mt-2 text-xs" />}
 
         <div className="flex gap-3 mt-4">
           <button
@@ -136,7 +138,7 @@ function ReviewModal({
               aria-label="เลือกออเดอร์ที่ต้องการรีวิว"
               value={selectedOrderId}
               onChange={(e) => setSelectedOrderId(Number(e.target.value))}
-              className="w-full border border-[#DCD0C0] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+              className={getFormFieldClassName({ size: "xl" })}
             >
               {orders.map((o) => (
                 <option key={o.Order_ID} value={o.Order_ID}>
@@ -166,15 +168,15 @@ function ReviewModal({
         <label className="block text-sm font-medium text-[#4A3B32] mb-1">
           ความคิดเห็น <span className="text-[#A89F91] font-normal">(ไม่บังคับ)</span>
         </label>
-        <textarea
+        <TextareaField
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows={3}
           placeholder="แบ่งปันประสบการณ์การซื้อของคุณ..."
-          className="w-full border border-[#DCD0C0] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] resize-none"
+          textareaClassName={getFormFieldClassName({ size: "xl", resize: "none" })}
         />
 
-        {error && <p className="text-[#C45A5A] text-xs mt-1">{error}</p>}
+        {error && <FormErrorNotice message={error} className="mt-2 text-xs" />}
 
         <div className="flex gap-3 mt-4">
           <button
@@ -343,9 +345,10 @@ export default function PublicProfilePage() {
           </div>
 
           {reportDone && (
-            <div className="mt-3 text-xs text-[#4A3B32] bg-[#E6D5C3] border border-[#DCD0C0] rounded-lg px-3 py-2">
-              ส่งรายงานเรียบร้อยแล้ว ขอบคุณที่แจ้งให้เราทราบ
-            </div>
+            <FormSuccessNotice
+              message="ส่งรายงานเรียบร้อยแล้ว ขอบคุณที่แจ้งให้เราทราบ"
+              className="mt-3 text-xs px-3 py-2 text-[#4A3B32]"
+            />
           )}
         </div>
 

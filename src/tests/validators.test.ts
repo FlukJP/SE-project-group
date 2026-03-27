@@ -17,15 +17,19 @@ describe('validateEmail', () => {
 });
 
 describe('validatePassword', () => {
-    it('should accept passwords with 8+ characters', () => {
-        expect(validatePassword('12345678')).toBe(true);
-        expect(validatePassword('longpassword123')).toBe(true);
+    it('should accept passwords that meet all complexity rules', () => {
+        expect(validatePassword('Password1!')).toBe(true);
+        expect(validatePassword('Nongfluk2!')).toBe(true);
     });
 
-    it('should reject passwords shorter than 8 characters', () => {
+    it('should reject passwords that fail any password rule', () => {
         expect(validatePassword('')).toBe(false);
         expect(validatePassword('1234567')).toBe(false);
         expect(validatePassword('short')).toBe(false);
+        expect(validatePassword('nongfluk2!')).toBe(false);
+        expect(validatePassword('NONGFLUK2!')).toBe(false);
+        expect(validatePassword('Nongfluk!!')).toBe(false);
+        expect(validatePassword('Nongfluk2')).toBe(false);
     });
 });
 

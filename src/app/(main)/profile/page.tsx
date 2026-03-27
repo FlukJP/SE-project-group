@@ -10,6 +10,8 @@ import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 import ProductCard from "@/src/components/product/ProductCard";
 import EmailOTP from "@/src/components/auth/EmailOTP";
 import PhoneOTP from "@/src/components/auth/PhoneOTP";
+import { FormErrorNotice, FormSuccessNotice, TextareaField } from "@/src/components/ui";
+import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 import { startTransition } from "react";
 
 type TabKey = "profile" | "autoReply" | "review" | "manageProfile" | "account";
@@ -180,7 +182,7 @@ function InputField(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] focus:outline-none"
+      className={getFormFieldClassName({ size: "lg", readOnly: props.readOnly })}
     />
   );
 }
@@ -320,11 +322,7 @@ function ProfileInfo({
         {showEmailOTP && !isEmailVerified && (
           <div className="mt-4 p-4 bg-white border border-[#DCD0C0] rounded-xl">
             <h4 className="text-sm font-semibold text-[#D9734E] mb-3">ยืนยันอีเมลด้วย OTP</h4>
-            {otpError && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2 mb-3">
-                {otpError}
-              </div>
-            )}
+            {otpError && <FormErrorNotice message={otpError} className="mb-3" />}
             <EmailOTP
               email={email}
               onVerified={handleOTPVerified}
@@ -344,11 +342,7 @@ function ProfileInfo({
         {showPhoneOTP && !isPhoneVerified && isEmailVerified && phone && (
           <div className="mt-4 p-4 bg-white border border-blue-200 rounded-xl">
             <h4 className="text-sm font-semibold text-blue-700 mb-3">ยืนยันเบอร์โทรศัพท์ด้วย OTP</h4>
-            {otpError && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2 mb-3">
-                {otpError}
-              </div>
-            )}
+            {otpError && <FormErrorNotice message={otpError} className="mb-3" />}
             <PhoneOTP
               phone={phone}
               onVerified={handlePhoneOTPVerified}
@@ -392,22 +386,23 @@ function ProfileInfo({
 
             <div>
               <Label>ที่อยู่</Label>
-              <textarea
+              <TextareaField
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="เช่น 123/4 ซอยสุขุมวิท 11 พระนคร กรุงเทพมหานคร 10200"
                 rows={3}
-                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] focus:outline-none resize-none text-sm"
+                textareaClassName={getFormFieldClassName({ size: "lg", resize: "none" })}
               />
             </div>
           </div>
         </div>
 
-        {message && (
-          <div className={`text-sm ${message === "บันทึกสำเร็จ" ? "text-[#D9734E]" : "text-red-600"}`}>
-            {message}
-          </div>
-        )}
+        {message &&
+          (message === "บันทึกสำเร็จ" ? (
+            <FormSuccessNotice message={message} />
+          ) : (
+            <FormErrorNotice message={message} />
+          ))}
 
         <button
           type="button"
@@ -438,14 +433,14 @@ function AutoReply() {
 
       <Label>ข้อความที่ส่งอัตโนมัติเมื่อมีคนทักแชท</Label>
 
-      <textarea
-        className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 h-32 focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+      <TextareaField
+        textareaClassName={`${getFormFieldClassName({ size: "lg" })} h-32`}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         aria-label="ข้อความตอบกลับอัตโนมัติ"
       />
 
-      {saved && <p className="text-sm text-[#D9734E] mt-2">บันทึกสำเร็จ</p>}
+      {saved && <FormSuccessNotice message="บันทึกสำเร็จ" className="mt-2" />}
 
       <button type="button" onClick={handleSave} className="bg-[#D9734E] text-white px-6 py-2 rounded-lg font-semibold mt-4">บันทึก</button>
     </>
@@ -513,12 +508,12 @@ function WriteReviewCard({ order, onSubmitted }: { order: OrderWithDetails; onSu
         <StarSelector value={rating} onChange={setRating} />
       </div>
 
-      <textarea
+      <TextareaField
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder="แสดงความคิดเห็น (ไม่บังคับ)..."
         rows={2}
-        className="w-full border border-[#E6D5C3] rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] bg-white mt-2"
+        textareaClassName={`${getFormFieldClassName({ size: "lg", resize: "none" })} border-[#E6D5C3] mt-2`}
       />
 
       {error && <p className="text-[#C45A5A] text-xs mt-1">{error}</p>}

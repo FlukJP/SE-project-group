@@ -9,6 +9,8 @@ import { productApi, categoryApi, API_BASE, type CategoryData } from "@/src/lib/
 import { useError } from "@/src/contexts/ErrorContext";
 import type { ProductWithSeller } from "@/src/types/Product";
 import { PROVINCES } from "@/src/data/provinces";
+import { FormSuccessNotice, TextareaField } from "@/src/components/ui";
+import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 
 function parseDescription(description: string) {
   const locMatch = description.match(/📍\s*พื้นที่:\s*(.+?)\s*\((.+?)\)/);
@@ -241,9 +243,10 @@ export default function EditProductPage() {
           <h1 className="text-2xl font-extrabold text-[#D9734E] mb-6">แก้ไขสินค้า</h1>
 
           {submitSuccess && (
-            <div className="bg-[#E6D5C3] border border-[#DCD0C0] text-[#D9734E] rounded-xl px-4 py-3 mb-6 font-semibold">
-              บันทึกสำเร็จ กำลังกลับไปหน้าสินค้าของฉัน...
-            </div>
+            <FormSuccessNotice
+              message="บันทึกสำเร็จ กำลังกลับไปหน้าสินค้าของฉัน..."
+              className="rounded-xl px-4 py-3 mb-6 font-semibold"
+            />
           )}
 
           <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-[#E6D5C3] p-6 space-y-5">
@@ -256,7 +259,7 @@ export default function EditProductPage() {
                 title="เลือกหมวดหมู่"
                 value={categoryKey}
                 onChange={(e) => setCategoryKey(e.target.value)}
-                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+                className={getFormFieldClassName({ size: "lg" })}
               >
                 <option value="">-- เลือกหมวด --</option>
                 {categories.map((c) => (
@@ -277,7 +280,7 @@ export default function EditProductPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={255}
                 placeholder="ชื่อสินค้า"
-                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+                className={getFormFieldClassName({ size: "lg" })}
               />
               <div className="text-xs text-[#A89F91] text-right mt-0.5">{title.length}/255</div>
               {errors.title && <p className="text-red-600 text-xs mt-1">{errors.title}</p>}
@@ -294,7 +297,7 @@ export default function EditProductPage() {
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder="ราคา"
-                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+                className={getFormFieldClassName({ size: "lg" })}
               />
               {errors.price && <p className="text-red-600 text-xs mt-1">{errors.price}</p>}
             </div>
@@ -308,7 +311,7 @@ export default function EditProductPage() {
                 title="เลือกสภาพสินค้า"
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
-                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+                className={getFormFieldClassName({ size: "lg" })}
               >
                 <option value="มือสอง">มือสอง</option>
                 <option value="มือหนึ่ง">มือหนึ่ง</option>
@@ -321,13 +324,13 @@ export default function EditProductPage() {
               <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
                 รายละเอียดสินค้า
               </label>
-              <textarea
+              <TextareaField
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={2000}
                 rows={5}
                 placeholder="รายละเอียดเพิ่มเติม"
-                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+                textareaClassName={getFormFieldClassName({ size: "lg" })}
               />
               <div className="text-xs text-[#A89F91] text-right mt-0.5">
                 {description.length}/2000
@@ -348,7 +351,7 @@ export default function EditProductPage() {
                     setProvince(e.target.value);
                     setDistrict("");
                   }}
-                  className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+                  className={getFormFieldClassName({ size: "lg" })}
                 >
                   <option value="">-- เลือกจังหวัด --</option>
                   {provinceOptions.map((p) => (
@@ -370,7 +373,7 @@ export default function EditProductPage() {
                   value={district}
                   disabled={!province}
                   onChange={(e) => setDistrict(e.target.value)}
-                  className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] disabled:opacity-50"
+                  className={getFormFieldClassName({ size: "lg", disabled: !province })}
                 >
                   <option value="">-- เลือกอำเภอ/เขต --</option>
                   {districtOptions.map((d) => (
@@ -394,7 +397,7 @@ export default function EditProductPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="08XXXXXXXX"
-                className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+                className={getFormFieldClassName({ size: "lg" })}
               />
               {errors.phone && <p className="text-red-600 text-xs mt-1">{errors.phone}</p>}
             </div>

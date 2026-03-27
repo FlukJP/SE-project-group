@@ -7,35 +7,29 @@ import { useAuth } from "@/src/contexts/AuthContext";
 import { authApi } from "@/src/lib/api";
 import EmailOTP from "@/src/components/auth/EmailOTP";
 import PhoneOTP from "@/src/components/auth/PhoneOTP";
+import { AuthErrorAlert, PasswordField, SelectField, TextField, TextareaField } from "@/src/components/ui";
+import { AUTH_TEXT } from "@/src/constants/authText";
 import { PROVINCES } from "@/src/data/provinces";
-
-function getPasswordStrength(pw: string): { level: number; label: string; color: string } {
-  if (!pw) return { level: 0, label: "", color: "" };
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (pw.length >= 12) score++;
-  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
-  if (/\d/.test(pw)) score++;
-  if (/[^a-zA-Z0-9]/.test(pw)) score++;
-
-  if (score <= 1) return { level: 1, label: "อ่อนมาก", color: "bg-[#C45A5A]" };
-  if (score === 2) return { level: 2, label: "อ่อน", color: "bg-orange-500" };
-  if (score === 3) return { level: 3, label: "ปานกลาง", color: "bg-yellow-500" };
-  if (score === 4) return { level: 4, label: "แข็งแรง", color: "bg-[#D9734E]" };
-  return { level: 5, label: "แข็งแรงมาก", color: "bg-[#D9734E]" };
-}
+import { getAuthPageFieldClassName, getAuthPageSelectClassName } from "@/src/components/ui/authFieldStyles";
+import {
+  getPasswordValidationError,
+  getPasswordStrength,
+  PASSWORD_REQUIREMENTS_HINT,
+  PASSWORD_TOGGLE_ARIA_LABELS,
+  PASSWORD_PLACEHOLDERS,
+} from "@/src/utils/passwordValidation";
 
 function validatePhone(phone: string): string | null {
   const cleaned = phone.replace(/\D/g, "");
-  if (!cleaned) return "กรุณากรอกเบอร์โทรศัพท์";
-  if (!cleaned.startsWith("0")) return "เบอร์โทรศัพท์ต้องขึ้นต้นด้วย 0";
-  if (cleaned.length !== 10) return "เบอร์โทรศัพท์ต้องมี 10 หลัก";
+  if (!cleaned) return AUTH_TEXT.register.phoneRequired;
+  if (!cleaned.startsWith("0")) return AUTH_TEXT.register.phoneMustStartWithZero;
+  if (cleaned.length !== 10) return AUTH_TEXT.register.phoneMustBeTenDigits;
   return null;
 }
 
 function validateEmail(email: string): string | null {
-  if (!email.trim()) return "กรุณากรอกอีเมล";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "รูปแบบอีเมลไม่ถูกต้อง";
+  if (!email.trim()) return AUTH_TEXT.register.emailRequired;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return AUTH_TEXT.register.invalidEmail;
   return null;
 }
 
@@ -54,11 +48,9 @@ export default function RegisterPage() {
   const [province, setProvince] = useState("");
   const [district, setDistrict] = useState("");
   const [postalCode, setPostalCode] = useState("");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const selectedProvinceData = PROVINCES.find((p) => p.name === province);
-
-  // Track which fields have been touched for inline validation
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (isLoggedIn) router.replace("/");
@@ -70,15 +62,16 @@ export default function RegisterPage() {
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
-  // Per-field validation (only shown after touch)
-  const usernameError = touched.username && !username.trim() ? "กรุณากรอกชื่อผู้ใช้" : null;
+  const usernameError = touched.username && !username.trim() ? AUTH_TEXT.register.usernameRequired : null;
   const emailError = touched.email ? validateEmail(email) : null;
   const phoneError = touched.phone ? validatePhone(phone) : null;
-  const passwordError = touched.password && password.length > 0 && password.length < 8 ? "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร" : null;
-  const confirmError = touched.confirmPassword && confirmPassword.length > 0 && password !== confirmPassword ? "รหัสผ่านไม่ตรงกัน" : null;
-  const addressDetailError = touched.addressDetail && !addressDetail.trim() ? "กรุณากรอกที่อยู่" : null;
-  const provinceError = touched.province && !province ? "กรุณาเลือกจังหวัด" : null;
-  const districtError = touched.district && !district ? "กรุณาเลือกเขต/อำเภอ" : null;
+  const passwordError = touched.password ? getPasswordValidationError(password) : null;
+  const confirmError = touched.confirmPassword && confirmPassword.length > 0 && password !== confirmPassword
+    ? AUTH_TEXT.register.passwordMismatch
+    : null;
+  const addressDetailError = touched.addressDetail && !addressDetail.trim() ? AUTH_TEXT.register.addressRequired : null;
+  const provinceError = touched.province && !province ? AUTH_TEXT.register.provinceRequired : null;
+  const districtError = touched.district && !district ? AUTH_TEXT.register.districtRequired : null;
 
   const pwStrength = getPasswordStrength(password);
 
@@ -86,25 +79,63 @@ export default function RegisterPage() {
     e.preventDefault();
     if (loading) return;
 
-    // Mark all fields as touched
-    setTouched({ username: true, email: true, phone: true, password: true, confirmPassword: true, addressDetail: true, province: true, district: true });
+    setTouched({
+      username: true,
+      email: true,
+      phone: true,
+      password: true,
+      confirmPassword: true,
+      addressDetail: true,
+      province: true,
+      district: true,
+    });
 
-    // Validate all
     if (!username.trim() || !email.trim() || !password.trim() || !phone.trim()) {
-      setError("กรุณากรอกข้อมูลให้ครบ");
+      setError(AUTH_TEXT.register.fillAllFields);
       return;
     }
-    const eErr = validateEmail(email);
-    if (eErr) { setError(eErr); return; }
-    const pErr = validatePhone(phone);
-    if (pErr) { setError(pErr); return; }
-    if (password.length < 8) { setError("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"); return; }
-    if (password !== confirmPassword) { setError("รหัสผ่านไม่ตรงกัน"); return; }
-    if (!addressDetail.trim()) { setError("กรุณากรอกที่อยู่"); return; }
-    if (!province) { setError("กรุณาเลือกจังหวัด"); return; }
-    if (!district) { setError("กรุณาเลือกเขต/อำเภอ"); return; }
 
-    const fullAddress = [addressDetail.trim(), district, province, postalCode.trim()].filter(Boolean).join(" ");
+    const emailValidationError = validateEmail(email);
+    if (emailValidationError) {
+      setError(emailValidationError);
+      return;
+    }
+
+    const phoneValidationError = validatePhone(phone);
+    if (phoneValidationError) {
+      setError(phoneValidationError);
+      return;
+    }
+
+    const passwordValidationError = getPasswordValidationError(password);
+    if (passwordValidationError) {
+      setError(passwordValidationError);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError(AUTH_TEXT.register.passwordMismatch);
+      return;
+    }
+
+    if (!addressDetail.trim()) {
+      setError(AUTH_TEXT.register.addressRequired);
+      return;
+    }
+
+    if (!province) {
+      setError(AUTH_TEXT.register.provinceRequired);
+      return;
+    }
+
+    if (!district) {
+      setError(AUTH_TEXT.register.districtRequired);
+      return;
+    }
+
+    const fullAddress = [addressDetail.trim(), district, province, postalCode.trim()]
+      .filter(Boolean)
+      .join(" ");
 
     setError("");
     setLoading(true);
@@ -118,20 +149,19 @@ export default function RegisterPage() {
       });
       setStep("email-otp");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "สมัครสมาชิกไม่สำเร็จ");
+      setError(err instanceof Error ? err.message : AUTH_TEXT.register.failed);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fix #19: After email OTP verified, move to phone OTP step before going home
   const handleEmailVerified = async (data: { access_token: string; refresh_token: string }) => {
     try {
       await setTokensAndLoadUser(data.access_token, data.refresh_token);
       setError("");
       setStep("phone-otp");
     } catch {
-      setError("เข้าสู่ระบบอัตโนมัติไม่สำเร็จ กรุณาเข้าสู่ระบบด้วยตัวเอง");
+      setError(AUTH_TEXT.register.emailAutoLoginFailed);
     }
   };
 
@@ -141,7 +171,7 @@ export default function RegisterPage() {
       await setTokensAndLoadUser(result.access_token, result.refresh_token);
       router.push("/");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "ยืนยันเบอร์โทรไม่สำเร็จ");
+      setError(err instanceof Error ? err.message : AUTH_TEXT.register.phoneVerifyFailed);
     }
   };
 
@@ -154,80 +184,70 @@ export default function RegisterPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#E6D5C3] mb-4">
                 <span className="text-3xl">📝</span>
               </div>
-              <h1 className="text-2xl font-bold text-[#4A3B32]">สมัครสมาชิก</h1>
-              <p className="text-sm text-[#A89F91] mt-1">สร้างบัญชีเพื่อเริ่มซื้อขาย</p>
+              <h1 className="text-2xl font-bold text-[#4A3B32]">{AUTH_TEXT.register.title}</h1>
+              <p className="text-sm text-[#A89F91] mt-1">{AUTH_TEXT.register.subtitle}</p>
             </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2 mb-4">
-                {error}
-              </div>
-            )}
+            {error && <AuthErrorAlert message={error} />}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#4A3B32] mb-1">ชื่อผู้ใช้</label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  onBlur={() => markTouched("username")}
-                  placeholder="ชื่อที่แสดงให้ผู้อื่นเห็น"
-                  autoComplete="username"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${usernameError ? "border-red-300" : "border-[#E6D5C3]"}`}
-                />
-                {usernameError && <p className="text-xs text-[#C45A5A] mt-1">{usernameError}</p>}
-              </div>
+              <TextField
+                label={AUTH_TEXT.common.usernameLabel}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onBlur={() => markTouched("username")}
+                placeholder={AUTH_TEXT.common.usernamePlaceholder}
+                autoComplete="username"
+                error={usernameError}
+                inputClassName={getAuthPageFieldClassName(!!usernameError)}
+              />
+
+              <TextField
+                label={AUTH_TEXT.common.emailLabel}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => markTouched("email")}
+                placeholder={AUTH_TEXT.common.emailPlaceholder}
+                autoComplete="email"
+                error={emailError}
+                inputClassName={getAuthPageFieldClassName(!!emailError)}
+              />
+
+              <TextField
+                label={AUTH_TEXT.common.phoneLabel}
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                onBlur={() => markTouched("phone")}
+                placeholder={AUTH_TEXT.common.phonePlaceholder}
+                autoComplete="tel"
+                error={phoneError}
+                inputClassName={getAuthPageFieldClassName(!!phoneError)}
+              />
 
               <div>
-                <label className="block text-sm font-medium text-[#4A3B32] mb-1">อีเมล</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onBlur={() => markTouched("email")}
-                  placeholder="your@email.com"
-                  autoComplete="email"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${emailError ? "border-red-300" : "border-[#E6D5C3]"}`}
-                />
-                {emailError && <p className="text-xs text-[#C45A5A] mt-1">{emailError}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[#4A3B32] mb-1">เบอร์โทรศัพท์</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  onBlur={() => markTouched("phone")}
-                  placeholder="08x-xxx-xxxx"
-                  autoComplete="tel"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${phoneError ? "border-red-300" : "border-[#E6D5C3]"}`}
-                />
-                {phoneError && <p className="text-xs text-[#C45A5A] mt-1">{phoneError}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[#4A3B32] mb-1">รหัสผ่าน</label>
-                <input
-                  type="password"
+                <PasswordField
+                  label={AUTH_TEXT.common.passwordLabel}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => markTouched("password")}
-                  placeholder="อย่างน้อย 8 ตัวอักษร"
+                  placeholder={PASSWORD_PLACEHOLDERS.password}
                   autoComplete="new-password"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${passwordError ? "border-red-300" : "border-[#E6D5C3]"}`}
+                  showAriaLabel={PASSWORD_TOGGLE_ARIA_LABELS.show}
+                  hideAriaLabel={PASSWORD_TOGGLE_ARIA_LABELS.hide}
+                  error={passwordError}
+                  hint={PASSWORD_REQUIREMENTS_HINT}
+                  inputClassName={getAuthPageFieldClassName(!!passwordError)}
                 />
-                {passwordError && <p className="text-xs text-[#C45A5A] mt-1">{passwordError}</p>}
                 {password.length > 0 && (
                   <div className="mt-2">
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((i) => (
                         <div
                           key={i}
-                          className={`h-1.5 flex-1 rounded-full transition-colors ${
-                            i <= pwStrength.level ? pwStrength.color : "bg-[#E6D5C3]"
-                          }`}
+                          className={`h-1.5 flex-1 rounded-full transition-colors ${i <= pwStrength.level ? pwStrength.color : "bg-[#E6D5C3]"}`}
                         />
                       ))}
                     </div>
@@ -236,83 +256,74 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[#4A3B32] mb-1">ยืนยันรหัสผ่าน</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  onBlur={() => markTouched("confirmPassword")}
-                  placeholder="กรอกรหัสผ่านอีกครั้ง"
-                  autoComplete="new-password"
-                  className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${confirmError ? "border-red-300" : "border-[#E6D5C3]"}`}
-                />
-                {confirmError && <p className="text-xs text-[#C45A5A] mt-1">{confirmError}</p>}
-              </div>
+              <PasswordField
+                label={AUTH_TEXT.common.confirmPasswordLabel}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onBlur={() => markTouched("confirmPassword")}
+                placeholder={PASSWORD_PLACEHOLDERS.confirmPassword}
+                autoComplete="new-password"
+                showAriaLabel={PASSWORD_TOGGLE_ARIA_LABELS.showConfirm}
+                hideAriaLabel={PASSWORD_TOGGLE_ARIA_LABELS.hideConfirm}
+                error={confirmError}
+                inputClassName={getAuthPageFieldClassName(!!confirmError)}
+              />
 
               <div className="pt-2">
-                <p className="text-sm font-semibold text-[#4A3B32] mb-3">ที่อยู่สำหรับจัดส่ง</p>
+                <p className="text-sm font-semibold text-[#4A3B32] mb-3">{AUTH_TEXT.register.shippingAddressTitle}</p>
 
                 <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-[#4A3B32] mb-1">บ้านเลขที่ / ซอย / ถนน</label>
-                    <input
-                      type="text"
-                      value={addressDetail}
-                      onChange={(e) => setAddressDetail(e.target.value)}
-                      onBlur={() => markTouched("addressDetail")}
-                      placeholder="เช่น 123/4 ซอยสุขุมวิท 11 ถนนสุขุมวิท"
-                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] ${addressDetailError ? "border-red-300" : "border-[#E6D5C3]"}`}
-                    />
-                    {addressDetailError && <p className="text-xs text-[#C45A5A] mt-1">{addressDetailError}</p>}
-                  </div>
+                  <TextareaField
+                    label={AUTH_TEXT.register.addressDetailLabel}
+                    value={addressDetail}
+                    onChange={(e) => setAddressDetail(e.target.value)}
+                    onBlur={() => markTouched("addressDetail")}
+                    placeholder={AUTH_TEXT.register.addressDetailPlaceholder}
+                    rows={3}
+                    error={addressDetailError}
+                    textareaClassName={`${getAuthPageFieldClassName(!!addressDetailError)} resize-y min-h-[104px]`}
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-[#4A3B32] mb-1">จังหวัด</label>
-                    <select
-                      aria-label="เลือกจังหวัด"
-                      value={province}
-                      onChange={(e) => { setProvince(e.target.value); setDistrict(""); }}
-                      onBlur={() => markTouched("province")}
-                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] bg-white ${provinceError ? "border-red-300" : "border-[#E6D5C3]"}`}
-                    >
-                      <option value="">-- เลือกจังหวัด --</option>
+                  <SelectField
+                    label={AUTH_TEXT.register.provinceLabel}
+                    aria-label={AUTH_TEXT.register.provinceLabel}
+                    value={province}
+                    onChange={(e) => { setProvince(e.target.value); setDistrict(""); }}
+                    onBlur={() => markTouched("province")}
+                    error={provinceError}
+                    selectClassName={getAuthPageSelectClassName(!!provinceError)}
+                  >
+                      <option value="">{AUTH_TEXT.register.provincePlaceholder}</option>
                       {PROVINCES.map((p) => (
                         <option key={p.name} value={p.name}>{p.name}</option>
                       ))}
-                    </select>
-                    {provinceError && <p className="text-xs text-[#C45A5A] mt-1">{provinceError}</p>}
-                  </div>
+                    </SelectField>
 
-                  <div>
-                    <label className="block text-sm font-medium text-[#4A3B32] mb-1">เขต / อำเภอ</label>
-                    <select
-                      aria-label="เลือกเขต/อำเภอ"
-                      value={district}
-                      onChange={(e) => setDistrict(e.target.value)}
-                      onBlur={() => markTouched("district")}
-                      disabled={!province}
-                      className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] bg-white disabled:bg-[#F9F6F0] disabled:text-[#A89F91] ${districtError ? "border-red-300" : "border-[#E6D5C3]"}`}
-                    >
-                      <option value="">-- เลือกเขต/อำเภอ --</option>
+                  <SelectField
+                    label={AUTH_TEXT.register.districtLabel}
+                    aria-label={AUTH_TEXT.register.districtLabel}
+                    value={district}
+                    onChange={(e) => setDistrict(e.target.value)}
+                    onBlur={() => markTouched("district")}
+                    disabled={!province}
+                    error={districtError}
+                    selectClassName={getAuthPageSelectClassName(!!districtError, true)}
+                  >
+                      <option value="">{AUTH_TEXT.register.districtPlaceholder}</option>
                       {selectedProvinceData?.districts.map((d) => (
                         <option key={d} value={d}>{d}</option>
                       ))}
-                    </select>
-                    {districtError && <p className="text-xs text-[#C45A5A] mt-1">{districtError}</p>}
-                  </div>
+                    </SelectField>
 
-                  <div>
-                    <label className="block text-sm font-medium text-[#4A3B32] mb-1">รหัสไปรษณีย์ <span className="text-[#A89F91] font-normal">(ไม่บังคับ)</span></label>
-                    <input
-                      type="text"
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value.replace(/\D/g, "").slice(0, 5))}
-                      placeholder="เช่น 10110"
-                      maxLength={5}
-                      className="w-full px-4 py-3 rounded-xl border border-[#E6D5C3] text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
-                    />
-                  </div>
+                  <TextField
+                    label={`${AUTH_TEXT.register.postalCodeLabel} ${AUTH_TEXT.register.optional}`}
+                    type="text"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                    placeholder={AUTH_TEXT.register.postalCodePlaceholder}
+                    maxLength={5}
+                    inputClassName={getAuthPageFieldClassName()}
+                  />
                 </div>
               </div>
 
@@ -321,20 +332,20 @@ export default function RegisterPage() {
                 disabled={loading}
                 className="w-full py-3 rounded-xl bg-[#D9734E] text-white font-semibold hover:bg-[#C25B38] transition disabled:opacity-50"
               >
-                {loading ? "กำลังสมัคร..." : "สมัครสมาชิก"}
+                {loading ? AUTH_TEXT.register.loading : AUTH_TEXT.register.submit}
               </button>
             </form>
 
             <div className="mt-6 text-center text-sm text-[#A89F91]">
-              มีบัญชีอยู่แล้ว?{" "}
+              {AUTH_TEXT.register.haveAccount}{" "}
               <Link href="/login" className="text-[#D9734E] font-semibold hover:underline">
-                เข้าสู่ระบบ
+                {AUTH_TEXT.register.signIn}
               </Link>
             </div>
 
             <div className="mt-4 text-center">
               <Link href="/" className="text-sm text-[#A89F91] hover:text-[#4A3B32]">
-                กลับหน้าแรก
+                {AUTH_TEXT.register.backHome}
               </Link>
             </div>
           </>
@@ -346,15 +357,11 @@ export default function RegisterPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#E6D5C3] mb-4">
                 <span className="text-3xl">📧</span>
               </div>
-              <h1 className="text-2xl font-bold text-[#4A3B32]">ยืนยันอีเมล</h1>
-              <p className="text-sm text-[#A89F91] mt-1">ยืนยันตัวตนด้วยรหัส OTP ทางอีเมล</p>
+              <h1 className="text-2xl font-bold text-[#4A3B32]">{AUTH_TEXT.register.emailOtpTitle}</h1>
+              <p className="text-sm text-[#A89F91] mt-1">{AUTH_TEXT.register.emailOtpSubtitle}</p>
             </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2 mb-4">
-                {error}
-              </div>
-            )}
+            {error && <AuthErrorAlert message={error} />}
 
             <EmailOTP
               email={email}
@@ -367,7 +374,7 @@ export default function RegisterPage() {
                 onClick={() => router.push("/login")}
                 className="text-sm text-[#A89F91] hover:text-[#4A3B32]"
               >
-                ข้ามขั้นตอนนี้ ไปหน้าเข้าสู่ระบบ
+                {AUTH_TEXT.register.emailSkip}
               </button>
             </div>
           </>
@@ -379,15 +386,11 @@ export default function RegisterPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
                 <span className="text-3xl">📱</span>
               </div>
-              <h1 className="text-2xl font-bold text-[#4A3B32]">ยืนยันเบอร์โทรศัพท์</h1>
-              <p className="text-sm text-[#A89F91] mt-1">ยืนยันเบอร์โทรศัพท์เพื่อเริ่มซื้อขาย</p>
+              <h1 className="text-2xl font-bold text-[#4A3B32]">{AUTH_TEXT.register.phoneOtpTitle}</h1>
+              <p className="text-sm text-[#A89F91] mt-1">{AUTH_TEXT.register.phoneOtpSubtitle}</p>
             </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2 mb-4">
-                {error}
-              </div>
-            )}
+            {error && <AuthErrorAlert message={error} />}
 
             <PhoneOTP
               phone={phone}
@@ -400,7 +403,7 @@ export default function RegisterPage() {
                 onClick={() => router.push("/")}
                 className="text-sm text-[#A89F91] hover:text-[#4A3B32]"
               >
-                ข้ามขั้นตอนนี้
+                {AUTH_TEXT.register.phoneSkip}
               </button>
             </div>
           </>

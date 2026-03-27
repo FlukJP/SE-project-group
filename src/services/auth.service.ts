@@ -37,7 +37,7 @@ export const AuthService = {
         if (!userData.Username || !userData.Email || !userData.Password || !userData.Phone_number) throw new AppError("Username, Email, Password and Phone number are required", 400);
         if (!validateUsername(userData.Username)) throw new AppError("Username must be 2-50 characters and contain only letters, numbers, spaces, underscores, or hyphens", 400);
         if (!validateEmail(userData.Email)) throw new AppError("Invalid email format", 400);
-        if (!validatePassword(userData.Password)) throw new AppError("Password must be at least 8 characters long", 400);
+        if (!validatePassword(userData.Password)) throw new AppError("Password must be at least 8 characters and include uppercase, lowercase, number, and special character", 400);
         if (!validatePhoneNumber(userData.Phone_number)) throw new AppError("Phone number must be 10 digits", 400);
 
         const existingUser = await UserModel.findByEmailSafe(userData.Email);
@@ -160,7 +160,7 @@ export const AuthService = {
     /** Verify the old password and update it with the new hashed password */
     changePassword: async (userID: number, oldPassword: string, newPassword: string): Promise<boolean> => {
         if (!oldPassword || !newPassword) throw new AppError("Old password and new password are required", 400);
-        if (!validatePassword(newPassword)) throw new AppError("New password must be at least 8 characters long", 400);
+        if (!validatePassword(newPassword)) throw new AppError("New password must be at least 8 characters and include uppercase, lowercase, number, and special character", 400);
 
         const user = await UserModel.findByID(userID);
         if (!user || !user.Password) throw new AppError("User not found", 404);
@@ -225,7 +225,7 @@ export const AuthService = {
     /** Verify the OTP and update the user's password to the new hashed value */
     resetPasswordWithOTP: async (email: string, otp: string, newPassword: string): Promise<void> => {
         if (!validateEmail(email) || !newPassword) throw new AppError("Email and new password are required", 400);
-        if (!validatePassword(newPassword)) throw new AppError("New password must be at least 8 characters long", 400);
+        if (!validatePassword(newPassword)) throw new AppError("New password must be at least 8 characters and include uppercase, lowercase, number, and special character", 400);
 
         const storedOtp = await redisClient.get(`otp:${email}`);
         if (!storedOtp) throw new AppError("OTP expired or not found", 400);

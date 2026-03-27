@@ -29,6 +29,7 @@ const sampleReview = {
     Seller_ID: 30,
     Rating: 5,
     Comment: 'Great!',
+    Created_at: '2024-01-01T00:00:00.000Z',
 };
 
 describe('ReviewService', () => {
@@ -91,7 +92,7 @@ describe('ReviewService', () => {
             vi.mocked(ReviewModel.findByOrderId).mockResolvedValue(null);
             vi.mocked(ReviewModel.create).mockResolvedValue(1);
             vi.mocked(ReviewModel.getSellerRating).mockResolvedValue({ averageRating: 4.5, totalReviews: 2 });
-            vi.mocked(ReviewModel.findById).mockResolvedValue({ ...sampleReview, Comment: undefined });
+            vi.mocked(ReviewModel.findById).mockResolvedValue({ ...sampleReview, Comment: null });
 
             const result = await ReviewService.create(20, { orderId: 1, rating: 4 });
             expect(result).toBeDefined();

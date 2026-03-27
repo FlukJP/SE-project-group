@@ -12,7 +12,8 @@ if (!admin.apps.length) {
 
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         // Production: loaded from environment variable (JSON string)
-        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        const keyPath = path.resolve(process.env.FIREBASE_SERVICE_ACCOUNT as string);
+        serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
     } else if (fs.existsSync(serviceAccountPath)) {
         // Local dev: loaded from file
         serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf-8"));

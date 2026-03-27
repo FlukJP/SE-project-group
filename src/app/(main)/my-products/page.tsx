@@ -8,6 +8,7 @@ import { useAuth } from "@/src/contexts/AuthContext";
 import { productApi, orderApi, API_BASE, type OrderWithDetails } from "@/src/lib/api";
 import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 import { useError } from "@/src/contexts/ErrorContext";
+import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 
 type Tab = "products" | "selling" | "buying";
 
@@ -333,7 +334,7 @@ export default function MyProductsPage() {
                           value={p.status}
                           disabled={statusUpdating === p.id}
                           onChange={(e) => handleStatusChange(p.id, e.target.value)}
-                          className="block w-full text-xs border border-[#DCD0C0] rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] disabled:opacity-50"
+                          className={`${getFormFieldClassName({ size: "lg", disabled: statusUpdating === p.id })} block px-2 py-1 text-xs`}
                         >
                           <option value="available">กำลังขาย</option>
                           <option value="reserved">จอง</option>
@@ -432,7 +433,7 @@ export default function MyProductsPage() {
               placeholder="User ID ผู้ซื้อ"
               value={buyerIdInput}
               onChange={(e) => setBuyerIdInput(e.target.value)}
-              className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] mb-4"
+              className={`${getFormFieldClassName({ size: "lg" })} mb-4`}
               autoFocus
             />
             <div className="flex gap-2">

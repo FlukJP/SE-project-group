@@ -4,11 +4,13 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/src/components/layout/Navbar";
 import ProductCard from "@/src/components/product/ProductCard";
+import { FormErrorNotice } from "@/src/components/ui";
 import { ProductGridSkeleton } from "@/src/components/ui/Skeleton";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { PROVINCES } from "@/src/data/provinces";
 import { useProducts } from "@/src/hooks/useProducts";
 import { useCategories } from "@/src/hooks/useCategories";
+import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 
 type SortOption = "newest" | "price_asc" | "price_desc";
 
@@ -203,7 +205,7 @@ function SearchPageContent() {
                   value={query}
                   onChange={(e) => handleQueryChange(e.target.value)}
                   placeholder="พิมพ์ชื่อสินค้าที่ต้องการค้นหา..."
-                  className="w-full rounded-xl border border-white/20 bg-white pl-10 pr-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E] placeholder-[#A89F91]"
+                  className={`${getFormFieldClassName({ size: "xl" })} border-white/20 pl-10 pr-3 py-3`}
                 />
                 {query && (
                   <button
@@ -271,7 +273,7 @@ function SearchPageContent() {
                     aria-label="เลือกจังหวัด"
                     value={province}
                     onChange={(e) => navigate({ province: e.target.value, district: "" })}
-                    className="flex-1 border border-[#DCD0C0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+                    className={`${getFormFieldClassName({ size: "lg" })} flex-1`}
                   >
                     <option value="">ทุกจังหวัด</option>
                     {PROVINCES.map((p) => (
@@ -283,7 +285,7 @@ function SearchPageContent() {
                       aria-label="เลือกอำเภอ"
                       value={district}
                       onChange={(e) => navigate({ district: e.target.value })}
-                      className="flex-1 border border-[#DCD0C0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+                      className={`${getFormFieldClassName({ size: "lg" })} flex-1`}
                     >
                       <option value="">ทุกอำเภอ</option>
                       {PROVINCES.find((p) => p.name === province)?.districts.map((d) => (
@@ -369,7 +371,7 @@ function SearchPageContent() {
                       placeholder="ต่ำสุด"
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
-                      className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+                      className={getFormFieldClassName({ size: "lg" })}
                     />
                     <span className="text-[#A89F91] shrink-0">–</span>
                     <input
@@ -378,7 +380,7 @@ function SearchPageContent() {
                       placeholder="สูงสุด"
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
-                      className="w-full border border-[#DCD0C0] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 focus:border-[#D9734E]"
+                      className={getFormFieldClassName({ size: "lg" })}
                     />
                   </div>
                 </div>
@@ -460,7 +462,7 @@ function SearchPageContent() {
           ) : error ? (
             <div className="text-center py-16">
               <div className="text-4xl mb-3">&#9888;&#65039;</div>
-              <p className="text-[#C45A5A]">{error}</p>
+              <FormErrorNotice message={error} className="max-w-md mx-auto" />
               <button type="button" onClick={() => window.location.reload()} className="mt-3 text-[#D9734E] hover:underline text-sm">
                 ลองใหม่อีกครั้ง
               </button>

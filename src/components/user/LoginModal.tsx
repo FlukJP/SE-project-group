@@ -3,6 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { AuthErrorAlert, PasswordField, TextField } from "@/src/components/ui";
+import { getAuthModalFieldClassName } from "@/src/components/ui/authFieldStyles";
+import { AUTH_TEXT } from "@/src/constants/authText";
+import { PASSWORD_PLACEHOLDERS, PASSWORD_TOGGLE_ARIA_LABELS } from "@/src/utils/passwordValidation";
 
 // Renders a login modal with email/password form and optional Google login (disabled)
 export default function LoginModal({ onClose }: { onClose: () => void }) {
@@ -15,7 +19,6 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
 
     // Close the modal when Escape is pressed, blocked during loading
     useEffect(() => {
-        // Handles keydown events to close the modal on Escape
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape" && !loading) onClose();
         };
@@ -28,11 +31,11 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
         e.preventDefault();
         if (loading) return;
         if (!email.trim() || !password.trim()) {
-            setError("กรุณากรอกอีเมลและรหัสผ่าน");
+            setError(AUTH_TEXT.login.emptyCredentials);
             return;
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            setError("รูปแบบอีเมลไม่ถูกต้อง");
+            setError(AUTH_TEXT.register.invalidEmail);
             return;
         }
         setError("");
@@ -41,14 +44,13 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
             await login(email, password);
             onClose();
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "เข้าสู่ระบบไม่สำเร็จ");
+            setError(err instanceof Error ? err.message : AUTH_TEXT.login.failed);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        // Close the modal on backdrop click, blocked during loading
         <div
             className="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999]"
             onClick={(e) => {
@@ -58,11 +60,13 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white rounded-2xl w-[520px] px-10 py-8 relative text-center">
                 <button
                     type="button"
-                    onClick={() => { if (!loading) onClose(); }}
+                    onClick={() => {
+                        if (!loading) onClose();
+                    }}
                     disabled={loading}
                     className="absolute top-4 right-4 border-none bg-transparent text-xl cursor-pointer disabled:opacity-50"
                 >
-                    ✕
+                    &times;
                 </button>
 
                 <div className="flex justify-center mb-4">
@@ -73,13 +77,9 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
                     />
                 </div>
 
-                <h2 className="text-2xl font-bold mb-6">เริ่มต้นใช้งาน</h2>
+                <h2 className="text-2xl font-bold mb-6">{AUTH_TEXT.modal.title}</h2>
 
-                {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-2 mb-4">
-                        {error}
-                    </div>
-                )}
+                {error && <AuthErrorAlert message={error} />}
 
                 {mode === "choice" ? (
                     <>
@@ -88,7 +88,7 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
                             onClick={() => setMode("email")}
                             className="w-full p-3.5 rounded-xl border border-[#DCD0C0] bg-white text-base mb-3 cursor-pointer hover:bg-[#E6D5C3] transition-colors"
                         >
-                            ✉️ เข้าสู่ระบบด้วยอีเมล
+                            ✉️ {AUTH_TEXT.modal.emailOption}
                         </button>
 
                         <button
@@ -101,63 +101,72 @@ export default function LoginModal({ onClose }: { onClose: () => void }) {
                                 alt="google"
                                 className="w-5 mr-2"
                             />
-                            เชื่อมต่อด้วย Google (เร็ว ๆ นี้)
+                            {AUTH_TEXT.modal.googleComingSoon}
                         </button>
                     </>
                 ) : (
                     <form onSubmit={handleEmailLogin} className="text-left space-y-3">
                         <button
                             type="button"
-                            onClick={() => { setMode("choice"); setError(""); }}
+                            onClick={() => {
+                                setMode("choice");
+                                setError("");
+                            }}
                             className="text-sm text-[#D9734E] hover:underline mb-2 transition-colors"
                         >
-                            &larr; กลับ
+                            &larr; {AUTH_TEXT.modal.back}
                         </button>
 
-                        <div>
-                            <label className="block text-sm font-medium text-[#4A3B32] mb-1">อีเมล</label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="your@email.com"
-                                className="w-full p-3.5 rounded-xl border border-[#DCD0C0] text-base focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]"
-                            />
-                        </div>
+                        <TextField
+                            label={AUTH_TEXT.common.emailLabel}
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder={AUTH_TEXT.common.emailPlaceholder}
+                            inputClassName={getAuthModalFieldClassName()}
+                        />
 
-                        <div>
-                            <label className="block text-sm font-medium text-[#4A3B32] mb-1">รหัสผ่าน</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="รหัสผ่าน"
-                                className="w-full p-3.5 rounded-xl border border-[#DCD0C0] text-base focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30 bg-white text-[#4A3B32] placeholder-[#A89F91]"
-                            />
-                        </div>
+                        <PasswordField
+                            label={AUTH_TEXT.common.passwordLabel}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder={PASSWORD_PLACEHOLDERS.currentPassword}
+                            autoComplete="current-password"
+                            showAriaLabel={PASSWORD_TOGGLE_ARIA_LABELS.show}
+                            hideAriaLabel={PASSWORD_TOGGLE_ARIA_LABELS.hide}
+                            inputClassName={getAuthModalFieldClassName()}
+                        />
 
                         <button
                             type="submit"
                             disabled={loading}
                             className="w-full p-3.5 rounded-xl border-none bg-[#D9734E] text-white text-base font-semibold cursor-pointer hover:bg-[#C25B38] transition-colors disabled:opacity-50"
                         >
-                            {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+                            {loading ? AUTH_TEXT.login.loading : AUTH_TEXT.login.submit}
                         </button>
                     </form>
                 )}
 
                 <p className="text-sm text-[#A89F91] mt-5">
-                    ยังไม่มีบัญชี?{" "}
-                    <Link href="/register" onClick={onClose} className="text-[#D9734E] font-semibold hover:underline transition-colors">
-                        สมัครสมาชิก
+                    {AUTH_TEXT.login.noAccount}{" "}
+                    <Link
+                        href="/register"
+                        onClick={onClose}
+                        className="text-[#D9734E] font-semibold hover:underline transition-colors"
+                    >
+                        {AUTH_TEXT.login.signUp}
                     </Link>
                 </p>
 
                 <p className="text-xs text-[#A89F91] mt-4">
-                    กด &quot;เข้าสู่ระบบ&quot; เพื่อยอมรับ{" "}
-                    <span className="text-[#D9734E] cursor-pointer hover:underline transition-colors">เงื่อนไขการใช้บริการ</span>{" "}
-                    และ{" "}
-                    <span className="text-[#D9734E] cursor-pointer hover:underline transition-colors">นโยบายความเป็นส่วนตัว</span>
+                    {AUTH_TEXT.modal.acceptPrefix} &quot;{AUTH_TEXT.login.submit}&quot; {AUTH_TEXT.modal.acceptMiddle}{" "}
+                    <span className="text-[#D9734E] cursor-pointer hover:underline transition-colors">
+                        {AUTH_TEXT.modal.termsOfService}
+                    </span>{" "}
+                    {AUTH_TEXT.modal.and}{" "}
+                    <span className="text-[#D9734E] cursor-pointer hover:underline transition-colors">
+                        {AUTH_TEXT.modal.privacyPolicy}
+                    </span>
                 </p>
             </div>
         </div>
