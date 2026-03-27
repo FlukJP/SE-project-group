@@ -14,9 +14,9 @@ import type { ChatRoomWithPartner } from "@/src/types/Chat";
 type ChatTab = "all" | "buyer" | "seller";
 
 const CHAT_TABS: { key: ChatTab; label: string }[] = [
-  { key: "all", label: "à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”" },
-  { key: "buyer", label: "à¹à¸Šà¸—à¸à¸±à¸šà¸œà¸¹à¹‰à¸‹à¸·à¹‰à¸­" },
-  { key: "seller", label: "à¹à¸Šà¸—à¸à¸±à¸šà¸œà¸¹à¹‰à¸‚à¸²à¸¢" },
+  { key: "all", label: "ทั้งหมด" },
+  { key: "buyer", label: "แชทกับผู้ซื้อ" },
+  { key: "seller", label: "แชทกับผู้ขาย" },
 ];
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
@@ -33,13 +33,13 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
       setRooms(res.data);
       setRoomsError(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "à¹‚à¸«à¸¥à¸”à¸«à¹‰à¸­à¸‡à¹à¸Šà¸—à¹„à¸¡à¹ˆà¸ªà¸³à¹€à¸£à¹‡à¸ˆ";
+      const message = err instanceof Error ? err.message : "โหลดห้องแชทไม่สำเร็จ";
       showError(message);
       setRoomsError(message);
     } finally {
       setIsLoadingRooms(false);
     }
-  }, []);
+  }, []); // แนะนำให้เพิ่ม showError เข้าไปใน array นี้ถ้า lint เตือนนะครับ
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -77,14 +77,14 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
               !
             </div>
             <p>
-              à¹€à¸§à¹‡à¸šà¹„à¸‹à¸•à¹Œà¹„à¸¡à¹ˆà¸¡à¸µà¸šà¸£à¸´à¸à¸²à¸£à¹€à¸›à¹‡à¸™à¸•à¸±à¸§à¸à¸¥à¸²à¸‡à¸£à¸±à¸šà¸Šà¸³à¸£à¸°à¹€à¸‡à¸´à¸™à¹ƒà¸™à¸à¸²à¸£à¸‹à¸·à¹‰à¸­à¸‚à¸²à¸¢ à¹‚à¸”à¸¢à¸à¸²à¸£à¸‹à¸·à¹‰à¸­à¸‚à¸²à¸¢à¸ªà¸´à¸™à¸„à¹‰à¸²à¸ˆà¸°à¹€à¸›à¹‡à¸™à¸à¸²à¸£à¸•à¸à¸¥à¸‡à¸à¸±à¸™à¹€à¸­à¸‡à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸œà¸¹à¹‰à¸‚à¸²à¸¢à¹à¸¥à¸°à¸œà¸¹à¹‰à¸‹à¸·à¹‰à¸­ à¹‚à¸›à¸£à¸”à¸£à¸°à¸§à¸±à¸‡à¸à¸²à¸£à¹ƒà¸«à¹‰à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¹ˆà¸§à¸™à¸•à¸±à¸§à¹€à¸žà¸·à¹ˆà¸­à¸„à¸§à¸²à¸¡à¸›à¸¥à¸­à¸”à¸ à¸±à¸¢à¸‚à¸­à¸‡à¸„à¸¸à¸“
+              เว็บไซต์ไม่มีบริการเป็นตัวกลางรับชำระเงินในการซื้อขาย โดยการซื้อขายสินค้าจะเป็นการตกลงกันเองระหว่างผู้ขายและผู้ซื้อ โปรดระวังการให้ข้อมูลส่วนตัวเพื่อความปลอดภัยของคุณ
             </p>
           </div>
 
           <div className="flex-1 overflow-y-auto bg-[#F4F5F5] p-2">
             {isLoadingRooms ? (
               <div className="flex items-center justify-center py-8 text-sm text-gray-400">
-                à¸à¸³à¸¥à¸±à¸‡à¹‚à¸«à¸¥à¸”...
+                กำลังโหลด...
               </div>
             ) : roomsError ? (
               <div className="flex items-center justify-center py-8 px-4 text-sm text-red-500 text-center">
@@ -97,7 +97,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
 
           <div className="p-3 border-t border-gray-200 bg-white">
             <button disabled className="px-4 py-1.5 border border-gray-300 rounded text-sm text-gray-400 cursor-not-allowed opacity-50">
-              à¹à¸à¹‰à¹„à¸‚ (à¹€à¸£à¹‡à¸§à¹† à¸™à¸µà¹‰)
+              แก้ไข (เร็วๆ นี้)
             </button>
           </div>
         </div>
