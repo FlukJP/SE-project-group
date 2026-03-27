@@ -59,6 +59,7 @@ export { FormField } from "@/src/components/ui/FormField";
 export { TextField } from "@/src/components/ui/TextField";
 export { SelectField } from "@/src/components/ui/SelectField";
 export { TextareaField } from "@/src/components/ui/TextareaField";
+export { TabButtonGroup } from "@/src/components/ui/TabButtonGroup";
 export { AuthErrorAlert } from "@/src/components/ui/AuthErrorAlert";
 export { FormErrorNotice } from "@/src/components/ui/FormErrorNotice";
 export { FormSuccessNotice } from "@/src/components/ui/FormSuccessNotice";

@@ -11,8 +11,7 @@ import { useError } from "@/src/contexts/ErrorContext";
 import {
   getFormButtonClassName,
   getPanelClassName,
-  getSegmentedControlClassName,
-  getSegmentedControlItemClassName,
+  TabButtonGroup,
 } from "@/src/components/ui";
 import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 
@@ -259,21 +258,13 @@ export default function MyProductsPage() {
           </div>
 
           {/* Tabs */}
-          <div className={`${getSegmentedControlClassName({ fullWidth: true })} mb-6`}>
-            {TABS.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setActiveTab(t.key)}
-                className={getSegmentedControlItemClassName({
-                  active: activeTab === t.key,
-                  size: "md",
-                })}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <TabButtonGroup
+            items={TABS}
+            value={activeTab}
+            onChange={setActiveTab}
+            size="md"
+            className="mb-6"
+          />
 
           {/* Tab: My Products */}
           {activeTab === "products" && (

@@ -1,14 +1,19 @@
-import { cn } from "@/src/components/ui";
+import {
+    cn,
+    getPanelClassName,
+    getSegmentedControlClassName,
+    getSegmentedControlItemClassName,
+} from "@/src/components/ui";
 
 // Base shimmer block — all skeletons are composed from this
 export function Skeleton({ className }: { className?: string }) {
-    return <div className={cn("animate-pulse rounded-lg bg-white", className)} />;
+    return <div className={cn("animate-pulse rounded-lg bg-[#EFE5D8]", className)} />;
 }
 
 // Matches a single ProductCard (h-44 image + p-4 content)
 export function ProductCardSkeleton() {
     return (
-        <div className="bg-white rounded-2xl overflow-hidden border border-[#DCD0C0]">
+        <div className={cn(getPanelClassName({ radius: "2xl" }), "overflow-hidden")}>
             <Skeleton className="h-44 rounded-none" />
             <div className="p-4 space-y-2">
                 <Skeleton className="h-4 w-full" />
@@ -83,7 +88,7 @@ export function UserProfileSkeleton() {
         <div className="container mx-auto px-4 py-8 max-w-4xl">
             <Skeleton className="h-4 w-32 mb-4" />
             {/* Profile header card */}
-            <div className="bg-white border border-[#DCD0C0] rounded-t-2xl p-6 border-b-0">
+            <div className={`${getPanelClassName({ padding: "lg", radius: "2xl" })} mb-4`}>
                 <div className="flex items-center gap-5">
                     <Skeleton className="h-20 w-20 rounded-full shrink-0" />
                     <div className="space-y-2 flex-1">
@@ -93,9 +98,13 @@ export function UserProfileSkeleton() {
                 </div>
             </div>
             {/* Tab bar */}
-            <div className="bg-white border border-[#DCD0C0] rounded-b-2xl flex overflow-hidden mb-6">
-                <Skeleton className="flex-1 h-11 rounded-none" />
-                <Skeleton className="flex-1 h-11 rounded-none" />
+            <div className={`${getSegmentedControlClassName({ fullWidth: true })} mb-6`}>
+                <div className={`${getSegmentedControlItemClassName({ active: true, size: "lg" })} pointer-events-none`}>
+                    <Skeleton className="mx-auto h-5 w-24 bg-white/70" />
+                </div>
+                <div className={`${getSegmentedControlItemClassName({ size: "lg" })} pointer-events-none`}>
+                    <Skeleton className="mx-auto h-5 w-24" />
+                </div>
             </div>
             {/* Product grid preview */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">

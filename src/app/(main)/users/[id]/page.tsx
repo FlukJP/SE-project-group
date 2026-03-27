@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -9,11 +9,10 @@ import { UserProfileSkeleton } from "@/src/components/ui/Skeleton";
 import {
   FormErrorNotice,
   FormSuccessNotice,
+  TabButtonGroup,
   TextareaField,
   getFormButtonClassName,
   getPanelClassName,
-  getSegmentedControlClassName,
-  getSegmentedControlItemClassName,
 } from "@/src/components/ui";
 import type { OrderWithDetails } from "@/src/types/Order";
 import { useAuth } from "@/src/contexts/AuthContext";
@@ -30,11 +29,11 @@ function StarDisplay({ score, total }: { score: number; total: number }) {
   return (
     <div className="flex items-center gap-1.5 mt-1">
       <span className="text-yellow-400 text-base leading-none">
-        {"★".repeat(filled)}
-        <span className="text-[#DCD0C0]">{"★".repeat(5 - filled)}</span>
+        {"â˜…".repeat(filled)}
+        <span className="text-[#DCD0C0]">{"â˜…".repeat(5 - filled)}</span>
       </span>
       <span className="text-sm font-semibold text-[#4A3B32]">{score.toFixed(1)}</span>
-      <span className="text-sm text-[#A89F91]">({total} คน)</span>
+      <span className="text-sm text-[#A89F91]">({total} à¸„à¸™)</span>
     </div>
   );
 }
@@ -51,13 +50,13 @@ function ReportModal({
   const [error, setError] = useState("");
 
   const handleSubmit = async () => {
-    if (!reason.trim()) { setError("กรุณาระบุเหตุผล"); return; }
+    if (!reason.trim()) { setError("à¸à¸£à¸¸à¸“à¸²à¸£à¸°à¸šà¸¸à¹€à¸«à¸•à¸¸à¸œà¸¥"); return; }
     setLoading(true);
     setError("");
     try {
       await onSubmit(reason.trim());
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      setError(err instanceof Error ? err.message : "à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”");
       setLoading(false);
     }
   };
@@ -66,16 +65,16 @@ function ReportModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className={`${getPanelClassName({ padding: "lg", radius: "2xl", shadow: "xl", bordered: false })} w-full max-w-md`}>
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-[#C45A5A] text-xl">🚩</span>
-          <h2 className="text-lg font-bold text-[#4A3B32]">รายงานผู้ใช้นี้</h2>
+          <span className="text-[#C45A5A] text-xl">ðŸš©</span>
+          <h2 className="text-lg font-bold text-[#4A3B32]">à¸£à¸²à¸¢à¸‡à¸²à¸™à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸™à¸µà¹‰</h2>
         </div>
 
-        <label className="block text-sm font-medium text-[#4A3B32] mb-1">เหตุผลในการรายงาน</label>
+        <label className="block text-sm font-medium text-[#4A3B32] mb-1">à¹€à¸«à¸•à¸¸à¸œà¸¥à¹ƒà¸™à¸à¸²à¸£à¸£à¸²à¸¢à¸‡à¸²à¸™</label>
         <TextareaField
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={4}
-          placeholder="อธิบายเหตุผลที่ต้องการรายงานผู้ใช้นี้..."
+          placeholder="à¸­à¸˜à¸´à¸šà¸²à¸¢à¹€à¸«à¸•à¸¸à¸œà¸¥à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸£à¸²à¸¢à¸‡à¸²à¸™à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸™à¸µà¹‰..."
           textareaClassName={getFormFieldClassName({ size: "xl", tone: "danger", resize: "none" })}
         />
 
@@ -87,7 +86,7 @@ function ReportModal({
             onClick={onClose}
             className={`${getFormButtonClassName({ variant: "secondary", size: "md", fullWidth: true })} rounded-xl`}
           >
-            ยกเลิก
+            à¸¢à¸à¹€à¸¥à¸´à¸
           </button>
           <button
             type="button"
@@ -95,7 +94,7 @@ function ReportModal({
             disabled={loading}
             className={`${getFormButtonClassName({ variant: "danger", size: "md", fullWidth: true })} rounded-xl`}
           >
-            {loading ? "กำลังส่ง..." : "ส่งรายงาน"}
+            {loading ? "à¸à¸³à¸¥à¸±à¸‡à¸ªà¹ˆà¸‡..." : "à¸ªà¹ˆà¸‡à¸£à¸²à¸¢à¸‡à¸²à¸™"}
           </button>
         </div>
       </div>
@@ -120,13 +119,13 @@ function ReviewModal({
   const [error, setError] = useState("");
 
   const handleSubmit = async () => {
-    if (rating === 0) { setError("กรุณาเลือกดาว"); return; }
+    if (rating === 0) { setError("à¸à¸£à¸¸à¸“à¸²à¹€à¸¥à¸·à¸­à¸à¸”à¸²à¸§"); return; }
     setLoading(true);
     setError("");
     try {
       await onSubmit(selectedOrderId, rating, comment.trim());
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      setError(err instanceof Error ? err.message : "à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”");
       setLoading(false);
     }
   };
@@ -135,29 +134,29 @@ function ReviewModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className={`${getPanelClassName({ padding: "lg", radius: "2xl", shadow: "xl", bordered: false })} w-full max-w-md`}>
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-yellow-400 text-xl">★</span>
-          <h2 className="text-lg font-bold text-[#4A3B32]">รีวิวผู้ขาย</h2>
+          <span className="text-yellow-400 text-xl">â˜…</span>
+          <h2 className="text-lg font-bold text-[#4A3B32]">à¸£à¸µà¸§à¸´à¸§à¸œà¸¹à¹‰à¸‚à¸²à¸¢</h2>
         </div>
 
         {orders.length > 1 && (
           <div className="mb-4">
-            <label className="block text-sm font-medium text-[#4A3B32] mb-1">เลือกออเดอร์ที่ต้องการรีวิว</label>
+            <label className="block text-sm font-medium text-[#4A3B32] mb-1">à¹€à¸¥à¸·à¸­à¸à¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸£à¸µà¸§à¸´à¸§</label>
             <select
-              aria-label="เลือกออเดอร์ที่ต้องการรีวิว"
+              aria-label="à¹€à¸¥à¸·à¸­à¸à¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸£à¸µà¸§à¸´à¸§"
               value={selectedOrderId}
               onChange={(e) => setSelectedOrderId(Number(e.target.value))}
               className={getFormFieldClassName({ size: "xl" })}
             >
               {orders.map((o) => (
                 <option key={o.Order_ID} value={o.Order_ID}>
-                  {o.Title || `ออเดอร์ #${o.Order_ID}`}
+                  {o.Title || `à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ #${o.Order_ID}`}
                 </option>
               ))}
             </select>
           </div>
         )}
 
-        <label className="block text-sm font-medium text-[#4A3B32] mb-2">คะแนน</label>
+        <label className="block text-sm font-medium text-[#4A3B32] mb-2">à¸„à¸°à¹à¸™à¸™</label>
         <div className="flex gap-1 mb-4">
           {[1, 2, 3, 4, 5].map((s) => (
             <button
@@ -168,19 +167,19 @@ function ReviewModal({
               onMouseLeave={() => setHoverRating(0)}
               className="text-4xl leading-none transition-transform hover:scale-110"
             >
-              <span className={(hoverRating || rating) >= s ? "text-yellow-400" : "text-[#DCD0C0]"}>★</span>
+              <span className={(hoverRating || rating) >= s ? "text-yellow-400" : "text-[#DCD0C0]"}>â˜…</span>
             </button>
           ))}
         </div>
 
         <label className="block text-sm font-medium text-[#4A3B32] mb-1">
-          ความคิดเห็น <span className="text-[#A89F91] font-normal">(ไม่บังคับ)</span>
+          à¸„à¸§à¸²à¸¡à¸„à¸´à¸”à¹€à¸«à¹‡à¸™ <span className="text-[#A89F91] font-normal">(à¹„à¸¡à¹ˆà¸šà¸±à¸‡à¸„à¸±à¸š)</span>
         </label>
         <TextareaField
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows={3}
-          placeholder="แบ่งปันประสบการณ์การซื้อของคุณ..."
+          placeholder="à¹à¸šà¹ˆà¸‡à¸›à¸±à¸™à¸›à¸£à¸°à¸ªà¸šà¸à¸²à¸£à¸“à¹Œà¸à¸²à¸£à¸‹à¸·à¹‰à¸­à¸‚à¸­à¸‡à¸„à¸¸à¸“..."
           textareaClassName={getFormFieldClassName({ size: "xl", resize: "none" })}
         />
 
@@ -192,7 +191,7 @@ function ReviewModal({
             onClick={onClose}
             className={`${getFormButtonClassName({ variant: "secondary", size: "md", fullWidth: true })} rounded-xl`}
           >
-            ยกเลิก
+            à¸¢à¸à¹€à¸¥à¸´à¸
           </button>
           <button
             type="button"
@@ -200,7 +199,7 @@ function ReviewModal({
             disabled={loading}
             className={`${getFormButtonClassName({ variant: "primary", size: "md", fullWidth: true })} rounded-xl`}
           >
-            {loading ? "กำลังส่ง..." : "ส่งรีวิว"}
+            {loading ? "à¸à¸³à¸¥à¸±à¸‡à¸ªà¹ˆà¸‡..." : "à¸ªà¹ˆà¸‡à¸£à¸µà¸§à¸´à¸§"}
           </button>
         </div>
       </div>
@@ -257,8 +256,8 @@ export default function PublicProfilePage() {
       <>
         <Navbar />
         <div className="container mx-auto px-4 py-16 text-center">
-          <p className="text-lg mb-4">ไม่พบผู้ใช้</p>
-          <Link href="/" className="text-[#D9734E] hover:underline">กลับไปหน้าหลัก</Link>
+          <p className="text-lg mb-4">à¹„à¸¡à¹ˆà¸žà¸šà¸œà¸¹à¹‰à¹ƒà¸Šà¹‰</p>
+          <Link href="/" className="text-[#D9734E] hover:underline">à¸à¸¥à¸±à¸šà¹„à¸›à¸«à¸™à¹‰à¸²à¸«à¸¥à¸±à¸</Link>
         </div>
       </>
     );
@@ -291,7 +290,7 @@ export default function PublicProfilePage() {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-4">
           <Link href="/" className="text-sm text-[#D9734E] hover:underline">
-            &larr; กลับไปหน้าหลัก
+            &larr; à¸à¸¥à¸±à¸šà¹„à¸›à¸«à¸™à¹‰à¸²à¸«à¸¥à¸±à¸
           </Link>
         </div>
 
@@ -307,7 +306,7 @@ export default function PublicProfilePage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="grid place-items-center h-full text-3xl">👤</span>
+                  <span className="grid place-items-center h-full text-3xl">ðŸ‘¤</span>
                 )}
               </div>
               <div>
@@ -316,14 +315,14 @@ export default function PublicProfilePage() {
                   <StarDisplay score={rating.averageRating} total={rating.totalReviews} />
                 ) : (
                   <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-[#DCD0C0] text-base">{"★".repeat(5)}</span>
-                    <span className="text-sm text-[#A89F91]">ยังไม่มีรีวิว</span>
+                    <span className="text-[#DCD0C0] text-base">{"â˜…".repeat(5)}</span>
+                    <span className="text-sm text-[#A89F91]">à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸µà¸§à¸´à¸§</span>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Action buttons — only show when logged in and not own profile */}
+            {/* Action buttons â€” only show when logged in and not own profile */}
             {isLoggedIn && !isOwnProfile && (
               <div className="flex flex-col items-end gap-2">
                 {reviewableOrders.length > 0 && (
@@ -332,21 +331,21 @@ export default function PublicProfilePage() {
                     onClick={() => setShowReview(true)}
                     className={`${getFormButtonClassName({ variant: "secondary", size: "sm" })} gap-1.5`}
                   >
-                    <span className="text-sm leading-none">★</span>
-                    รีวิวผู้ขาย
+                    <span className="text-sm leading-none">â˜…</span>
+                    à¸£à¸µà¸§à¸´à¸§à¸œà¸¹à¹‰à¸‚à¸²à¸¢
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={() => setShowReport(true)}
-                  title="รายงานผู้ใช้นี้"
+                  title="à¸£à¸²à¸¢à¸‡à¸²à¸™à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸™à¸µà¹‰"
                   disabled={reportDone}
                   className={`${getFormButtonClassName({ variant: "secondary", size: "sm" })} gap-1.5 text-[#A89F91] hover:text-[#C45A5A] hover:border-[#C45A5A]`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 01.832 1.555L13.382 10l3.45 5.445A1 1 0 0116 17H4a1 1 0 01-1-1V4z" clipRule="evenodd" />
                   </svg>
-                  {reportDone ? "รายงานแล้ว" : "รายงาน"}
+                  {reportDone ? "à¸£à¸²à¸¢à¸‡à¸²à¸™à¹à¸¥à¹‰à¸§" : "à¸£à¸²à¸¢à¸‡à¸²à¸™"}
                 </button>
               </div>
             )}
@@ -354,35 +353,24 @@ export default function PublicProfilePage() {
 
           {reportDone && (
             <FormSuccessNotice
-              message="ส่งรายงานเรียบร้อยแล้ว ขอบคุณที่แจ้งให้เราทราบ"
+              message="à¸ªà¹ˆà¸‡à¸£à¸²à¸¢à¸‡à¸²à¸™à¹€à¸£à¸µà¸¢à¸šà¸£à¹‰à¸­à¸¢à¹à¸¥à¹‰à¸§ à¸‚à¸­à¸šà¸„à¸¸à¸“à¸—à¸µà¹ˆà¹à¸ˆà¹‰à¸‡à¹ƒà¸«à¹‰à¹€à¸£à¸²à¸—à¸£à¸²à¸š"
               className="mt-3 text-xs px-3 py-2 text-[#4A3B32]"
             />
           )}
         </div>
 
         {/* Tab menu */}
-        <div className={`${getSegmentedControlClassName({ fullWidth: true })} mb-6`}>
-          <button
-            type="button"
-            onClick={() => setActiveTab("products")}
-            className={getSegmentedControlItemClassName({
-              active: activeTab === "products",
-              size: "lg",
-            })}
-          >
-            สินค้า ({products.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("reviews")}
-            className={getSegmentedControlItemClassName({
-              active: activeTab === "reviews",
-              size: "lg",
-            })}
-          >
-            รีวิว ({reviews.length})
-          </button>
-        </div>
+        <TabButtonGroup
+          items={[
+            { key: "products", label: `สินค้า (${products.length})` },
+            { key: "reviews", label: `รีวิว (${reviews.length})` },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+          size="lg"
+          className="mb-6"
+        />
+
 
         {activeTab === "products" && (
           products.length > 0 ? (
@@ -399,13 +387,13 @@ export default function PublicProfilePage() {
                     onClick={() => setVisibleCount((c) => c + 28)}
                     className={`${getFormButtonClassName({ variant: "primary", size: "md" })} rounded-xl`}
                   >
-                    โหลดเพิ่มเติม ({products.length - visibleCount} รายการ)
+                    à¹‚à¸«à¸¥à¸”à¹€à¸žà¸´à¹ˆà¸¡à¹€à¸•à¸´à¸¡ ({products.length - visibleCount} à¸£à¸²à¸¢à¸à¸²à¸£)
                   </button>
                 </div>
               )}
             </>
           ) : (
-            <div className="text-center text-[#A89F91] py-16">ยังไม่มีสินค้า</div>
+            <div className="text-center text-[#A89F91] py-16">à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸ªà¸´à¸™à¸„à¹‰à¸²</div>
           )
         )}
 
@@ -416,7 +404,7 @@ export default function PublicProfilePage() {
               {reviews.map((r) => (
                 <div key={r.Review_ID} className={getPanelClassName({ padding: "md", radius: "xl" })}>
                   <div className="flex items-center justify-between mb-1">
-                    <div className="text-sm font-semibold text-[#4A3B32]">{r.ReviewerName || "ผู้ซื้อ"}</div>
+                    <div className="text-sm font-semibold text-[#4A3B32]">{r.ReviewerName || "à¸œà¸¹à¹‰à¸‹à¸·à¹‰à¸­"}</div>
                     <div className="text-xs text-[#A89F91]">
                       {new Date(r.Created_at).toLocaleDateString("th-TH", {
                         year: "numeric",
@@ -426,15 +414,15 @@ export default function PublicProfilePage() {
                     </div>
                   </div>
                   <div className="text-yellow-400 text-sm mb-1">
-                    {"★".repeat(r.Rating)}
-                    <span className="text-[#DCD0C0]">{"★".repeat(5 - r.Rating)}</span>
+                    {"â˜…".repeat(r.Rating)}
+                    <span className="text-[#DCD0C0]">{"â˜…".repeat(5 - r.Rating)}</span>
                   </div>
                   {r.Comment && <p className="text-sm text-[#4A3B32]">{r.Comment}</p>}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center text-[#A89F91] py-16">ยังไม่มีรีวิว</div>
+            <div className="text-center text-[#A89F91] py-16">à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸µà¸§à¸´à¸§</div>
           )
         )}
       </div>
@@ -444,7 +432,7 @@ export default function PublicProfilePage() {
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="fixed bottom-6 right-6 z-50 bg-[#D9734E] hover:bg-[#C25B38] text-white w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition"
-          title="เลื่อนไปบนสุด"
+          title="à¹€à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸›à¸šà¸™à¸ªà¸¸à¸”"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />

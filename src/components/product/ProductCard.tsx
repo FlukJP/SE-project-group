@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ProductDisplay } from "@/src/types/ProductDisplay";
+import { getPanelClassName } from "@/src/components/ui";
 
 
 // Renders a product card with an image, badge, title, price, and location
@@ -27,7 +28,7 @@ export default function ProductCard({
     return (
         <Link
             href={to}
-            className="group bg-white rounded-2xl overflow-hidden border border-[#DCD0C0] hover:shadow-lg transition-colors"
+            className={`${getPanelClassName({ radius: "2xl" })} group overflow-hidden transition-shadow hover:shadow-lg`}
         >
             <div className="relative h-44">
                 {image && !imgError ? (
