@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,13 +10,20 @@ import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 import ProductCard from "@/src/components/product/ProductCard";
 import EmailOTP from "@/src/components/auth/EmailOTP";
 import PhoneOTP from "@/src/components/auth/PhoneOTP";
-import { FormErrorNotice, FormSuccessNotice, TextareaField } from "@/src/components/ui";
+import { FormErrorNotice, FormSuccessNotice, SidebarNavGroup, TextareaField } from "@/src/components/ui";
 import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 import { startTransition } from "react";
 
 type TabKey = "profile" | "autoReply" | "review" | "manageProfile" | "account";
 
 const VALID_TABS: TabKey[] = ["profile", "autoReply", "review", "manageProfile", "account"];
+const PROFILE_NAV_ITEMS: { key: TabKey; label: string; suffix: string }[] = [
+  { key: "profile", label: "à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¹ˆà¸§à¸™à¸•à¸±à¸§", suffix: "â€º" },
+  { key: "autoReply", label: "à¸‚à¹‰à¸­à¸„à¸§à¸²à¸¡à¸•à¸­à¸šà¸à¸¥à¸±à¸šà¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´", suffix: "â€º" },
+  { key: "review", label: "à¸£à¸µà¸§à¸´à¸§à¸‚à¸­à¸‡à¸‰à¸±à¸™", suffix: "â€º" },
+  { key: "manageProfile", label: "à¸ˆà¸±à¸”à¸à¸²à¸£à¹‚à¸›à¸£à¹„à¸Ÿà¸¥à¹Œ", suffix: "â€º" },
+  { key: "account", label: "à¸ˆà¸±à¸”à¸à¸²à¸£à¸šà¸±à¸à¸Šà¸µ", suffix: "â€º" },
+];
 function isTabKey(v: string | null): v is TabKey {
   if (!v) return false;
   return VALID_TABS.includes(v as TabKey);
@@ -24,7 +31,7 @@ function isTabKey(v: string | null): v is TabKey {
 
 export default function ProfilePage() {
   return (
-    <Suspense fallback={<><Navbar /><div className="text-center py-16 text-[#A89F91]">กำลังโหลด...</div></>}>
+    <Suspense fallback={<><Navbar /><div className="text-center py-16 text-[#A89F91]">à¸à¸³à¸¥à¸±à¸‡à¹‚à¸«à¸¥à¸”...</div></>}>
       <ProfilePageContent />
     </Suspense>
   );
@@ -37,11 +44,11 @@ function ProfilePageContent() {
 
   const tabTitles: Record<TabKey, string> = useMemo(
     () => ({
-      profile: "ข้อมูลส่วนตัว",
-      autoReply: "ข้อความตอบกลับอัตโนมัติ",
-      review: "รีวิวของฉัน",
-      manageProfile: "จัดการโปรไฟล์",
-      account: "จัดการบัญชี",
+      profile: "à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¹ˆà¸§à¸™à¸•à¸±à¸§",
+      autoReply: "à¸‚à¹‰à¸­à¸„à¸§à¸²à¸¡à¸•à¸­à¸šà¸à¸¥à¸±à¸šà¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´",
+      review: "à¸£à¸µà¸§à¸´à¸§à¸‚à¸­à¸‡à¸‰à¸±à¸™",
+      manageProfile: "à¸ˆà¸±à¸”à¸à¸²à¸£à¹‚à¸›à¸£à¹„à¸Ÿà¸¥à¹Œ",
+      account: "à¸ˆà¸±à¸”à¸à¸²à¸£à¸šà¸±à¸à¸Šà¸µ",
     }),
     []
   );
@@ -51,7 +58,7 @@ function ProfilePageContent() {
 useEffect(() => {
   const tabFromUrl = searchParams.get("tab");
   if (isTabKey(tabFromUrl)) {
-    startTransition(() => setActiveTab(tabFromUrl)); // ไม่ synchronous แล้ว
+    startTransition(() => setActiveTab(tabFromUrl)); // à¹„à¸¡à¹ˆ synchronous à¹à¸¥à¹‰à¸§
   }
 }, [searchParams]);
 
@@ -64,7 +71,7 @@ useEffect(() => {
     return (
       <>
         <Navbar />
-        <div className="text-center py-16 text-[#A89F91]">กำลังโหลด...</div>
+        <div className="text-center py-16 text-[#A89F91]">à¸à¸³à¸¥à¸±à¸‡à¹‚à¸«à¸¥à¸”...</div>
       </>
     );
   }
@@ -74,7 +81,7 @@ useEffect(() => {
       <>
         <Navbar />
         <div className="text-center py-16">
-          <p className="text-lg mb-4">กรุณาเข้าสู่ระบบก่อน</p>
+          <p className="text-lg mb-4">à¸à¸£à¸¸à¸“à¸²à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸šà¸à¹ˆà¸­à¸™</p>
         </div>
       </>
     );
@@ -99,18 +106,18 @@ useEffect(() => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                "👤"
+                "ðŸ‘¤"
               )}
             </div>
 
             <div>
-              <div className="text-sm text-[#A89F91]">ชื่อผู้ใช้</div>
+              <div className="text-sm text-[#A89F91]">à¸Šà¸·à¹ˆà¸­à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰</div>
               <div className="text-lg font-bold text-[#4A3B32]">
                 {user?.Username || "..."}
               </div>
 
               <div className="text-sm text-[#A89F91] mt-1">
-                หมายเลขสมาชิก{" "}
+                à¸«à¸¡à¸²à¸¢à¹€à¸¥à¸‚à¸ªà¸¡à¸²à¸Šà¸´à¸{" "}
                 <span className="font-semibold text-[#4A3B32]">
                   {user?.User_ID || "..."}
                 </span>
@@ -119,31 +126,11 @@ useEffect(() => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
-            <aside className="bg-white border border-[#E6D5C3] rounded-xl p-4">
-              {[
-                { key: "profile", label: "ข้อมูลส่วนตัว" },
-                { key: "autoReply", label: "ข้อความตอบกลับอัตโนมัติ" },
-                { key: "review", label: "รีวิวของฉัน" },
-                { key: "manageProfile", label: "จัดการโปรไฟล์" },
-                { key: "account", label: "จัดการบัญชี" },
-              ].map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => changeTab(item.key as TabKey)}
-                  className={`w-full text-left px-4 py-2 rounded-lg mb-1 flex justify-between items-center
-                    ${
-                      activeTab === item.key
-                        ? "bg-[#E6D5C3] text-[#4A3B32] font-semibold"
-                        : "hover:bg-[#F9F6F0]"
-                    }
-                  `}
-                >
-                  {item.label}
-                  <span>›</span>
-                </button>
-              ))}
-            </aside>
+            <SidebarNavGroup
+              items={PROFILE_NAV_ITEMS}
+              activeKey={activeTab}
+              onChange={changeTab}
+            />
 
             <section className="bg-white border border-[#E6D5C3] rounded-xl p-6">
               {/* Fix #9: Use key to force remount when user data changes, preventing stale sync */}
@@ -231,11 +218,11 @@ function ProfileInfo({
   const handleSave = async () => {
     if (saving) return;
     if (!username.trim()) {
-      setMessage("กรุณากรอกชื่อผู้ใช้");
+      setMessage("à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¸Šà¸·à¹ˆà¸­à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰");
       return;
     }
     if (phone && !/^0\d{9}$/.test(phone.replace(/\D/g, ""))) {
-      setMessage("เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักขึ้นต้นด้วย 0");
+      setMessage("à¹€à¸šà¸­à¸£à¹Œà¹‚à¸—à¸£à¸¨à¸±à¸žà¸—à¹Œà¸•à¹‰à¸­à¸‡à¹€à¸›à¹‡à¸™à¸•à¸±à¸§à¹€à¸¥à¸‚ 10 à¸«à¸¥à¸±à¸à¸‚à¸¶à¹‰à¸™à¸•à¹‰à¸™à¸”à¹‰à¸§à¸¢ 0");
       return;
     }
     setSaving(true);
@@ -243,9 +230,9 @@ function ProfileInfo({
     try {
       await userApi.updateMe({ Username: username.trim(), Phone_number: phone.trim(), Address: address.trim() });
       await onSaved();
-      setMessage("บันทึกสำเร็จ");
+      setMessage("à¸šà¸±à¸™à¸—à¸¶à¸à¸ªà¸³à¹€à¸£à¹‡à¸ˆ");
     } catch (err: unknown) {
-      setMessage(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      setMessage(err instanceof Error ? err.message : "à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”");
     } finally {
       setSaving(false);
     }
@@ -262,7 +249,7 @@ function ProfileInfo({
       await onVerified(result);
       setShowPhoneOTP(false);
     } catch (err: unknown) {
-      setOtpError(err instanceof Error ? err.message : "ยืนยันเบอร์โทรไม่สำเร็จ");
+      setOtpError(err instanceof Error ? err.message : "à¸¢à¸·à¸™à¸¢à¸±à¸™à¹€à¸šà¸­à¸£à¹Œà¹‚à¸—à¸£à¹„à¸¡à¹ˆà¸ªà¸³à¹€à¸£à¹‡à¸ˆ");
     }
   };
 
@@ -270,43 +257,43 @@ function ProfileInfo({
 
   return (
     <>
-      <h2 className="text-lg font-bold text-[#D9734E] mb-6">ข้อมูลส่วนตัว</h2>
+      <h2 className="text-lg font-bold text-[#D9734E] mb-6">à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¹ˆà¸§à¸™à¸•à¸±à¸§</h2>
 
       {/* Verification Status */}
       <div className="mb-6 p-4 rounded-xl border border-[#E6D5C3] bg-[#F9F6F0]">
-        <h3 className="text-base font-bold text-[#4A3B32] mb-3">สถานะการยืนยันตัวตน</h3>
+        <h3 className="text-base font-bold text-[#4A3B32] mb-3">à¸ªà¸–à¸²à¸™à¸°à¸à¸²à¸£à¸¢à¸·à¸™à¸¢à¸±à¸™à¸•à¸±à¸§à¸•à¸™</h3>
         <div className="space-y-2">
           {/* Email verification */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-[#A89F91]">อีเมล ({email})</span>
+            <span className="text-sm text-[#A89F91]">à¸­à¸µà¹€à¸¡à¸¥ ({email})</span>
             {isEmailVerified ? (
-              <span className="text-sm font-semibold text-[#D9734E]">ยืนยันแล้ว</span>
+              <span className="text-sm font-semibold text-[#D9734E]">à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§</span>
             ) : (
               <button
                 type="button"
                 onClick={() => { setShowEmailOTP(true); setShowPhoneOTP(false); setOtpError(""); }}
                 className="text-sm font-semibold text-orange-600 hover:underline"
               >
-                ยังไม่ยืนยัน — กดเพื่อยืนยัน
+                à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¢à¸·à¸™à¸¢à¸±à¸™ â€” à¸à¸”à¹€à¸žà¸·à¹ˆà¸­à¸¢à¸·à¸™à¸¢à¸±à¸™
               </button>
             )}
           </div>
           {/* Phone verification */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-[#A89F91]">เบอร์โทรศัพท์ ({phone || "ยังไม่ได้กรอก"})</span>
+            <span className="text-sm text-[#A89F91]">à¹€à¸šà¸­à¸£à¹Œà¹‚à¸—à¸£à¸¨à¸±à¸žà¸—à¹Œ ({phone || "à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸à¸£à¸­à¸"})</span>
             {isPhoneVerified ? (
-              <span className="text-sm font-semibold text-[#D9734E]">ยืนยันแล้ว</span>
+              <span className="text-sm font-semibold text-[#D9734E]">à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§</span>
             ) : !isEmailVerified ? (
-              <span className="text-sm text-[#A89F91]">รอยืนยันอีเมลก่อน</span>
+              <span className="text-sm text-[#A89F91]">à¸£à¸­à¸¢à¸·à¸™à¸¢à¸±à¸™à¸­à¸µà¹€à¸¡à¸¥à¸à¹ˆà¸­à¸™</span>
             ) : !phone ? (
-              <span className="text-sm text-[#A89F91]">กรุณากรอกเบอร์โทรก่อน</span>
+              <span className="text-sm text-[#A89F91]">à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¹€à¸šà¸­à¸£à¹Œà¹‚à¸—à¸£à¸à¹ˆà¸­à¸™</span>
             ) : (
               <button
                 type="button"
                 onClick={() => { setShowPhoneOTP(true); setShowEmailOTP(false); setOtpError(""); }}
                 className="text-sm font-semibold text-orange-600 hover:underline"
               >
-                ยังไม่ยืนยัน — กดเพื่อยืนยัน
+                à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¢à¸·à¸™à¸¢à¸±à¸™ â€” à¸à¸”à¹€à¸žà¸·à¹ˆà¸­à¸¢à¸·à¸™à¸¢à¸±à¸™
               </button>
             )}
           </div>
@@ -314,14 +301,14 @@ function ProfileInfo({
 
         {!allVerified && !showEmailOTP && !showPhoneOTP && (
           <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-700">
-            กรุณายืนยันตัวตนทั้งอีเมลและเบอร์โทรศัพท์ จึงจะสามารถแชท ซื้อ หรือขายสินค้าได้
+            à¸à¸£à¸¸à¸“à¸²à¸¢à¸·à¸™à¸¢à¸±à¸™à¸•à¸±à¸§à¸•à¸™à¸—à¸±à¹‰à¸‡à¸­à¸µà¹€à¸¡à¸¥à¹à¸¥à¸°à¹€à¸šà¸­à¸£à¹Œà¹‚à¸—à¸£à¸¨à¸±à¸žà¸—à¹Œ à¸ˆà¸¶à¸‡à¸ˆà¸°à¸ªà¸²à¸¡à¸²à¸£à¸–à¹à¸Šà¸— à¸‹à¸·à¹‰à¸­ à¸«à¸£à¸·à¸­à¸‚à¸²à¸¢à¸ªà¸´à¸™à¸„à¹‰à¸²à¹„à¸”à¹‰
           </div>
         )}
 
         {/* Email OTP form */}
         {showEmailOTP && !isEmailVerified && (
           <div className="mt-4 p-4 bg-white border border-[#DCD0C0] rounded-xl">
-            <h4 className="text-sm font-semibold text-[#D9734E] mb-3">ยืนยันอีเมลด้วย OTP</h4>
+            <h4 className="text-sm font-semibold text-[#D9734E] mb-3">à¸¢à¸·à¸™à¸¢à¸±à¸™à¸­à¸µà¹€à¸¡à¸¥à¸”à¹‰à¸§à¸¢ OTP</h4>
             {otpError && <FormErrorNotice message={otpError} className="mb-3" />}
             <EmailOTP
               email={email}
@@ -333,7 +320,7 @@ function ProfileInfo({
               onClick={() => setShowEmailOTP(false)}
               className="mt-3 text-sm text-[#A89F91] hover:text-[#4A3B32]"
             >
-              ยกเลิก
+              à¸¢à¸à¹€à¸¥à¸´à¸
             </button>
           </div>
         )}
@@ -341,7 +328,7 @@ function ProfileInfo({
         {/* Phone OTP form */}
         {showPhoneOTP && !isPhoneVerified && isEmailVerified && phone && (
           <div className="mt-4 p-4 bg-white border border-blue-200 rounded-xl">
-            <h4 className="text-sm font-semibold text-blue-700 mb-3">ยืนยันเบอร์โทรศัพท์ด้วย OTP</h4>
+            <h4 className="text-sm font-semibold text-blue-700 mb-3">à¸¢à¸·à¸™à¸¢à¸±à¸™à¹€à¸šà¸­à¸£à¹Œà¹‚à¸—à¸£à¸¨à¸±à¸žà¸—à¹Œà¸”à¹‰à¸§à¸¢ OTP</h4>
             {otpError && <FormErrorNotice message={otpError} className="mb-3" />}
             <PhoneOTP
               phone={phone}
@@ -353,7 +340,7 @@ function ProfileInfo({
               onClick={() => setShowPhoneOTP(false)}
               className="mt-3 text-sm text-[#A89F91] hover:text-[#4A3B32]"
             >
-              ยกเลิก
+              à¸¢à¸à¹€à¸¥à¸´à¸
             </button>
           </div>
         )}
@@ -361,35 +348,35 @@ function ProfileInfo({
 
       <div className="space-y-5 max-w-xl">
         <div>
-          <Label>ชื่อผู้ใช้ (แสดงให้ผู้อื่นเห็น)</Label>
+          <Label>à¸Šà¸·à¹ˆà¸­à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰ (à¹à¸ªà¸”à¸‡à¹ƒà¸«à¹‰à¸œà¸¹à¹‰à¸­à¸·à¹ˆà¸™à¹€à¸«à¹‡à¸™)</Label>
           <InputField value={username} onChange={(e) => setUsername(e.target.value)} />
         </div>
 
         <div>
-          <Label>อีเมล</Label>
+          <Label>à¸­à¸µà¹€à¸¡à¸¥</Label>
           <InputField value={email} readOnly className="bg-[#F9F6F0] text-[#A89F91] cursor-not-allowed" />
-          <p className="text-xs text-[#A89F91] mt-1">อีเมลไม่สามารถเปลี่ยนแปลงได้</p>
+          <p className="text-xs text-[#A89F91] mt-1">à¸­à¸µà¹€à¸¡à¸¥à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¹à¸›à¸¥à¸‡à¹„à¸”à¹‰</p>
         </div>
 
         <div className="border-t border-[#DCD0C0] pt-6 mt-6">
-          <h3 className="text-base font-bold text-[#D9734E] mb-4">ข้อมูลการติดต่อ</h3>
+          <h3 className="text-base font-bold text-[#D9734E] mb-4">à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸à¸²à¸£à¸•à¸´à¸”à¸•à¹ˆà¸­</h3>
 
           <div className="space-y-4">
             <div>
-              <Label>เบอร์โทรศัพท์</Label>
+              <Label>à¹€à¸šà¸­à¸£à¹Œà¹‚à¸—à¸£à¸¨à¸±à¸žà¸—à¹Œ</Label>
               <InputField
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="เช่น 08x-xxx-xxxx"
+                placeholder="à¹€à¸Šà¹ˆà¸™ 08x-xxx-xxxx"
               />
             </div>
 
             <div>
-              <Label>ที่อยู่</Label>
+              <Label>à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆ</Label>
               <TextareaField
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="เช่น 123/4 ซอยสุขุมวิท 11 พระนคร กรุงเทพมหานคร 10200"
+                placeholder="à¹€à¸Šà¹ˆà¸™ 123/4 à¸‹à¸­à¸¢à¸ªà¸¸à¸‚à¸¸à¸¡à¸§à¸´à¸— 11 à¸žà¸£à¸°à¸™à¸„à¸£ à¸à¸£à¸¸à¸‡à¹€à¸—à¸žà¸¡à¸«à¸²à¸™à¸„à¸£ 10200"
                 rows={3}
                 textareaClassName={getFormFieldClassName({ size: "lg", resize: "none" })}
               />
@@ -398,7 +385,7 @@ function ProfileInfo({
         </div>
 
         {message &&
-          (message === "บันทึกสำเร็จ" ? (
+          (message === "à¸šà¸±à¸™à¸—à¸¶à¸à¸ªà¸³à¹€à¸£à¹‡à¸ˆ" ? (
             <FormSuccessNotice message={message} />
           ) : (
             <FormErrorNotice message={message} />
@@ -410,7 +397,7 @@ function ProfileInfo({
           disabled={saving}
           className="bg-[#D9734E] text-white px-6 py-2 rounded-lg font-semibold disabled:opacity-50"
         >
-          {saving ? "กำลังบันทึก..." : "บันทึก"}
+          {saving ? "à¸à¸³à¸¥à¸±à¸‡à¸šà¸±à¸™à¸—à¸¶à¸..." : "à¸šà¸±à¸™à¸—à¸¶à¸"}
         </button>
       </div>
     </>
@@ -418,7 +405,7 @@ function ProfileInfo({
 }
 
 function AutoReply() {
-  const [message, setMessage] = useState("ขอบคุณที่สนใจสินค้าของเรา ทักมาสอบถามได้เลย");
+  const [message, setMessage] = useState("à¸‚à¸­à¸šà¸„à¸¸à¸“à¸—à¸µà¹ˆà¸ªà¸™à¹ƒà¸ˆà¸ªà¸´à¸™à¸„à¹‰à¸²à¸‚à¸­à¸‡à¹€à¸£à¸² à¸—à¸±à¸à¸¡à¸²à¸ªà¸­à¸šà¸–à¸²à¸¡à¹„à¸”à¹‰à¹€à¸¥à¸¢");
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
@@ -429,20 +416,20 @@ function AutoReply() {
 
   return (
     <>
-      <h2 className="text-lg font-bold text-[#D9734E] mb-6">ข้อความตอบกลับอัตโนมัติ</h2>
+      <h2 className="text-lg font-bold text-[#D9734E] mb-6">à¸‚à¹‰à¸­à¸„à¸§à¸²à¸¡à¸•à¸­à¸šà¸à¸¥à¸±à¸šà¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´</h2>
 
-      <Label>ข้อความที่ส่งอัตโนมัติเมื่อมีคนทักแชท</Label>
+      <Label>à¸‚à¹‰à¸­à¸„à¸§à¸²à¸¡à¸—à¸µà¹ˆà¸ªà¹ˆà¸‡à¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´à¹€à¸¡à¸·à¹ˆà¸­à¸¡à¸µà¸„à¸™à¸—à¸±à¸à¹à¸Šà¸—</Label>
 
       <TextareaField
         textareaClassName={`${getFormFieldClassName({ size: "lg" })} h-32`}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        aria-label="ข้อความตอบกลับอัตโนมัติ"
+        aria-label="à¸‚à¹‰à¸­à¸„à¸§à¸²à¸¡à¸•à¸­à¸šà¸à¸¥à¸±à¸šà¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´"
       />
 
-      {saved && <FormSuccessNotice message="บันทึกสำเร็จ" className="mt-2" />}
+      {saved && <FormSuccessNotice message="à¸šà¸±à¸™à¸—à¸¶à¸à¸ªà¸³à¹€à¸£à¹‡à¸ˆ" className="mt-2" />}
 
-      <button type="button" onClick={handleSave} className="bg-[#D9734E] text-white px-6 py-2 rounded-lg font-semibold mt-4">บันทึก</button>
+      <button type="button" onClick={handleSave} className="bg-[#D9734E] text-white px-6 py-2 rounded-lg font-semibold mt-4">à¸šà¸±à¸™à¸—à¸¶à¸</button>
     </>
   );
 }
@@ -461,7 +448,7 @@ function StarSelector({ value, onChange }: { value: number; onChange: (v: number
           className="text-2xl transition-colors leading-none"
         >
           <span className={(hovered ? star <= hovered : star <= value) ? "text-yellow-400" : "text-[#DCD0C0]"}>
-            ★
+            â˜…
           </span>
         </button>
       ))}
@@ -482,7 +469,7 @@ function WriteReviewCard({ order, onSubmitted }: { order: OrderWithDetails; onSu
       await reviewApi.create({ orderId: order.Order_ID, rating, comment: comment.trim() || undefined });
       onSubmitted();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      setError(err instanceof Error ? err.message : "à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”");
       setSubmitting(false);
     }
   };
@@ -498,20 +485,20 @@ function WriteReviewCard({ order, onSubmitted }: { order: OrderWithDetails; onSu
           />
         )}
         <div className="min-w-0">
-          <div className="font-semibold text-[#4A3B32] text-sm truncate">{order.Title || "สินค้า"}</div>
-          <div className="text-xs text-[#A89F91]">ผู้ขาย: {order.SellerName || "—"}</div>
+          <div className="font-semibold text-[#4A3B32] text-sm truncate">{order.Title || "à¸ªà¸´à¸™à¸„à¹‰à¸²"}</div>
+          <div className="text-xs text-[#A89F91]">à¸œà¸¹à¹‰à¸‚à¸²à¸¢: {order.SellerName || "â€”"}</div>
         </div>
       </div>
 
       <div className="mb-2">
-        <div className="text-xs font-medium text-[#A89F91] mb-1">ให้คะแนน</div>
+        <div className="text-xs font-medium text-[#A89F91] mb-1">à¹ƒà¸«à¹‰à¸„à¸°à¹à¸™à¸™</div>
         <StarSelector value={rating} onChange={setRating} />
       </div>
 
       <TextareaField
         value={comment}
         onChange={(e) => setComment(e.target.value)}
-        placeholder="แสดงความคิดเห็น (ไม่บังคับ)..."
+        placeholder="à¹à¸ªà¸”à¸‡à¸„à¸§à¸²à¸¡à¸„à¸´à¸”à¹€à¸«à¹‡à¸™ (à¹„à¸¡à¹ˆà¸šà¸±à¸‡à¸„à¸±à¸š)..."
         rows={2}
         textareaClassName={`${getFormFieldClassName({ size: "lg", resize: "none" })} border-[#E6D5C3] mt-2`}
       />
@@ -524,7 +511,7 @@ function WriteReviewCard({ order, onSubmitted }: { order: OrderWithDetails; onSu
         disabled={submitting}
         className="mt-2 bg-[#D9734E] text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-[#C25B38] disabled:opacity-50"
       >
-        {submitting ? "กำลังส่ง..." : "ส่งรีวิว"}
+        {submitting ? "à¸à¸³à¸¥à¸±à¸‡à¸ªà¹ˆà¸‡..." : "à¸ªà¹ˆà¸‡à¸£à¸µà¸§à¸´à¸§"}
       </button>
     </div>
   );
@@ -554,17 +541,17 @@ function MyReview() {
 
   return (
     <>
-      <h2 className="text-lg font-bold text-[#D9734E] mb-5">รีวิวของฉัน</h2>
+      <h2 className="text-lg font-bold text-[#D9734E] mb-5">à¸£à¸µà¸§à¸´à¸§à¸‚à¸­à¸‡à¸‰à¸±à¸™</h2>
 
       {loading ? (
-        <div className="text-center text-[#A89F91] py-16">กำลังโหลด...</div>
+        <div className="text-center text-[#A89F91] py-16">à¸à¸³à¸¥à¸±à¸‡à¹‚à¸«à¸¥à¸”...</div>
       ) : (
         <>
           {/* Pending reviews */}
           {pendingOrders.length > 0 && (
             <div className="mb-7">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-base font-bold text-[#4A3B32]">รอรีวิว</span>
+                <span className="text-base font-bold text-[#4A3B32]">à¸£à¸­à¸£à¸µà¸§à¸´à¸§</span>
                 <span className="bg-[#E6D5C3] text-[#D9734E] text-xs font-bold px-2 py-0.5 rounded-full">
                   {pendingOrders.length}
                 </span>
@@ -584,7 +571,7 @@ function MyReview() {
           {/* Written reviews */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-base font-bold text-[#4A3B32]">รีวิวที่เขียนแล้ว</span>
+              <span className="text-base font-bold text-[#4A3B32]">à¸£à¸µà¸§à¸´à¸§à¸—à¸µà¹ˆà¹€à¸‚à¸µà¸¢à¸™à¹à¸¥à¹‰à¸§</span>
               <span className="bg-[#E6D5C3] text-[#A89F91] text-xs font-bold px-2 py-0.5 rounded-full">
                 {reviews.length}
               </span>
@@ -595,7 +582,7 @@ function MyReview() {
                 {reviews.map((r) => (
                   <div key={r.Review_ID} className="border border-[#E6D5C3] rounded-xl p-4 bg-white">
                     <div className="flex items-center justify-between mb-1">
-                      <div className="text-sm font-semibold text-[#4A3B32]">{r.ProductTitle || "สินค้า"}</div>
+                      <div className="text-sm font-semibold text-[#4A3B32]">{r.ProductTitle || "à¸ªà¸´à¸™à¸„à¹‰à¸²"}</div>
                       <div className="text-xs text-[#A89F91]">
                         {new Date(r.Created_at).toLocaleDateString("th-TH", {
                           year: "numeric",
@@ -605,15 +592,15 @@ function MyReview() {
                       </div>
                     </div>
                     <div className="mb-1 text-yellow-400 text-sm">
-                      {"★".repeat(r.Rating)}
-                      <span className="text-[#DCD0C0]">{"★".repeat(5 - r.Rating)}</span>
+                      {"â˜…".repeat(r.Rating)}
+                      <span className="text-[#DCD0C0]">{"â˜…".repeat(5 - r.Rating)}</span>
                     </div>
                     {r.Comment && <p className="text-sm text-[#A89F91]">{r.Comment}</p>}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-[#A89F91] py-10">ยังไม่มีรายการรีวิว</div>
+              <div className="text-center text-[#A89F91] py-10">à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸²à¸¢à¸à¸²à¸£à¸£à¸µà¸§à¸´à¸§</div>
             )}
           </div>
         </>
@@ -640,22 +627,22 @@ function ManageProfile() {
 
   return (
     <>
-      <h2 className="text-lg font-bold text-[#D9734E] mb-6">จัดการโปรไฟล์ร้าน</h2>
+      <h2 className="text-lg font-bold text-[#D9734E] mb-6">à¸ˆà¸±à¸”à¸à¸²à¸£à¹‚à¸›à¸£à¹„à¸Ÿà¸¥à¹Œà¸£à¹‰à¸²à¸™</h2>
 
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-semibold text-[#4A3B32]">
-          สินค้าของฉัน ({products.length})
+          à¸ªà¸´à¸™à¸„à¹‰à¸²à¸‚à¸­à¸‡à¸‰à¸±à¸™ ({products.length})
         </h3>
         <Link
           href="/products/create"
           className="bg-[#D9734E] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#C25B38] transition"
         >
-          + ลงขายสินค้าใหม่
+          + à¸¥à¸‡à¸‚à¸²à¸¢à¸ªà¸´à¸™à¸„à¹‰à¸²à¹ƒà¸«à¸¡à¹ˆ
         </Link>
       </div>
 
       {loading ? (
-        <div className="text-center text-[#A89F91] py-16">กำลังโหลด...</div>
+        <div className="text-center text-[#A89F91] py-16">à¸à¸³à¸¥à¸±à¸‡à¹‚à¸«à¸¥à¸”...</div>
       ) : products.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {products.map((p) => (
@@ -664,10 +651,10 @@ function ManageProfile() {
         </div>
       ) : (
         <div className="text-center text-[#A89F91] py-16">
-          <div className="text-4xl mb-3">📦</div>
-          <p>ยังไม่มีสินค้า</p>
+          <div className="text-4xl mb-3">ðŸ“¦</div>
+          <p>à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸ªà¸´à¸™à¸„à¹‰à¸²</p>
           <Link href="/products/create" className="text-[#D9734E] hover:underline text-sm mt-2 inline-block">
-            ลงขายสินค้าแรกของคุณ
+            à¸¥à¸‡à¸‚à¸²à¸¢à¸ªà¸´à¸™à¸„à¹‰à¸²à¹à¸£à¸à¸‚à¸­à¸‡à¸„à¸¸à¸“
           </Link>
         </div>
       )}
@@ -678,20 +665,20 @@ function ManageProfile() {
 function Account({ email }: { email: string }) {
   return (
     <>
-      <h2 className="text-lg font-bold text-[#D9734E] mb-6">การเข้าสู่ระบบ</h2>
+      <h2 className="text-lg font-bold text-[#D9734E] mb-6">à¸à¸²à¸£à¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸š</h2>
 
       <div className="space-y-4 max-w-xl">
         <div className="flex items-center justify-between">
           <span>Google</span>
-          <button type="button" disabled className="border border-[#DCD0C0] px-4 py-1.5 rounded-lg opacity-50 cursor-not-allowed">เชื่อมต่อ (เร็วๆ นี้)</button>
+          <button type="button" disabled className="border border-[#DCD0C0] px-4 py-1.5 rounded-lg opacity-50 cursor-not-allowed">à¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­ (à¹€à¸£à¹‡à¸§à¹† à¸™à¸µà¹‰)</button>
         </div>
 
         <div>
-          <Label>อีเมลสำหรับเข้าสู่ระบบ</Label>
+          <Label>à¸­à¸µà¹€à¸¡à¸¥à¸ªà¸³à¸«à¸£à¸±à¸šà¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸š</Label>
           <InputField value={email} readOnly />
         </div>
 
-        <button type="button" disabled className="border border-[#D9734E] text-[#D9734E] px-4 py-2 rounded-lg opacity-50 cursor-not-allowed">เปลี่ยนรหัสผ่าน (เร็วๆ นี้)</button>
+        <button type="button" disabled className="border border-[#D9734E] text-[#D9734E] px-4 py-2 rounded-lg opacity-50 cursor-not-allowed">à¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¸£à¸«à¸±à¸ªà¸œà¹ˆà¸²à¸™ (à¹€à¸£à¹‡à¸§à¹† à¸™à¸µà¹‰)</button>
       </div>
     </>
   );

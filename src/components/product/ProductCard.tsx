@@ -6,6 +6,51 @@ import Image from "next/image";
 import { ProductDisplay } from "@/src/types/ProductDisplay";
 import { getPanelClassName } from "@/src/components/ui";
 
+type ProductCardFrameProps = {
+    children: ReactNode;
+    href?: string;
+    className?: string;
+};
+
+type ProductCardImageProps = {
+    src?: string;
+    alt: string;
+    badge?: ReactNode;
+    heightClassName?: string;
+};
+
+type ProductCardProps = {
+    product: ProductDisplay;
+    href?: string;
+    badgeText?: string;
+};
+
+function joinClasses(...classNames: (string | false | null | undefined)[]) {
+    return classNames.filter(Boolean).join(" ");
+}
+
+export function ProductCardFrame({
+    children,
+    href,
+    className,
+}: ProductCardFrameProps) {
+    const sharedClassName = joinClasses(
+        getPanelClassName({ radius: "2xl" }),
+        "group overflow-hidden transition-shadow hover:shadow-lg",
+        className,
+    );
+
+    if (href) {
+        return (
+            <Link href={href} className={sharedClassName}>
+                {children}
+            </Link>
+        );
+    }
+
+    return <div className={sharedClassName}>{children}</div>;
+}
+
 export function ProductCardBadge({ children }: { children: ReactNode }) {
     if (!children) return null;
 
@@ -14,6 +59,41 @@ export function ProductCardBadge({ children }: { children: ReactNode }) {
             <span className="rounded-full border border-[#DCD0C0] bg-white/95 px-2 py-1 text-[11px] font-semibold text-[#4A3B32]">
                 {children}
             </span>
+        </div>
+    );
+}
+
+export function ProductCardImage({
+    src,
+    alt,
+    badge,
+    heightClassName = "h-44",
+}: ProductCardImageProps) {
+    const [imgError, setImgError] = useState(false);
+    const image = src || "";
+
+    // Disable Next.js image optimization for localhost images that the CDN cannot reach
+    const isLocalImage = image.startsWith("http://localhost") || image.startsWith("http://127.");
+
+    return (
+        <div className={joinClasses("relative", heightClassName)}>
+            {image && !imgError ? (
+                <Image
+                    src={image}
+                    alt={alt}
+                    fill
+                    className="object-cover transition group-hover:scale-[1.03]"
+                    sizes="(max-width: 1024px) 100vw, 25vw"
+                    priority={false}
+                    unoptimized={isLocalImage}
+                    onError={() => setImgError(true)}
+                />
+            ) : (
+                <div className="flex h-full items-center justify-center bg-[#E6D5C3] text-4xl text-[#A89F91]">
+                    📷
+                </div>
+            )}
+            {badge}
         </div>
     );
 }
@@ -47,12 +127,6 @@ export function ProductCardLocation({
     );
 }
 
-type ProductCardProps = {
-    product: ProductDisplay;
-    href?: string;
-    badgeText?: string;
-};
-
 // Renders a product card with an image, badge, title, price, and location
 export default function ProductCard({
     product,
@@ -60,47 +134,24 @@ export default function ProductCard({
     badgeText = "⭐ แนะนำ",
 }: ProductCardProps) {
     const to = href ?? `/products/${product.id}`;
-    const image = product.images[0] || "";
-    const timeAgo = product.postedAt;
     const priceStr = `${Number(product.price ?? 0).toLocaleString()} ฿`;
-    const [imgError, setImgError] = useState(false);
-
-    // Disable Next.js image optimization for localhost images that the CDN cannot reach
-    const isLocalImage = image.startsWith("http://localhost") || image.startsWith("http://127.");
 
     return (
-        <Link
-            href={to}
-            className={`${getPanelClassName({ radius: "2xl" })} group overflow-hidden transition-shadow hover:shadow-lg`}
-        >
-            <div className="relative h-44">
-                {image && !imgError ? (
-                    <Image
-                        src={image}
-                        alt={product.title}
-                        fill
-                        className="object-cover transition group-hover:scale-[1.03]"
-                        sizes="(max-width: 1024px) 100vw, 25vw"
-                        priority={false}
-                        unoptimized={isLocalImage}
-                        onError={() => setImgError(true)}
-                    />
-                ) : (
-                    <div className="flex h-full items-center justify-center bg-[#E6D5C3] text-4xl text-[#A89F91]">
-                        📷
-                    </div>
-                )}
-                <ProductCardBadge>{badgeText}</ProductCardBadge>
-            </div>
+        <ProductCardFrame href={to}>
+            <ProductCardImage
+                src={product.images[0]}
+                alt={product.title}
+                badge={<ProductCardBadge>{badgeText}</ProductCardBadge>}
+            />
 
             <div className="p-4">
                 <div className="line-clamp-2 font-semibold text-[#4A3B32] transition-colors group-hover:text-[#D9734E]">
                     {product.title}
                 </div>
 
-                <ProductCardMeta price={priceStr} postedAt={timeAgo} />
+                <ProductCardMeta price={priceStr} postedAt={product.postedAt} />
                 <ProductCardLocation location={product.location} />
             </div>
-        </Link>
+        </ProductCardFrame>
     );
 }
