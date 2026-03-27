@@ -12,11 +12,11 @@ export const OrderService = {
 
         const product = await ProductModel.findByID(orderData.Product_ID);
         if (!product) throw new AppError("Product not found", 404);
-
         if (product.Seller_ID === buyerID) throw new AppError("Cannot order your own product", 400);
 
         const currentQuantity = product.Quantity || 0;
         if (currentQuantity < orderData.Quantity) throw new AppError("Not enough stock available", 400);
+        
         const totalPrice = product.Price * orderData.Quantity;
 
         const newOrder: Order = {
@@ -27,9 +27,8 @@ export const OrderService = {
             Total_Price: totalPrice,
             Status: 'pending',
         };
-        const remainingQuantity = currentQuantity - orderData.Quantity;
-        const newProductStatus = remainingQuantity === 0 ? 'sold' : product.Status;
-        const orderID = await OrderModel.createOrderTransaction(newOrder, product.Product_ID!, remainingQuantity, newProductStatus!);
+
+        const orderID = await OrderModel.createOrderTransaction(newOrder, product.Product_ID!);
 
         if (product.Category_Key) {
             CategoryService.recordPopularity(product.Category_Key, 'purchase').catch(() => {});
@@ -109,7 +108,6 @@ export const OrderService = {
         const qty = Math.max(1, product.Quantity || 1);
         const orderStatus = targetStatus === 'sold' ? 'completed' : 'pending';
         const newProductStatus = targetStatus === 'sold' ? 'sold' : 'reserved';
-        const remainingQty = targetStatus === 'sold' ? 0 : qty;
 
         const newOrder: Order = {
             Product_ID: productID,
@@ -120,6 +118,6 @@ export const OrderService = {
             Status: orderStatus,
         };
 
-        return await OrderModel.createOrderTransaction(newOrder, productID, remainingQty, newProductStatus);
+        return await OrderModel.createOrderTransaction(newOrder, productID, newProductStatus);
     },
 };

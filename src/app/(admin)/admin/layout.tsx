@@ -17,7 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="h-9 w-9 rounded-xl bg-kd-primary text-white grid place-items-center font-extrabold">
                 K
               </div>
-              <div className="font-extrabold">Kaidee-like</div>
+              <div className="font-extrabold">KMUTNB2Market</div>
               <span className="text-xs bg-kd-card text-kd-primary px-2 py-0.5 rounded-full font-semibold">
                 Admin
               </span>

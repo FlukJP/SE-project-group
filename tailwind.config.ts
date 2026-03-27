@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Custom color scheme for Kaidee-like marketplace
+        // Custom color scheme for KMUTNB2Market marketplace
         'kd-bg': '#F9F6F0', // Background: cream light
         'kd-card': '#E6D5C3', // Card/Section: light brown
         'kd-primary': '#D9734E', // Primary accent: orange brick

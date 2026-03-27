@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
     socket.on('sendMessage', (data: { roomId: string; message: unknown }) => {
         if (!socketUser) return;
         const msg = data.message as Record<string, unknown> | undefined;
-        if (!msg || msg.Sender_ID !== socketUser.userID || !msg.Message_ID) return;
+        if (!msg || msg.Sender_ID !== socketUser.userID || !msg.Messages_ID) return;
         socket.to(data.roomId).emit('newMessage', data.message);
     });
 

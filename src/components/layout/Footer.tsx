@@ -8,7 +8,7 @@ export default function Footer() {
             <div className="container mx-auto px-4 py-8 text-sm text-[#4A3B32]">
                 <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
                     <div className="flex items-center gap-3">
-                        <span className="font-semibold text-[#4A3B32]">© {new Date().getFullYear()} Kaidee-like (Demo)</span>
+                        <span className="font-semibold text-[#4A3B32]">© {new Date().getFullYear()} KMUTNB2Market (Demo)</span>
                         <span className="text-xs text-[#A89F91] bg-white rounded px-1.5 py-0.5">v{pkg.version}</span>
                     </div>
                     <div className="flex gap-4">

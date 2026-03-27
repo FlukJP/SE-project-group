@@ -133,43 +133,43 @@ export const OrderModel = {
     },
 
     /** Create an order and decrement product quantity atomically; uses row-level locking to prevent race conditions */
-    createOrderTransaction: async (newOrder: Order, productID: number, remainingQuantity: number, newProductStatus: string): Promise<number> => {
+    createOrderTransaction: async (newOrder: Order, productID: number, forceProductStatus?: string): Promise<number> => { 
         const connection = await db.getConnection();
         try {
             await connection.beginTransaction();
 
-            // Lock the product row to prevent race conditions
             const [lockedRows] = await connection.query<RowDataPacket[]>(
-                `SELECT Quantity FROM Product WHERE Product_ID = ? FOR UPDATE`,
+                `SELECT Quantity, Status FROM Product WHERE Product_ID = ? FOR UPDATE`,
                 [productID]
             );
             if (!lockedRows || lockedRows.length === 0) throw new Error('Product not found');
+            
             const currentQty = lockedRows[0].Quantity;
+            const currentStatus = lockedRows[0].Status;
+            
             if (currentQty < newOrder.Quantity) throw new Error('Insufficient stock');
+
+            const actualRemainingQuantity = currentQty - newOrder.Quantity;
+            const finalProductStatus = forceProductStatus 
+                ? forceProductStatus 
+                : (actualRemainingQuantity === 0 ? 'sold' : currentStatus);
 
             const insertOrderSQL = `
                 INSERT INTO Purchase (Product_ID, Buyer_ID, Seller_ID, Quantity, Total_Price, Status)
                 VALUES (?, ?, ?, ?, ?, ?)
             `;
-            const orderValues = [
-                newOrder.Product_ID,
-                newOrder.Buyer_ID,
-                newOrder.Seller_ID,
-                newOrder.Quantity,
-                newOrder.Total_Price,
-                newOrder.Status
-            ];
+            const orderValues = [newOrder.Product_ID, newOrder.Buyer_ID, newOrder.Seller_ID, newOrder.Quantity, newOrder.Total_Price, newOrder.Status];
             const [orderResult] = await connection.query<ResultSetHeader>(insertOrderSQL, orderValues);
-            const orderID = orderResult.insertId;
 
             const updateProductSql = `
                 UPDATE Product
                 SET Quantity = ?, Status = ?
                 WHERE Product_ID = ?
             `;
-            await connection.query(updateProductSql, [remainingQuantity, newProductStatus, productID]);
+            await connection.query(updateProductSql, [actualRemainingQuantity, finalProductStatus, productID]);
+            
             await connection.commit();
-            return orderID;
+            return orderResult.insertId;
         } catch (error) {
             await connection.rollback();
             throw error;

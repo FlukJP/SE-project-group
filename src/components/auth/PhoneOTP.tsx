@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useId } from "react";
 import {
     RecaptchaVerifier,
     signInWithPhoneNumber,
@@ -15,15 +15,15 @@ interface PhoneOTPProps {
 }
 
 const FIREBASE_PHONE_ERRORS: Record<string, string> = {
-    "auth/invalid-app-credential":     "reCAPTCHA ผิดพลาด กรุณา refresh หน้าแล้วลองใหม่",
-    "auth/captcha-check-failed":       "reCAPTCHA ผิดพลาด กรุณาลองใหม่",
-    "auth/invalid-recaptcha-token":    "reCAPTCHA หมดอายุ กรุณาลองใหม่",
-    "auth/invalid-phone-number":    "เบอร์โทรศัพท์ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง",
-    "auth/missing-phone-number":    "กรุณากรอกเบอร์โทรศัพท์",
-    "auth/too-many-requests":       "ส่ง OTP บ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่",
-    "auth/quota-exceeded":          "เกินโควต้า SMS กรุณาลองใหม่ภายหลัง",
-    "auth/network-request-failed":  "ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบเครือข่าย",
-    "auth/code-expired":            "รหัส OTP หมดอายุแล้ว กรุณาขอรหัสใหม่",
+    "auth/invalid-app-credential": "reCAPTCHA ผิดพลาด กรุณา refresh หน้าแล้วลองใหม่",
+    "auth/captcha-check-failed": "reCAPTCHA ผิดพลาด กรุณาลองใหม่",
+    "auth/invalid-recaptcha-token": "reCAPTCHA หมดอายุ กรุณาลองใหม่",
+    "auth/invalid-phone-number": "เบอร์โทรศัพท์ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง",
+    "auth/missing-phone-number": "กรุณากรอกเบอร์โทรศัพท์",
+    "auth/too-many-requests": "ส่ง OTP บ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่",
+    "auth/quota-exceeded": "เกินโควต้า SMS กรุณาลองใหม่ภายหลัง",
+    "auth/network-request-failed": "ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบเครือข่าย",
+    "auth/code-expired": "รหัส OTP หมดอายุแล้ว กรุณาขอรหัสใหม่",
     "auth/invalid-verification-code": "รหัส OTP ไม่ถูกต้อง",
 };
 
@@ -47,6 +47,7 @@ function toE164(phone: string): string {
 // Handles SMS OTP flow via Firebase: sending a verification code and confirming it to obtain an ID token
 export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) {
     const [step, setStep] = useState<"send" | "verify">("send");
+    const recaptchaContainerId = useId();
     const [otp, setOtp] = useState("");
     const [loading, setLoading] = useState(false);
     const [countdown, setCountdown] = useState(0);
@@ -91,7 +92,7 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
                 recaptchaRef.current.clear();
                 recaptchaRef.current = null;
             }
-            const verifier = new RecaptchaVerifier(firebaseAuth, "recaptcha-container", {
+            const verifier = new RecaptchaVerifier(firebaseAuth, recaptchaContainerId, {
                 size: "invisible",
             });
             recaptchaRef.current = verifier;
@@ -128,7 +129,7 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
     return (
         <div className="space-y-4">
             {/* Invisible reCAPTCHA container (required by Firebase) */}
-            <div id="recaptcha-container" />
+            <div id={recaptchaContainerId} />
 
             {step === "send" && (
                 <div className="space-y-3">

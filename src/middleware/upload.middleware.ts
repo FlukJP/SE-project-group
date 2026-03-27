@@ -34,10 +34,10 @@ export const validateImageMagicBytes = async (req: Request, _res: Response, next
     if (files.length === 0) return next();
 
     try {
-        const { fileTypeFromBuffer } = await import('file-type');
+        const { fromBuffer } = await import('file-type');
 
         for (const file of files) {
-            const meta = await fileTypeFromBuffer(file.buffer);
+            const meta = await fromBuffer(file.buffer);
             if (!meta || !UPLOAD_CONFIG.ALLOWED_MIMES.includes(meta.mime)) {
                 throw new AppError('Invalid image file. File signature does not match allowed types.', 400);
             }

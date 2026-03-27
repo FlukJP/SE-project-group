@@ -37,6 +37,7 @@ export default function MessageBubble({ message, isMine }: Props) {
                         alt="sent image"
                         width={300}
                         height={200}
+                        priority
                         className="rounded-lg max-w-full h-auto cursor-pointer"
                         onClick={() => window.open(message.Content, "_blank")}
                     />

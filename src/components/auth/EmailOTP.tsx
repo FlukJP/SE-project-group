@@ -56,7 +56,7 @@ export default function EmailOTP({ email, onVerified, onError }: EmailOTPProps) 
 
     // Verifies the entered OTP and calls onVerified with the resulting tokens on success
     const handleVerifyOTP = async () => {
-        if (loading) return;
+        if (loading || otp.length !== 6) return;
         setLoading(true);
         try {
             const response = await authApi.verifyOTP(email, otp);

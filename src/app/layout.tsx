@@ -13,7 +13,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Kaidee-like — ตลาดมือสองออนไลน์",
+  title: "KMUTNB2Market — ตลาดมือสองออนไลน์",
   description: "ซื้อขายสินค้ามือสองและของใหม่ ค้นหาง่าย ราคาโดนใจ",
 };
 

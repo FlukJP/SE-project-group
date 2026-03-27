@@ -48,7 +48,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
                     <div className="h-9 w-9 rounded-xl bg-[#D9734E] text-white grid place-items-center font-extrabold">
                         K
                     </div>
-                    <div className="font-extrabold text-[#4A3B32]">Kaidee-like</div>
+                    <div className="font-extrabold text-[#4A3B32]">KMUTNB2Market</div>
                     <div className="text-[11px] text-[#A89F91] -mt-0.5">ตลาดมือสองใกล้คุณ</div>
                 </Link>
 
