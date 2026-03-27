@@ -8,6 +8,12 @@ import { useAuth } from "@/src/contexts/AuthContext";
 import { productApi, orderApi, API_BASE, type OrderWithDetails } from "@/src/lib/api";
 import { ProductDisplay, toProductDisplay } from "@/src/types/ProductDisplay";
 import { useError } from "@/src/contexts/ErrorContext";
+import {
+  getFormButtonClassName,
+  getPanelClassName,
+  getSegmentedControlClassName,
+  getSegmentedControlItemClassName,
+} from "@/src/components/ui";
 import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 
 type Tab = "products" | "selling" | "buying";
@@ -218,7 +224,7 @@ export default function MyProductsPage() {
           <button
             type="button"
             onClick={() => router.push("/login")}
-            className="bg-[#D9734E] text-white px-6 py-2 rounded-lg font-semibold"
+            className={getFormButtonClassName({ variant: "primary", size: "md" })}
           >
             เข้าสู่ระบบ
           </button>
@@ -246,24 +252,23 @@ export default function MyProductsPage() {
             </div>
             <Link
               href="/products/create"
-              className="bg-[#D9734E] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#C25B38] transition"
+              className={`${getFormButtonClassName({ variant: "primary", size: "md" })} rounded-xl`}
             >
               + ลงขายสินค้าใหม่
             </Link>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 bg-white border border-[#E6D5C3] rounded-xl p-1 mb-6">
+          <div className={`${getSegmentedControlClassName({ fullWidth: true })} mb-6`}>
             {TABS.map((t) => (
               <button
                 key={t.key}
                 type="button"
                 onClick={() => setActiveTab(t.key)}
-                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${
-                  activeTab === t.key
-                    ? "bg-[#D9734E] text-white"
-                    : "text-[#A89F91] hover:bg-[#F9F6F0]"
-                }`}
+                className={getSegmentedControlItemClassName({
+                  active: activeTab === t.key,
+                  size: "md",
+                })}
               >
                 {t.label}
               </button>
@@ -291,7 +296,7 @@ export default function MyProductsPage() {
                   {products.map((p) => (
                     <div
                       key={p.id}
-                      className="bg-white border border-[#E6D5C3] rounded-xl p-4 flex items-center gap-4"
+                      className={`${getPanelClassName({ padding: "md", radius: "xl" })} flex items-center gap-4`}
                     >
                       {/* Thumbnail */}
                       <div className="w-16 h-16 rounded-lg overflow-hidden bg-[#E6D5C3] shrink-0">
@@ -346,7 +351,7 @@ export default function MyProductsPage() {
                       <div className="flex flex-col gap-2 shrink-0">
                         <Link
                           href={`/products/${p.id}/edit`}
-                          className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-100 transition text-center"
+                          className={`${getFormButtonClassName({ variant: "infoOutline", size: "sm" })} text-center`}
                         >
                           แก้ไข
                         </Link>
@@ -354,7 +359,7 @@ export default function MyProductsPage() {
                           type="button"
                           disabled={deleting === p.id}
                           onClick={() => handleDelete(p.id)}
-                          className="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg font-semibold hover:bg-red-100 transition disabled:opacity-50"
+                          className={getFormButtonClassName({ variant: "dangerOutline", size: "sm" })}
                         >
                           {deleting === p.id ? "กำลังลบ..." : "ลบ"}
                         </button>
@@ -422,7 +427,7 @@ export default function MyProductsPage() {
       {/* Buyer ID Modal */}
       {pendingStatus && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+          <div className={`${getPanelClassName({ padding: "lg", radius: "2xl", shadow: "xl", bordered: false })} w-full max-w-sm mx-4`}>
             <h3 className="text-base font-bold text-[#4A3B32] mb-1">
               {pendingStatus.newStatus === "sold" ? "บันทึกการขาย" : "บันทึกการจอง"}
             </h3>
@@ -439,14 +444,14 @@ export default function MyProductsPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setPendingStatus(null)}
-                className="flex-1 py-2 rounded-lg border border-[#E6D5C3] text-sm text-[#A89F91] hover:bg-[#F9F6F0] transition"
+                className={`${getFormButtonClassName({ variant: "secondary", size: "md", fullWidth: true })} text-[#A89F91]`}
               >
                 ยกเลิก
               </button>
               <button
                 onClick={handleBuyerIdConfirm}
                 disabled={!buyerIdInput}
-                className="flex-1 py-2 rounded-lg bg-[#D9734E] text-white text-sm font-semibold hover:bg-[#C25B38] transition disabled:opacity-50"
+                className={`${getFormButtonClassName({ variant: "primary", size: "md", fullWidth: true })}`}
               >
                 ยืนยัน
               </button>
@@ -506,7 +511,7 @@ function SellerOrderCard({
   const imageUrl = resolveImageUrl(order.Image_URL);
 
   return (
-    <div className="bg-white border border-[#E6D5C3] rounded-xl p-4 flex items-center gap-4">
+    <div className={`${getPanelClassName({ padding: "md", radius: "xl" })} flex items-center gap-4`}>
       <OrderImage imageUrl={imageUrl} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold text-[#4A3B32] truncate">
@@ -526,7 +531,7 @@ function SellerOrderCard({
             type="button"
             disabled={updating}
             onClick={() => onConfirmShip(order.Order_ID)}
-            className="text-xs bg-[#D9734E] text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-[#C25B38] transition disabled:opacity-50"
+            className={getFormButtonClassName({ variant: "primary", size: "sm" })}
           >
             {updating ? "..." : "ยืนยันส่งสินค้า"}
           </button>
@@ -554,7 +559,7 @@ function BuyerOrderCard({
   const imageUrl = resolveImageUrl(order.Image_URL);
 
   return (
-    <div className="bg-white border border-[#E6D5C3] rounded-xl p-4 flex items-center gap-4">
+    <div className={`${getPanelClassName({ padding: "md", radius: "xl" })} flex items-center gap-4`}>
       <OrderImage imageUrl={imageUrl} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold text-[#4A3B32] truncate">
@@ -575,7 +580,7 @@ function BuyerOrderCard({
               type="button"
               disabled={updating}
               onClick={() => onPay(order.Order_ID)}
-              className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+              className={getFormButtonClassName({ variant: "info", size: "sm" })}
             >
               {updating ? "..." : "ยืนยันชำระเงิน"}
             </button>
@@ -583,7 +588,7 @@ function BuyerOrderCard({
               type="button"
               disabled={updating}
               onClick={() => onCancel(order.Order_ID)}
-              className="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg font-semibold hover:bg-red-100 transition disabled:opacity-50"
+              className={getFormButtonClassName({ variant: "dangerOutline", size: "sm" })}
             >
               {updating ? "..." : "ยกเลิก"}
             </button>

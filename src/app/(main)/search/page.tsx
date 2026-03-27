@@ -4,7 +4,13 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/src/components/layout/Navbar";
 import ProductCard from "@/src/components/product/ProductCard";
-import { FormErrorNotice } from "@/src/components/ui";
+import {
+  FormErrorNotice,
+  getFilterChipClassName,
+  getFilterChipRemoveButtonClassName,
+  getFilterPanelClassName,
+  getFormButtonClassName,
+} from "@/src/components/ui";
 import { ProductGridSkeleton } from "@/src/components/ui/Skeleton";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { PROVINCES } from "@/src/data/provinces";
@@ -219,7 +225,7 @@ function SearchPageContent() {
               </div>
               <button
                 type="submit"
-                className="rounded-xl bg-white text-[#D9734E] font-semibold px-6 py-3 text-sm hover:bg-[#F9F6F0] transition"
+                className={`${getFormButtonClassName({ variant: "surfaceAccent", size: "lg" })} rounded-xl`}
               >
                 ค้นหา
               </button>
@@ -243,11 +249,10 @@ function SearchPageContent() {
             <button
               type="button"
               onClick={() => setShowFilter((v) => !v)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold transition ${
-                hasActiveFilter
-                  ? "bg-[#D9734E] text-white border-[#D9734E]"
-                  : "bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
-              }`}
+              className={`${getFormButtonClassName({
+                variant: hasActiveFilter ? "primary" : "secondary",
+                size: "md",
+              })} rounded-xl gap-2`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6 10a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm2 4a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1z" clipRule="evenodd" />
@@ -263,7 +268,7 @@ function SearchPageContent() {
 
           {/* Filter panel */}
           {showFilter && (
-            <div className="bg-white border border-[#E6D5C3] rounded-2xl p-5 mb-5 shadow-sm space-y-5">
+            <div className={getFilterPanelClassName()}>
 
               {/* Province / District */}
               <div>
@@ -315,11 +320,7 @@ function SearchPageContent() {
                           key={cat.category_key}
                           type="button"
                           onClick={() => toggleCategory(cat.category_key)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
-                            isActive
-                              ? "bg-[#D9734E] text-white border-[#D9734E]"
-                              : "bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
-                          }`}
+                          className={getFilterChipClassName({ active: isActive })}
                         >
                           {isActive && (
                             <svg className="w-3 h-3 shrink-0" viewBox="0 0 12 12" fill="none">
@@ -347,11 +348,7 @@ function SearchPageContent() {
                         key={key}
                         type="button"
                         onClick={() => setSort(key)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
-                          sort === key
-                            ? "bg-[#D9734E] text-white border-[#D9734E]"
-                            : "bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
-                        }`}
+                        className={getFilterChipClassName({ active: sort === key })}
                       >
                         {SORT_LABELS[key]}
                       </button>
@@ -391,7 +388,7 @@ function SearchPageContent() {
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="text-sm text-[#C45A5A] hover:underline font-medium"
+                    className={getFormButtonClassName({ variant: "secondary", size: "sm" })}
                   >
                     ล้างตัวกรองทั้งหมด
                   </button>
@@ -405,12 +402,12 @@ function SearchPageContent() {
             <div className="flex flex-wrap gap-2 mb-4">
               {/* Province / District chip */}
               {province && (
-                <span className="flex items-center gap-1 bg-[#E6D5C3] text-[#4A3B32] text-xs font-semibold px-3 py-1.5 rounded-full">
+                <span className={getFilterChipClassName({ tone: "summary", size: "sm" })}>
                   📍 {province}{district && ` · ${district}`}
                   <button
                     type="button"
                     onClick={() => navigate({ province: "", district: "" })}
-                    className="hover:text-[#D9734E] ml-1"
+                    className={getFilterChipRemoveButtonClassName()}
                   >
                     ✕
                   </button>
@@ -422,13 +419,13 @@ function SearchPageContent() {
                 return (
                   <span
                     key={key}
-                    className="flex items-center gap-1 bg-[#E6D5C3] text-[#4A3B32] text-xs font-semibold px-3 py-1.5 rounded-full"
+                    className={getFilterChipClassName({ tone: "summary", size: "sm" })}
                   >
                     {cat?.emoji} {cat?.name || key}
                     <button
                       type="button"
                       onClick={() => toggleCategory(key)}
-                      className="hover:text-[#D9734E] ml-1"
+                      className={getFilterChipRemoveButtonClassName()}
                     >
                       ✕
                     </button>
@@ -436,21 +433,21 @@ function SearchPageContent() {
                 );
               })}
               {sort !== "newest" && (
-                <span className="flex items-center gap-1 bg-[#E6D5C3] text-[#4A3B32] text-xs font-semibold px-3 py-1.5 rounded-full">
+                <span className={getFilterChipClassName({ tone: "summary", size: "sm" })}>
                   {SORT_LABELS[sort]}
-                  <button type="button" onClick={() => setSort("newest")} className="hover:text-[#D9734E] ml-1">✕</button>
+                  <button type="button" onClick={() => setSort("newest")} className={getFilterChipRemoveButtonClassName()}>✕</button>
                 </span>
               )}
               {minPrice !== "" && (
-                <span className="flex items-center gap-1 bg-[#E6D5C3] text-[#4A3B32] text-xs font-semibold px-3 py-1.5 rounded-full">
+                <span className={getFilterChipClassName({ tone: "summary", size: "sm" })}>
                   ราคา ≥ {Number(minPrice).toLocaleString()} ฿
-                  <button type="button" onClick={() => setMinPrice("")} className="hover:text-[#D9734E] ml-1">✕</button>
+                  <button type="button" onClick={() => setMinPrice("")} className={getFilterChipRemoveButtonClassName()}>✕</button>
                 </span>
               )}
               {maxPrice !== "" && (
-                <span className="flex items-center gap-1 bg-[#E6D5C3] text-[#4A3B32] text-xs font-semibold px-3 py-1.5 rounded-full">
+                <span className={getFilterChipClassName({ tone: "summary", size: "sm" })}>
                   ราคา ≤ {Number(maxPrice).toLocaleString()} ฿
-                  <button type="button" onClick={() => setMaxPrice("")} className="hover:text-[#D9734E] ml-1">✕</button>
+                  <button type="button" onClick={() => setMaxPrice("")} className={getFilterChipRemoveButtonClassName()}>✕</button>
                 </span>
               )}
             </div>
@@ -463,7 +460,7 @@ function SearchPageContent() {
             <div className="text-center py-16">
               <div className="text-4xl mb-3">&#9888;&#65039;</div>
               <FormErrorNotice message={error} className="max-w-md mx-auto" />
-              <button type="button" onClick={() => window.location.reload()} className="mt-3 text-[#D9734E] hover:underline text-sm">
+              <button type="button" onClick={() => window.location.reload()} className={`${getFormButtonClassName({ variant: "secondary", size: "md" })} mt-3`}>
                 ลองใหม่อีกครั้ง
               </button>
             </div>
@@ -482,7 +479,7 @@ function SearchPageContent() {
                     type="button"
                     onClick={() => { setPage((p) => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     disabled={page <= 1}
-                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
+                    className={getFormButtonClassName({ variant: "secondary", size: "md" })}
                   >
                     ก่อนหน้า
                   </button>
@@ -502,11 +499,10 @@ function SearchPageContent() {
                           key={item}
                           type="button"
                           onClick={() => { setPage(item as number); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                          className={`w-9 h-9 rounded-lg border text-sm font-medium transition ${
-                            page === item
-                              ? "bg-[#D9734E] text-white border-[#D9734E]"
-                              : "bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
-                          }`}
+                          className={`${getFormButtonClassName({
+                            variant: page === item ? "primary" : "secondary",
+                            size: "md",
+                          })} w-9 h-9 px-0`}
                         >
                           {item}
                         </button>
@@ -517,7 +513,7 @@ function SearchPageContent() {
                     type="button"
                     onClick={() => { setPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     disabled={page >= totalPages}
-                    className="px-3 py-2 rounded-lg border text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed bg-white text-[#4A3B32] border-[#DCD0C0] hover:border-[#D9734E]"
+                    className={getFormButtonClassName({ variant: "secondary", size: "md" })}
                   >
                     ถัดไป
                   </button>

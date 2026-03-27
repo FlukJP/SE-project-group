@@ -6,7 +6,15 @@ import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
 import { reviewApi, reportApi, orderApi, API_BASE } from "@/src/lib/api";
 import { UserProfileSkeleton } from "@/src/components/ui/Skeleton";
-import { FormErrorNotice, FormSuccessNotice, TextareaField } from "@/src/components/ui";
+import {
+  FormErrorNotice,
+  FormSuccessNotice,
+  TextareaField,
+  getFormButtonClassName,
+  getPanelClassName,
+  getSegmentedControlClassName,
+  getSegmentedControlItemClassName,
+} from "@/src/components/ui";
 import type { OrderWithDetails } from "@/src/types/Order";
 import { useAuth } from "@/src/contexts/AuthContext";
 import ProductCard from "@/src/components/product/ProductCard";
@@ -56,7 +64,7 @@ function ReportModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+      <div className={`${getPanelClassName({ padding: "lg", radius: "2xl", shadow: "xl", bordered: false })} w-full max-w-md`}>
         <div className="flex items-center gap-2 mb-4">
           <span className="text-[#C45A5A] text-xl">🚩</span>
           <h2 className="text-lg font-bold text-[#4A3B32]">รายงานผู้ใช้นี้</h2>
@@ -77,7 +85,7 @@ function ReportModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 border border-[#DCD0C0] rounded-xl py-2 text-sm font-medium text-[#4A3B32] hover:bg-[#E6D5C3]"
+            className={`${getFormButtonClassName({ variant: "secondary", size: "md", fullWidth: true })} rounded-xl`}
           >
             ยกเลิก
           </button>
@@ -85,7 +93,7 @@ function ReportModal({
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-1 bg-[#C45A5A] text-white rounded-xl py-2 text-sm font-semibold hover:bg-[#A84040] disabled:opacity-50"
+            className={`${getFormButtonClassName({ variant: "danger", size: "md", fullWidth: true })} rounded-xl`}
           >
             {loading ? "กำลังส่ง..." : "ส่งรายงาน"}
           </button>
@@ -125,7 +133,7 @@ function ReviewModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+      <div className={`${getPanelClassName({ padding: "lg", radius: "2xl", shadow: "xl", bordered: false })} w-full max-w-md`}>
         <div className="flex items-center gap-2 mb-4">
           <span className="text-yellow-400 text-xl">★</span>
           <h2 className="text-lg font-bold text-[#4A3B32]">รีวิวผู้ขาย</h2>
@@ -182,7 +190,7 @@ function ReviewModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 border border-[#DCD0C0] rounded-xl py-2 text-sm font-medium text-[#4A3B32] hover:bg-[#E6D5C3]"
+            className={`${getFormButtonClassName({ variant: "secondary", size: "md", fullWidth: true })} rounded-xl`}
           >
             ยกเลิก
           </button>
@@ -190,7 +198,7 @@ function ReviewModal({
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-1 bg-[#D9734E] hover:bg-[#C25B38] text-white rounded-xl py-2 text-sm font-semibold disabled:opacity-50"
+            className={`${getFormButtonClassName({ variant: "primary", size: "md", fullWidth: true })} rounded-xl`}
           >
             {loading ? "กำลังส่ง..." : "ส่งรีวิว"}
           </button>
@@ -288,7 +296,7 @@ export default function PublicProfilePage() {
         </div>
 
         {/* Profile header card */}
-        <div className="bg-white border border-[#E6D5C3] rounded-t-2xl p-6 border-b-0">
+        <div className={`${getPanelClassName({ padding: "lg", radius: "2xl" })} mb-4`}>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-5">
               <div className="h-20 w-20 rounded-full bg-[#E6D5C3] overflow-hidden shrink-0">
@@ -322,7 +330,7 @@ export default function PublicProfilePage() {
                   <button
                     type="button"
                     onClick={() => setShowReview(true)}
-                    className="flex items-center gap-1.5 text-xs text-[#4A3B32] hover:text-[#D9734E] border border-[#DCD0C0] hover:border-[#D9734E] hover:bg-[#E6D5C3] rounded-lg px-3 py-1.5 transition font-medium"
+                    className={`${getFormButtonClassName({ variant: "secondary", size: "sm" })} gap-1.5`}
                   >
                     <span className="text-sm leading-none">★</span>
                     รีวิวผู้ขาย
@@ -333,7 +341,7 @@ export default function PublicProfilePage() {
                   onClick={() => setShowReport(true)}
                   title="รายงานผู้ใช้นี้"
                   disabled={reportDone}
-                  className="flex items-center gap-1.5 text-xs text-[#A89F91] hover:text-[#C45A5A] transition border border-[#DCD0C0] hover:border-[#C45A5A] rounded-lg px-3 py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`${getFormButtonClassName({ variant: "secondary", size: "sm" })} gap-1.5 text-[#A89F91] hover:text-[#C45A5A] hover:border-[#C45A5A]`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 01.832 1.555L13.382 10l3.45 5.445A1 1 0 0116 17H4a1 1 0 01-1-1V4z" clipRule="evenodd" />
@@ -353,26 +361,24 @@ export default function PublicProfilePage() {
         </div>
 
         {/* Tab menu */}
-        <div className="bg-white border border-[#E6D5C3] rounded-b-2xl flex overflow-hidden mb-6">
+        <div className={`${getSegmentedControlClassName({ fullWidth: true })} mb-6`}>
           <button
             type="button"
             onClick={() => setActiveTab("products")}
-            className={`flex-1 py-3 text-sm font-semibold transition border-b-2 ${
-              activeTab === "products"
-                ? "border-[#D9734E] text-[#D9734E] bg-[#F9F6F0]"
-                : "border-transparent text-[#A89F91] hover:text-[#4A3B32] hover:bg-[#F9F6F0]"
-            }`}
+            className={getSegmentedControlItemClassName({
+              active: activeTab === "products",
+              size: "lg",
+            })}
           >
             สินค้า ({products.length})
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("reviews")}
-            className={`flex-1 py-3 text-sm font-semibold transition border-b-2 ${
-              activeTab === "reviews"
-                ? "border-[#D9734E] text-[#D9734E] bg-[#F9F6F0]"
-                : "border-transparent text-[#A89F91] hover:text-[#4A3B32] hover:bg-[#F9F6F0]"
-            }`}
+            className={getSegmentedControlItemClassName({
+              active: activeTab === "reviews",
+              size: "lg",
+            })}
           >
             รีวิว ({reviews.length})
           </button>
@@ -391,7 +397,7 @@ export default function PublicProfilePage() {
                   <button
                     type="button"
                     onClick={() => setVisibleCount((c) => c + 28)}
-                    className="px-6 py-2 bg-[#D9734E] text-white text-sm font-semibold rounded-xl hover:bg-[#C25B38] transition"
+                    className={`${getFormButtonClassName({ variant: "primary", size: "md" })} rounded-xl`}
                   >
                     โหลดเพิ่มเติม ({products.length - visibleCount} รายการ)
                   </button>
@@ -408,7 +414,7 @@ export default function PublicProfilePage() {
           reviews.length > 0 ? (
             <div className="space-y-3">
               {reviews.map((r) => (
-                <div key={r.Review_ID} className="border border-[#E6D5C3] rounded-xl p-4 bg-white">
+                <div key={r.Review_ID} className={getPanelClassName({ padding: "md", radius: "xl" })}>
                   <div className="flex items-center justify-between mb-1">
                     <div className="text-sm font-semibold text-[#4A3B32]">{r.ReviewerName || "ผู้ซื้อ"}</div>
                     <div className="text-xs text-[#A89F91]">
