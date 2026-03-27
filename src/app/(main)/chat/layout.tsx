@@ -1,19 +1,28 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/src/contexts/AuthContext";
 import Navbar from "@/src/components/layout/Navbar";
 import ChatRoomList from "@/src/components/chat/ChatRoomList";
+import { TabButtonGroup } from "@/src/components/ui";
 import { ChatLayoutContext } from "@/src/contexts/ChatLayoutContext";
 import { chatApi } from "@/src/lib/api";
 import { useError } from "@/src/contexts/ErrorContext";
 import { socket } from "@/src/lib/socket";
 import type { ChatRoomWithPartner } from "@/src/types/Chat";
 
+type ChatTab = "all" | "buyer" | "seller";
+
+const CHAT_TABS: { key: ChatTab; label: string }[] = [
+  { key: "all", label: "à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”" },
+  { key: "buyer", label: "à¹à¸Šà¸—à¸à¸±à¸šà¸œà¸¹à¹‰à¸‹à¸·à¹‰à¸­" },
+  { key: "seller", label: "à¹à¸Šà¸—à¸à¸±à¸šà¸œà¸¹à¹‰à¸‚à¸²à¸¢" },
+];
+
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useAuth();
   const { showError } = useError();
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState<ChatTab>("all");
   const [rooms, setRooms] = useState<ChatRoomWithPartner[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   const [roomsError, setRoomsError] = useState<string | null>(null);
@@ -24,7 +33,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
       setRooms(res.data);
       setRoomsError(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "โหลดห้องแชทไม่สำเร็จ";
+      const message = err instanceof Error ? err.message : "à¹‚à¸«à¸¥à¸”à¸«à¹‰à¸­à¸‡à¹à¸Šà¸—à¹„à¸¡à¹ˆà¸ªà¸³à¹€à¸£à¹‡à¸ˆ";
       showError(message);
       setRoomsError(message);
     } finally {
@@ -55,52 +64,27 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
 
         <div className="w-1/4 min-w-[260px] border-r border-gray-200 flex flex-col bg-white">
 
-          <div className="flex border-b border-gray-200 text-sm font-medium text-gray-500">
-            <button
-              onClick={() => setActiveTab("all")}
-              className={`flex-1 py-3 transition-colors ${
-                activeTab === "all"
-                  ? "border-b-2 border-[#121E4D] text-[#121E4D] font-bold"
-                  : "hover:bg-gray-50"
-              }`}
-            >
-              ทั้งหมด
-            </button>
-            <button
-              onClick={() => setActiveTab("buyer")}
-              className={`flex-1 py-3 transition-colors ${
-                activeTab === "buyer"
-                  ? "border-b-2 border-[#121E4D] text-[#121E4D] font-bold"
-                  : "hover:bg-gray-50"
-              }`}
-            >
-              แชทกับผู้ซื้อ
-            </button>
-            <button
-              onClick={() => setActiveTab("seller")}
-              className={`flex-1 py-3 transition-colors ${
-                activeTab === "seller"
-                  ? "border-b-2 border-[#121E4D] text-[#121E4D] font-bold"
-                  : "hover:bg-gray-50"
-              }`}
-            >
-              แชทกับผู้ขาย
-            </button>
-          </div>
+          <TabButtonGroup
+            items={CHAT_TABS}
+            value={activeTab}
+            onChange={setActiveTab}
+            variant="underline"
+          />
+
 
           <div className="bg-[#FFF8CC] p-3 text-[11px] text-gray-700 flex items-start gap-2 border-b border-gray-200">
             <div className="bg-[#121E4D] text-white rounded-full w-4 h-4 flex items-center justify-center font-bold shrink-0 mt-0.5">
               !
             </div>
             <p>
-              เว็บไซต์ไม่มีบริการเป็นตัวกลางรับชำระเงินในการซื้อขาย โดยการซื้อขายสินค้าจะเป็นการตกลงกันเองระหว่างผู้ขายและผู้ซื้อ โปรดระวังการให้ข้อมูลส่วนตัวเพื่อความปลอดภัยของคุณ
+              à¹€à¸§à¹‡à¸šà¹„à¸‹à¸•à¹Œà¹„à¸¡à¹ˆà¸¡à¸µà¸šà¸£à¸´à¸à¸²à¸£à¹€à¸›à¹‡à¸™à¸•à¸±à¸§à¸à¸¥à¸²à¸‡à¸£à¸±à¸šà¸Šà¸³à¸£à¸°à¹€à¸‡à¸´à¸™à¹ƒà¸™à¸à¸²à¸£à¸‹à¸·à¹‰à¸­à¸‚à¸²à¸¢ à¹‚à¸”à¸¢à¸à¸²à¸£à¸‹à¸·à¹‰à¸­à¸‚à¸²à¸¢à¸ªà¸´à¸™à¸„à¹‰à¸²à¸ˆà¸°à¹€à¸›à¹‡à¸™à¸à¸²à¸£à¸•à¸à¸¥à¸‡à¸à¸±à¸™à¹€à¸­à¸‡à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸œà¸¹à¹‰à¸‚à¸²à¸¢à¹à¸¥à¸°à¸œà¸¹à¹‰à¸‹à¸·à¹‰à¸­ à¹‚à¸›à¸£à¸”à¸£à¸°à¸§à¸±à¸‡à¸à¸²à¸£à¹ƒà¸«à¹‰à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¹ˆà¸§à¸™à¸•à¸±à¸§à¹€à¸žà¸·à¹ˆà¸­à¸„à¸§à¸²à¸¡à¸›à¸¥à¸­à¸”à¸ à¸±à¸¢à¸‚à¸­à¸‡à¸„à¸¸à¸“
             </p>
           </div>
 
           <div className="flex-1 overflow-y-auto bg-[#F4F5F5] p-2">
             {isLoadingRooms ? (
               <div className="flex items-center justify-center py-8 text-sm text-gray-400">
-                กำลังโหลด...
+                à¸à¸³à¸¥à¸±à¸‡à¹‚à¸«à¸¥à¸”...
               </div>
             ) : roomsError ? (
               <div className="flex items-center justify-center py-8 px-4 text-sm text-red-500 text-center">
@@ -113,7 +97,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
 
           <div className="p-3 border-t border-gray-200 bg-white">
             <button disabled className="px-4 py-1.5 border border-gray-300 rounded text-sm text-gray-400 cursor-not-allowed opacity-50">
-              แก้ไข (เร็วๆ นี้)
+              à¹à¸à¹‰à¹„à¸‚ (à¹€à¸£à¹‡à¸§à¹† à¸™à¸µà¹‰)
             </button>
           </div>
         </div>

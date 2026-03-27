@@ -5,6 +5,7 @@ import {
 } from "@/src/components/ui/segmentedControlStyles";
 
 type TabButtonGroupSize = "md" | "lg";
+type TabButtonGroupVariant = "surface" | "underline";
 
 export type TabButtonGroupItem<T extends string = string> = {
     key: T;
@@ -18,6 +19,7 @@ type TabButtonGroupProps<T extends string> = {
     value: T;
     onChange: (value: T) => void;
     size?: TabButtonGroupSize;
+    variant?: TabButtonGroupVariant;
     className?: string;
     itemClassName?: string;
     fullWidth?: boolean;
@@ -32,12 +34,18 @@ export function TabButtonGroup<T extends string>({
     value,
     onChange,
     size = "md",
+    variant = "surface",
     className,
     itemClassName,
     fullWidth = true,
 }: TabButtonGroupProps<T>) {
     return (
-        <div className={joinClasses(getSegmentedControlClassName({ fullWidth }), className)}>
+        <div
+            className={joinClasses(
+                getSegmentedControlClassName({ fullWidth, variant }),
+                className,
+            )}
+        >
             {items.map((item) => (
                 <button
                     key={item.key}
@@ -49,6 +57,7 @@ export function TabButtonGroup<T extends string>({
                         getSegmentedControlItemClassName({
                             active: value === item.key,
                             size,
+                            variant,
                         }),
                         item.disabled && "cursor-not-allowed opacity-50",
                         itemClassName,
