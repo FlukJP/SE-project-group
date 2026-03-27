@@ -47,7 +47,8 @@ export default function HomePage() {
       <Navbar onLoginClick={() => setShowLogin(true)} />
 
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-kd-primary via-kd-primary to-kd-primary-hover" />
+        <div className="absolute inset-0 bg-[url('/background.png')] bg-cover bg-center bg-no-repeat]" />
+        <div className="absolute inset-0 bg-black/40" />
         <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
         <div className="absolute -left-24 -bottom-24 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
 
