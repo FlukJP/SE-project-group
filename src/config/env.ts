@@ -1,7 +1,14 @@
 import "dotenv/config";
 
+// Check if we're in Next.js build phase (Vercel deployment)
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+
 // Returns the trimmed value of an environment variable, throwing if it is missing or empty.
 function requireString(name: string): string {
+    if (isBuildPhase) {
+        // During build phase, return placeholder to avoid breaking the build
+        return `PLACEHOLDER_${name}`;
+    }
     const value = process.env[name];
     if (!value || value.trim().length === 0) {
         throw new Error(`Environment variable ${name} is required but not defined or empty`);
@@ -11,6 +18,10 @@ function requireString(name: string): string {
 
 // Returns the value of an environment variable as a positive integer, throwing if invalid.
 function requirePositiveInt(name: string): number {
+    if (isBuildPhase) {
+        // During build phase, return placeholder to avoid breaking the build
+        return 3600; // 1 hour placeholder
+    }
     const raw = process.env[name];
     const value = Number(raw);
     if (!raw || isNaN(value) || !Number.isInteger(value) || value <= 0) {
@@ -21,6 +32,10 @@ function requirePositiveInt(name: string): number {
 
 // Returns the value of an environment variable as a validated URL string, throwing if malformed.
 function requireUrl(name: string): string {
+    if (isBuildPhase) {
+        // During build phase, return placeholder to avoid breaking the build
+        return "https://placeholder.com";
+    }
     const value = requireString(name);
     try {
         new URL(value);
@@ -63,7 +78,7 @@ const REDIS_URL = requireString("REDIS_URL");
 const NODE_ENV = process.env.NODE_ENV || "development";
 let EMAIL_USER = process.env.EMAIL_USER ?? "";
 let EMAIL_PASS = process.env.EMAIL_PASS ?? "";
-if (NODE_ENV === "production") {
+if (NODE_ENV === "production" && !isBuildPhase) {
     EMAIL_USER = requireString("EMAIL_USER");
     EMAIL_PASS = requireString("EMAIL_PASS");
 }
