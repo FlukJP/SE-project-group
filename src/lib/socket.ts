@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
+import { ENV } from '../config/env';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const SOCKET_URL = ENV.SOCKET_URL ? ENV.SOCKET_URL.replace(/^http/, 'ws') : 'ws://localhost:5000';
 
 let _socket: Socket | null = null;
 

@@ -1,7 +1,8 @@
 import rateLimit from 'express-rate-limit';
 import 'dotenv/config';
+import { ENV } from '../config/env';
 
-const isDevMode = process.env.NODE_ENV !== 'production';
+const isDevMode = ENV.NODE_ENV !== 'production';
 
 /** Create a rate-limiter middleware with the given time window, request limit, and error message; localhost is skipped in development */
 const createLimiter = (windowMs: number, max: number, message: string) => {

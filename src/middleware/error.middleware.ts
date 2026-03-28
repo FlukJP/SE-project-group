@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
 import { AuthRequest } from './auth.middleware';
+import { ENV } from '../config/env';
 
 interface HttpError extends Error {
     code?: string;
@@ -54,7 +55,7 @@ export const errorHandler = (err: HttpError, req: AuthRequest, res: Response, _n
     console.error(logData);
     if (statusCode === 500) console.error(err);
 
-    const isDevMode = process.env.NODE_ENV === 'development';
+    const isDevMode = ENV.NODE_ENV === 'development';
 
     res.status(statusCode).json({
         success: false,

@@ -1,5 +1,7 @@
+import { ENV } from './env';
+
 // Redis
-export const REDIS_URL = process.env.REDIS_URL;
+export const REDIS_URL = ENV.REDIS_URL;
 
 // OTP and rate limiting
 export const OTP_TTL_SECONDS = 5 * 60;
@@ -21,12 +23,12 @@ const parseFileSize = (sizeInMB: string): number => parseInt(sizeInMB) * 1024 * 
 export const UPLOAD_CONFIG = {
     ALLOWED_MIMES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
     PRODUCT: {
-        MAX_SIZE: parseFileSize(process.env.PRODUCT_MAX_SIZE || '5'),
-        UPLOAD_DIR: process.env.PRODUCT_UPLOAD_DIR || 'public/uploads/products',
+        MAX_SIZE: parseFileSize(ENV.PRODUCT_MAX_SIZE.toString()),
+        CLOUD_FOLDER: 'products',
     },
     USER: {
-        MAX_SIZE: parseFileSize(process.env.USER_MAX_SIZE || '2'),
-        UPLOAD_DIR: process.env.USER_UPLOAD_DIR || 'public/uploads/users',
+        MAX_SIZE: parseFileSize(ENV.USER_MAX_SIZE.toString()),
+        CLOUD_FOLDER: 'users',
     },
 };
 
