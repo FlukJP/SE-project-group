@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/^http/, 'ws');
+const SOCKET_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
 
 let _socket: Socket | null = null;
 
