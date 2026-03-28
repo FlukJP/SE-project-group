@@ -103,6 +103,7 @@ export const ENV = {
     // Client
     SOCKET_URL,
     CLIENT_URL,
+    NEXT_PUBLIC_API_URL,
     // JWT
     JWT_SECRET,
     JWT_ISSUER,
