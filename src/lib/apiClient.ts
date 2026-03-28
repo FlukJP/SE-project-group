@@ -1,6 +1,4 @@
-import { ENV } from "../config/env";
-
-export const API_BASE = ENV.SOCKET_URL || "http://localhost:5000";
+export const API_BASE = process.env.SOCKET_URL || "http://localhost:5000";
 
 // Represents an HTTP error response from the API, carrying the status code alongside the message.
 export class ApiError extends Error {
