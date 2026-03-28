@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { ENV } from '../config/env';
 
+
 // MySQL connection pool configured for the Aiven cloud database with SSL enabled.
 // enableKeepAlive prevents ECONNRESET caused by the cloud server closing idle connections.
 const pool = mysql.createPool({

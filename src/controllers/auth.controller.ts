@@ -100,6 +100,7 @@ export const AuthController = {
     requestOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { email } = req.body;
+            if (!email) return next(new AppError("Email is required", 400));
             await AuthService.requestOTP(email);
 
             res.status(200).json({
@@ -114,13 +115,16 @@ export const AuthController = {
     /** Verify the submitted OTP and return new tokens on success */
     verifyOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
-            const { email, otp } = req.body;
+            const email = req.body.email?.toLowerCase().trim();
+            const otp = req.body.otp?.toString().trim();
+            if (!email || !otp) return next(new AppError("Email and OTP are required", 400));
             const result = await AuthService.verifyOTP(email, otp);
 
             res.status(200).json({
                 success: true,
                 message: "OTP verified successfully",
-                ...result,
+                access_token: result.access_token,
+                refresh_token: result.refresh_token,
             });
         } catch (error) {
             next(error);
