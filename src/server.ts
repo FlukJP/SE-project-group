@@ -7,7 +7,7 @@ import http from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 
-import apiRoutes from './routes/index.js';
+import apiRoutes from './routes';
 import { AppError } from './errors/AppError';
 import { errorHandler } from './middleware/error.middleware';
 import { globalLimiter } from './middleware/rateLimit.middleware';
