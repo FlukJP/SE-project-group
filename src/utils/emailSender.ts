@@ -2,17 +2,46 @@ import nodemailer from 'nodemailer';
 import { ENV } from '../config/env';
 
 // Nodemailer transport configured with Gmail credentials from environment variables.
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, 
-    requireTLS: true,
-    auth: {
-        user: ENV.EMAIL_USER,
-        pass: ENV.EMAIL_PASS,
-    },
-    tls: {
-        rejectUnauthorized: false
+let transporter: nodemailer.Transporter | null = null;
+
+const createTransporter = () => {
+    return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: ENV.EMAIL_USER,
+            pass: ENV.EMAIL_PASS, // ต้องเป็น App Password
+        },
+        connectionTimeout: 10000, // 10s
+    });
+};
+
+export const getTransporter = () => {
+    if (!transporter) {
+        transporter = createTransporter();
+    }
+    return transporter;
+};
+
+// Verify connection ตอนเริ่ม server (optional)
+export const verifyEmailConfig = async () => {
+    try {
+        const t = getTransporter();
+        await t.verify();
+        console.log('[Email] SMTP connection verified');
+        return true;
+    } catch (error) {
+        console.error('[Email] SMTP verification failed');
+
+        if (error instanceof Error) {
+            console.error(error.message);
+
+            if (error.message.includes('Invalid login')) {
+                console.error('[Email] ตรวจสอบ App Password หรือ EMAIL_USER/EMAIL_PASS');
+            }
+        }
+
+        console.error(JSON.stringify(error, null, 2));
+        return false;
     }
 };
 
@@ -33,12 +62,41 @@ export const sendEmailWithRetry = async (
 };
 
 // Sends an email with the given recipient, subject, and plain-text body.
-export const sendEmail = async (to: string, subject: string, text: string) => {
-    const mailOptions = {
-        from: `"${ENV.EMAIL_USER}" <${ENV.EMAIL_USER}>`,
-        to,
-        subject,
-        text,
-    };
-    await transporter.sendMail(mailOptions);
+type SendEmailOptions = {
+    to: string;
+    subject: string;
+    text?: string;
+    html?: string; 
+};
+
+export const sendEmail = async ({
+    to,
+    subject,
+    text,
+    html,
+}: SendEmailOptions) => {
+    if (!ENV.EMAIL_USER || !ENV.EMAIL_PASS) throw new Error('Email credentials not configured');
+    try {
+        const info = await getTransporter().sendMail({
+            from: `"Marketplace" <${ENV.EMAIL_USER}>`,
+            to,
+            subject,
+            text,
+            html,
+        });
+        console.log(`[Email] Sent to ${to}: ${info.messageId}`);
+        return info;
+    } catch (error) {
+        console.error('[Email] Failed to send');
+
+        if (error instanceof Error) {
+            console.error(error.message);
+
+            if (error.message.includes('Invalid login')) console.error('App Password is wrong?');
+            if (error.message.includes('ETIMEDOUT')) console.error(' Network / Firewall problem');
+        }
+        console.error(JSON.stringify(error, null, 2));
+        throw new Error(`Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+    }
 };
