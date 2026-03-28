@@ -3,11 +3,17 @@ import "dotenv/config";
 // Check if we're in Next.js build phase (Vercel deployment)
 const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
 
+const isClient = typeof window !== 'undefined';
+
 // Returns the trimmed value of an environment variable, throwing if it is missing or empty.
 function requireString(name: string): string {
     if (isBuildPhase) {
         // During build phase, return placeholder to avoid breaking the build
         return `PLACEHOLDER_${name}`;
+    }
+
+    if (isClient && !name.startsWith('NEXT_PUBLIC_')) {
+        return "";
     }
     const value = process.env[name];
     if (!value || value.trim().length === 0) {
@@ -22,6 +28,9 @@ function requirePositiveInt(name: string): number {
         // During build phase, return placeholder to avoid breaking the build
         return 3600; // 1 hour placeholder
     }
+    if (isClient && !name.startsWith('NEXT_PUBLIC_')) {
+        return 0;
+    }
     const raw = process.env[name];
     const value = Number(raw);
     if (!raw || isNaN(value) || !Number.isInteger(value) || value <= 0) {
@@ -35,6 +44,10 @@ function requireUrl(name: string): string {
     if (isBuildPhase) {
         // During build phase, return placeholder to avoid breaking the build
         return "https://placeholder.com";
+    }
+
+    if (isClient && !name.startsWith('NEXT_PUBLIC_')) {
+        return "";
     }
     const value = requireString(name);
     try {

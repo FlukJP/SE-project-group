@@ -6,12 +6,12 @@ import { UserModel } from "@/src/models/UserModel";
 import { AppError } from "@/src/errors/AppError";
 import { sendEmailWithRetry } from '@/src/utils/emailSender';
 import { validateEmail, validatePassword, validatePhoneNumber, validateUsername } from '@/src/utils/validators';
-import { ENV } from "@/src/config/env";
 import redisClient, { connectRedis } from "@/src/config/redis";
 import { OTP_TTL_SECONDS, RATE_LIMIT_TTL_SECONDS, MAX_OTP_REQUESTS, MAX_OTP_ATTEMPTS, SALT_ROUNDS } from "@/src/config/constants";
 import { REFRESH_TOKEN_TTL_SECONDS } from "@/src/config/constants";
 import { generateAccessToken, generateRefreshToken, TokenPayload } from "@/src/utils/jwt";
 import admin from "@/src/config/firebaseAdmin";
+import { ENV } from "../config/env";
 
 /** Increment a Redis counter and throw a rate-limit error if the limit is exceeded within the TTL window */
 const checkRateLimit = async (key: string, limit: number, ttlSeconds: number): Promise<void> => {
