@@ -19,18 +19,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="th">
       <body
         className={`${geistSans.variable} antialiased`}
       >
-          <ErrorProvider>
-            <AuthProvider>
-              <SWRProvider>
-                {children}
-              </SWRProvider>
-            </AuthProvider>
-          </ErrorProvider>
-          <Footer />
+        <ErrorProvider>
+          <AuthProvider>
+            <SWRProvider>
+              {children}
+              <Footer />
+            </SWRProvider>
+          </AuthProvider>
+        </ErrorProvider>
         <SpeedInsights />
       </body>
     </html>

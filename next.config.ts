@@ -1,6 +1,15 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  async headers() {
+    return [
+      {
+        source: '/admin/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
+      },
+    ];
+  },
+
   images: {
     dangerouslyAllowSVG: false,
     contentDispositionType: "attachment",
@@ -35,7 +44,7 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
-        pathname: '/v0/b/your-project.appspot.com/o/**',
+        pathname: '/**',
       }
     ],
   },

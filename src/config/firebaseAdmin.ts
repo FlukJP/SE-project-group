@@ -1,18 +1,20 @@
 import admin from "firebase-admin";
 import path from "path";
 import fs from "fs";
+import { ENV } from "./env";
+
 
 // Initializes Firebase Admin SDK using a local service account file if present,
 // otherwise falls back to default initialization (e.g., Application Default Credentials).
 const serviceAccountPath = path.resolve(process.cwd(), "firebase-service-account.json");
-const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+const storageBucket = ENV.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
 
 if (!admin.apps.length) {
     let serviceAccount: object | undefined;
 
-    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    if (ENV.FIREBASE_SERVICE_ACCOUNT) {
         // Production: loaded from environment variable (JSON string)
-        const keyPath = path.resolve(process.env.FIREBASE_SERVICE_ACCOUNT as string);
+        const keyPath = path.resolve(ENV.FIREBASE_SERVICE_ACCOUNT as string);
         serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
     } else if (fs.existsSync(serviceAccountPath)) {
         // Local dev: loaded from file

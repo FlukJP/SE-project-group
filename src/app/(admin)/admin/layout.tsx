@@ -5,6 +5,8 @@ import AdminSidebar from "@/src/components/admin/AdminSidebar";
 import Link from "next/link";
 import { useAuth } from "@/src/contexts/AuthContext";
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
 

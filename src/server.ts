@@ -16,6 +16,7 @@ import { ENV } from './config/env';
 import pool from './lib/mysql';
 import { ChatModel } from './models/chatModel';
 
+
 interface AuthenticatedSocket extends Socket {
     user?: { userID: number; role: string };
 }
@@ -24,7 +25,7 @@ const app = express();
 const server = http.createServer(app);
 app.set('trust proxy', 1);
 
-const CLIENT_URLS = (process.env.CLIENT_URL || 'http://localhost:3000')
+const CLIENT_URLS = (ENV.CLIENT_URL || 'http://localhost:3000')
     .split(',')
     .map(u => u.trim());
 if (!CLIENT_URLS.includes('http://localhost:3001')) CLIENT_URLS.push('http://localhost:3001');
@@ -120,7 +121,7 @@ app.use('/{*path}', (req, _res, next) => {
 
 app.use(errorHandler);
 
-const PORT = Number(process.env.PORT) || 5000;
+const PORT = Number(ENV.PORT) || 5000;
 
 // Verifies the database connection, connects to Redis, then starts the HTTP server.
 async function bootstrap() {
@@ -143,7 +144,7 @@ async function bootstrap() {
     server.listen(PORT, () => {
         console.log(`[Server] running on http://localhost:${PORT}`);
         console.log(`[Server] static files at http://localhost:${PORT}/uploads`);
-        console.log(`[Server] environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`[Server] environment: ${ENV.NODE_ENV}`);
     });
 }
 
