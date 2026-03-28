@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { User, Role } from "@/src/types/User";
 import { UserModel } from "@/src/models/UserModel";
 import { AppError } from "@/src/errors/AppError";
-import { sendEmail } from '@/src/utils/emailSender';
+import { sendEmailWithRetry } from '@/src/utils/emailSender';
 import { validateEmail, validatePassword, validatePhoneNumber, validateUsername } from '@/src/utils/validators';
 import { ENV } from "@/src/config/env";
 import redisClient, { connectRedis } from "@/src/config/redis";
@@ -174,35 +174,58 @@ export const AuthService = {
 
     /** Generate a 6-digit OTP, hash and store it in Redis, then send it to the user's email */
     requestOTP: async (email: string): Promise<void> => {
+        email = email.toLowerCase().trim();
         if (!validateEmail(email)) throw new AppError("Invalid email format", 400);
 
         const user = await UserModel.findByEmailSafe(email);
         if (!user) throw new AppError("Email not found", 404);
 
         await checkRateLimit(`otp_request:${email}`, MAX_OTP_REQUESTS, RATE_LIMIT_TTL_SECONDS);
+        const cooldownKey = `otp_cooldown:${email}`;
+        const cooldown = await redisClient.get(cooldownKey);
+        if (cooldown) throw new AppError("Please wait before requesting another OTP", 429);
+
+        const existingOtp = await redisClient.get(`otp:${email}`);
+        if (existingOtp) throw new AppError("OTP already sent. Please wait until it expires", 429);
+        await redisClient.setEx(cooldownKey, 60, "1");
+
         const otp = crypto.randomInt(100000, 1000000).toString();
         const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
         await redisClient.setEx(`otp:${email}`, OTP_TTL_SECONDS, hashedOtp);
-        await sendEmail(
-            email,
-            "Your OTP Code",
-            `Your OTP code is ${otp}. It will expire in ${OTP_TTL_SECONDS / 60} minutes.`
-        );
+
+        try {
+            console.log(`[OTP] Sending OTP to ${email}`);
+
+            await sendEmailWithRetry({
+                to: email,
+                subject: "Your OTP Code",
+                text: `Your OTP code is ${otp}. It will expire in ${OTP_TTL_SECONDS / 60} minutes.`,
+            });
+
+        } catch (error) {
+            console.error(`[OTP] Failed to send OTP to ${email}`, error);
+            await redisClient.del(`otp:${email}`);
+            throw error;
+        }
     },
 
     /** Verify the provided OTP using a timing-safe comparison, mark the email as verified, and return new tokens */
     verifyOTP: async (email: string, otp: string) => {
+        email = email.toLowerCase().trim();
         if (!validateEmail(email)) throw new AppError("Invalid email format", 400);
+        
 
         const storedOtp = await redisClient.get(`otp:${email}`);
         if (!storedOtp) throw new AppError("OTP expired or not found", 400);
-
-        const hashedInput = crypto.createHash("sha256").update(otp).digest("hex");
+        const cleanOtp = otp.trim();
+        if (!/^\d{6}$/.test(cleanOtp)) throw new AppError("Invalid OTP format", 400);
+        const hashedInput = crypto.createHash("sha256").update(cleanOtp).digest("hex");
         const a = Buffer.from(hashedInput);
         const b = Buffer.from(storedOtp);
         const isValid = a.length === b.length && crypto.timingSafeEqual(a, b);
 
         if (!isValid) {
+            console.warn(`[OTP] Invalid OTP attempt for ${email}`);
             await checkRateLimit(`otp_attempt:${email}`, MAX_OTP_ATTEMPTS, RATE_LIMIT_TTL_SECONDS);
             throw new AppError("Invalid OTP", 400);
         }
@@ -261,11 +284,11 @@ export const AuthService = {
         const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
         await redisClient.setEx(`otp:phone:${phone}`, OTP_TTL_SECONDS, hashedOtp);
 
-        await sendEmail(
-            user.Email,
-            "Phone Verification OTP (sent via email)",
-            `Your OTP to verify phone number ${phone} is ${otp}\nThis code will expire in ${OTP_TTL_SECONDS / 60} minutes.`
-        );
+        await sendEmailWithRetry({
+            to: user.Email,
+            subject: "Phone Verification OTP (sent via email)",
+            text: `Your OTP to verify phone number ${phone} is ${otp}\nThis code will expire in ${OTP_TTL_SECONDS / 60} minutes.`
+        });
     },
 
     /** Verify the phone OTP, mark the phone as verified, and return new tokens */
