@@ -52,7 +52,7 @@ if (!NEXT_PUBLIC_API_URL) {
     throw new Error('Environment variable NEXT_PUBLIC_API_URL is required');
 }
 const SOCKET_URL = NEXT_PUBLIC_API_URL;
-const CLIENT_URL = requireString("CLIENT_URL");
+const CLIENT_URL = process.env.NEXT_PUBLIC_CLIENT_URL || process.env.CLIENT_URL;
 
 // JWT & Auth
 const JWT_SECRET = requireString("JWT_SECRET");
