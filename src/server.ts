@@ -25,10 +25,11 @@ const app = express();
 const server = http.createServer(app);
 app.set('trust proxy', 1);
 
-const CLIENT_URLS = (ENV.CLIENT_URL || 'http://localhost:3000')
-    .split(',')
-    .map(u => u.trim());
-if (!CLIENT_URLS.includes('http://localhost:3001')) CLIENT_URLS.push('http://localhost:3001');
+const CLIENT_URLS = [
+    ENV.CLIENT_URL,
+    'http://localhost:3000',
+    'http://localhost:3001'
+].filter(Boolean) as string[];
 
 const io = new SocketIOServer(server, {
     cors: {
