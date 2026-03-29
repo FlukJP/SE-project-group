@@ -230,6 +230,122 @@ npm start
 4. Push ไปยัง branch (`git push origin feature/amazing-feature`)
 5. เปิด Pull Request
 
+## Environment Template
+
+Copy [.env.example](/c:/Users/Jirayut%20Pimmuen/OneDrive/Desktop/folder%20for%20learn/SoftwareEngineerProject/.env.example) to `.env.local` for local work, then replace every placeholder with your own values.
+
+For local development:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_SOCKET_URL=
+CLIENT_URL=http://localhost:3000
+CLIENT_URLS=http://localhost:3000,http://localhost:3001
+```
+
+Notes:
+
+- `NEXT_PUBLIC_SOCKET_URL` is optional. If left empty, the app reuses `NEXT_PUBLIC_API_URL`.
+- `CLIENT_URLS` lets the backend accept multiple frontend origins, including local and preview domains.
+- Prefer `FIREBASE_SERVICE_ACCOUNT` as the main server-side Firebase credential.
+- Never commit real secrets from `.env` or `.env.local`.
+
+## Deploy Checklist
+
+This project is designed for:
+
+- Render: backend
+- Vercel: frontend
+
+### 1. Before deploy
+
+- Confirm local development works with `npm run dev`
+- Confirm the backend health endpoint responds at `/health`
+- Confirm MySQL, Redis, email, and Firebase credentials are valid
+- Rotate any Firebase service account key that was ever committed or shared
+
+### 2. Render backend checklist
+
+- Create a Render Web Service for the repo
+- Set the start command to the backend entry you use in production
+- Make sure Render exposes the backend over HTTPS
+- Add environment variables:
+
+```env
+NODE_ENV=production
+PORT=10000
+CLIENT_URL=https://your-frontend.vercel.app
+CLIENT_URLS=https://your-frontend.vercel.app,https://your-preview-domain.vercel.app
+JWT_SECRET=your-access-secret
+JWT_ISSUER=kmutnb2market
+JWT_AUDIENCE=kmutnb2market-users
+JWT_EXPIRES_IN=3600
+JWT_REFRESH_SECRET=your-refresh-secret
+JWT_REFRESH_EXPIRES_IN=7d
+OTP_EXPIRY=300
+DB_HOST=your-aiven-or-mysql-host
+DB_PORT=3306
+DB_USER=your-db-user
+DB_PASS=your-db-password
+DB_NAME=your-db-name
+DB_SSL_CA=ca.pem
+REDIS_URL=your-redis-url
+EMAIL_USER=your-email@example.com
+EMAIL_PASS=your-email-password
+FIREBASE_SERVICE_ACCOUNT={"type":"service_account",...}
+PRODUCT_MAX_SIZE=5
+USER_MAX_SIZE=2
+NEXT_PUBLIC_FIREBASE_API_KEY=your-firebase-web-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-firebase-app-id
+```
+
+- Ensure the CA file path in `DB_SSL_CA` matches how the certificate is available in the Render service
+- After deploy, open `https://your-render-backend.onrender.com/health`
+- Confirm CORS allows your Vercel domain
+- Copy the final Render backend URL for the Vercel setup
+
+### 3. Vercel frontend checklist
+
+- Import the same repo into Vercel
+- Set the production environment variables:
+
+```env
+NODE_ENV=production
+NEXT_PUBLIC_API_URL=https://your-render-backend.onrender.com
+NEXT_PUBLIC_SOCKET_URL=https://your-render-backend.onrender.com
+NEXT_PUBLIC_FIREBASE_API_KEY=your-firebase-web-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-firebase-app-id
+```
+
+- Redeploy after saving environment variables
+- Open the deployed site and test login, protected API calls, image loading, and socket chat
+- If you use Vercel preview deployments, add the preview domain to Render `CLIENT_URLS`
+
+### 4. Post-deploy smoke test
+
+- Frontend loads successfully on Vercel
+- Backend `/health` returns `status: ok`
+- Login and refresh token flows work
+- Uploads work with Firebase Storage
+- Socket chat connects to the Render backend
+- CORS errors do not appear in the browser console
+- Images and uploaded files resolve from allowed hosts
+
+### 5. Recommended secret handling
+
+- Keep real values only in Render and Vercel environment settings
+- Keep `.env.example` as placeholders only
+- Do not store Firebase service account JSON in tracked files
+- If a secret was committed before, rotate it before the next deploy
+
 ## 📄 License
 
 โปรเจกต์นี้ใช้สัญญาอนุญาต MIT - ดูรายละเอียดในไฟล์ [LICENSE](LICENSE)
