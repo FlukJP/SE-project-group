@@ -1,5 +1,5 @@
 import admin from "firebase-admin";
-import { ENV } from "./serverEnv";
+import { SERVER_ENV as ENV } from "@/src/config/env";
 
 if (!admin.apps.length) {
     if (!ENV.FIREBASE_SERVICE_ACCOUNT) {

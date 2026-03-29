@@ -12,18 +12,14 @@ import { AppError } from "./errors/AppError";
 import { errorHandler } from "./middleware/error.middleware";
 import { globalLimiter } from "./middleware/rateLimit.middleware";
 import { connectRedis, disconnectRedis, isRedisAvailable } from "./config/redis";
-import { ENV } from "./config/serverEnv";
+import { SERVER_ENV as ENV } from "./config/env";
 import pool from "./lib/mysql";
 import { ChatModel } from "./models/chatModel";
 import { verifyAccessToken } from "./utils/jwt";
 
-// TYPES
-
 interface AuthenticatedSocket extends Socket {
     user?: { userID: number; role: string };
 }
-
-// APP + SERVER SETUP
 
 const app = express();
 const server = http.createServer(app);
@@ -31,7 +27,6 @@ app.set("trust proxy", 1);
 
 const CLIENT_URLS = ENV.CLIENT_URLS;
 
-// SOCKET.IO
 const io = new SocketIOServer(server, {
     cors: {
         origin: CLIENT_URLS,
@@ -41,8 +36,7 @@ const io = new SocketIOServer(server, {
 
 /**
  * Authenticates each incoming Socket.IO connection.
- * Uses verifyAccessToken helper instead of raw jwt.verify()
- * to avoid TypeScript overload intersection error (Jwt & JwtPayload & void).
+ * Uses verifyAccessToken helper instead of raw jwt.verify().
  */
 io.use((socket, next) => {
     const token = socket.handshake.auth?.token as string | undefined;
@@ -60,7 +54,7 @@ io.use((socket, next) => {
     }
 });
 
-/** Handles Socket.IO connection lifecycle — joining/leaving chat rooms and broadcasting messages. */
+/** Handles Socket.IO connection lifecycle: joining/leaving rooms and broadcasting messages. */
 io.on("connection", (socket) => {
     const socketUser = (socket as AuthenticatedSocket).user;
     console.log(`[Socket] Connected: ${socket.id}, userID: ${socketUser?.userID}`);
@@ -100,16 +94,12 @@ io.on("connection", (socket) => {
 
 app.set("io", io);
 
-// MIDDLEWARE
-
-// Security headers
 app.use(
     helmet({
         crossOriginResourcePolicy: { policy: "cross-origin" },
     })
 );
 
-// CORS
 app.use(
     cors({
         origin: CLIENT_URLS,
@@ -117,17 +107,13 @@ app.use(
     })
 );
 
-// Compression
 app.use(compression());
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(globalLimiter);
 
-// Static files — ต้องมี middleware นี้ ไม่งั้น /uploads ไม่ทำงาน
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
-
-// ROUTES
 
 app.get("/health", (_req, res) => {
     res.json({
@@ -145,12 +131,10 @@ app.use("/{*path}", (req, _res, next) => {
 
 app.use(errorHandler);
 
-// BOOTSTRAP
 const PORT = Number(ENV.PORT) || 5000;
 
 /** Verifies DB connection, connects to Redis, then starts the HTTP server. */
 async function bootstrap() {
-    // 1. MySQL
     try {
         const conn = await pool.getConnection();
         console.log("[MySQL] Connected");
@@ -160,15 +144,19 @@ async function bootstrap() {
         process.exit(1);
     }
 
-    // 2. Redis (non-blocking — falls back to in-memory on failure)
-    await connectRedis();
+    try {
+        await connectRedis();
+    } catch (err) {
+        console.error("[Redis] Connection failed:", err);
+        process.exit(1);
+    }
+
     if (isRedisAvailable()) {
         console.log("[Redis] Connected");
     } else {
-        console.warn("[Redis] Not available — using in-memory fallback");
+        console.warn("[Redis] Using in-memory fallback outside production");
     }
 
-    // 3. HTTP server
     server.listen(PORT, () => {
         console.log(`[Server] Running on http://localhost:${PORT}`);
         console.log(`[Server] Static files at http://localhost:${PORT}/uploads`);
@@ -176,21 +164,23 @@ async function bootstrap() {
     });
 }
 
-// GRACEFUL SHUTDOWN
-
 /** Gracefully closes HTTP server, Socket.IO, Redis, and MySQL pool before exiting. */
 async function shutdown(signal: string) {
     console.log(`\n[${signal}] Shutting down...`);
 
-    await new Promise<void>((resolve) => server.close(() => {
-        console.log("[HTTP] Closed");
-        resolve();
-    }));
+    await new Promise<void>((resolve) =>
+        server.close(() => {
+            console.log("[HTTP] Closed");
+            resolve();
+        })
+    );
 
-    await new Promise<void>((resolve) => io.close(() => {
-        console.log("[Socket] Closed");
-        resolve();
-    }));
+    await new Promise<void>((resolve) =>
+        io.close(() => {
+            console.log("[Socket] Closed");
+            resolve();
+        })
+    );
 
     try {
         await disconnectRedis();

@@ -31,8 +31,8 @@ vi.mock('@/src/config/redis', () => {
     };
 });
 vi.mock('@/src/utils/emailSender', () => ({ sendEmail: vi.fn(async () => {}) }));
-vi.mock('@/src/config/serverEnv', () => ({
-    ENV: {
+vi.mock('@/src/config/env', () => ({
+    SERVER_ENV: {
         JWT_SECRET: 'test-secret-key-that-is-long-enough',
         JWT_ISSUER: 'test-issuer',
         JWT_AUDIENCE: 'test-audience',
@@ -40,6 +40,16 @@ vi.mock('@/src/config/serverEnv', () => ({
         JWT_REFRESH_SECRET: 'test-refresh-secret',
         JWT_REFRESH_EXPIRES_IN: '7d',
         PRODUCT_MAX_SIZE: 5, 
+        USER_MAX_SIZE: 2,
+    },
+    ENV: {
+        JWT_SECRET: 'test-secret-key-that-is-long-enough',
+        JWT_ISSUER: 'test-issuer',
+        JWT_AUDIENCE: 'test-audience',
+        JWT_EXPIRES_IN: 3600,
+        JWT_REFRESH_SECRET: 'test-refresh-secret',
+        JWT_REFRESH_EXPIRES_IN: '7d',
+        PRODUCT_MAX_SIZE: 5,
         USER_MAX_SIZE: 2,
     },
 }));

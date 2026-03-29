@@ -1,5 +1,7 @@
 import { createClient } from "redis";
-import { ENV } from "./serverEnv";
+import { SERVER_ENV as ENV } from "./env";
+
+const allowMemoryFallback = ENV.NODE_ENV !== "production";
 
 // CLIENT SETUP
 const redisClient = createClient({
@@ -34,6 +36,12 @@ redisClient.on("reconnecting", () => {
     console.log("[Redis] Reconnecting...");
 });
 
+const assertMemoryFallbackAllowed = () => {
+    if (!allowMemoryFallback) {
+        throw new Error("[Redis] Redis is unavailable and in-memory fallback is disabled in production");
+    }
+};
+
 // CONNECT / DISCONNECT
 /** Connect to Redis once at app startup. Safe to call multiple times. */
 export const connectRedis = async (): Promise<void> => {
@@ -43,25 +51,37 @@ export const connectRedis = async (): Promise<void> => {
     }
 
     if (!connectionPromise) {
-        connectionPromise = new Promise<void>((resolve) => {
+        connectionPromise = new Promise<void>((resolve, reject) => {
             const timeout = setTimeout(() => {
-                console.warn("[Redis] Connection timed out — falling back to in-memory store");
+                const error = new Error("[Redis] Connection timed out");
                 redisAvailable = false;
-                resolve();
+
+                if (allowMemoryFallback) {
+                    console.warn(`${error.message} - falling back to in-memory store`);
+                    resolve();
+                    return;
+                }
+
+                reject(error);
             }, 5000);
 
             redisClient
                 .connect()
                 .then(() => {
                     clearTimeout(timeout);
-                    // redisAvailable = true is handled by the 'ready' event
                     resolve();
                 })
                 .catch((err) => {
                     clearTimeout(timeout);
                     console.error("[Redis] Failed to connect:", err.message ?? err);
                     redisAvailable = false;
-                    resolve();
+
+                    if (allowMemoryFallback) {
+                        resolve();
+                        return;
+                    }
+
+                    reject(err instanceof Error ? err : new Error(String(err)));
                 })
                 .finally(() => {
                     connectionPromise = null;
@@ -109,11 +129,12 @@ setInterval(() => {
 }, 60_000).unref();
 
 // CACHE ADAPTER
-// Unified interface: Redis when available, in-memory fallback otherwise
+// Unified interface: Redis when available, in-memory fallback only outside production
 const cacheAdapter = {
     /** Returns the cached value for the given key, or null if not found/expired. */
     async get(key: string): Promise<string | null> {
         if (redisAvailable && redisClient.isOpen) return redisClient.get(key);
+        assertMemoryFallbackAllowed();
         return getMemory(key)?.value ?? null;
     },
 
@@ -131,7 +152,8 @@ const cacheAdapter = {
             return redisClient.set(key, value, options ?? {});
         }
 
-        // In-memory NX: only set if key does not already exist (non-expired)
+        assertMemoryFallbackAllowed();
+
         if (options?.NX && getMemory(key) !== null) return null;
 
         const expiresAt = options?.EX ? Date.now() + options.EX * 1000 : null;
@@ -145,12 +167,16 @@ const cacheAdapter = {
             await redisClient.setEx(key, seconds, value);
             return;
         }
+
+        assertMemoryFallbackAllowed();
         memoryStore.set(key, { value, expiresAt: Date.now() + seconds * 1000 });
     },
 
     /** Increments the integer value of the given key by one, creating it at 1 if absent. */
     async incr(key: string): Promise<number> {
         if (redisAvailable && redisClient.isOpen) return redisClient.incr(key);
+
+        assertMemoryFallbackAllowed();
 
         const entry = getMemory(key);
         const newVal = entry ? parseInt(entry.value, 10) + 1 : 1;
@@ -166,6 +192,9 @@ const cacheAdapter = {
         if (redisAvailable && redisClient.isOpen) {
             return Boolean(await redisClient.expire(key, seconds));
         }
+
+        assertMemoryFallbackAllowed();
+
         const entry = getMemory(key);
         if (!entry) return false;
         entry.expiresAt = Date.now() + seconds * 1000;
@@ -175,6 +204,9 @@ const cacheAdapter = {
     /** Returns the remaining TTL in seconds. -1 = no expiry, -2 = expired/missing. */
     async ttl(key: string): Promise<number> {
         if (redisAvailable && redisClient.isOpen) return redisClient.ttl(key);
+
+        assertMemoryFallbackAllowed();
+
         const entry = getMemory(key);
         if (!entry || !entry.expiresAt) return -1;
         const remaining = Math.ceil((entry.expiresAt - Date.now()) / 1000);
@@ -189,6 +221,8 @@ const cacheAdapter = {
     async del(...keys: string[]): Promise<number> {
         if (redisAvailable && redisClient.isOpen) return redisClient.del(keys);
 
+        assertMemoryFallbackAllowed();
+
         let count = 0;
         for (const key of keys) {
             if (memoryStore.delete(key)) count++;
@@ -196,9 +230,9 @@ const cacheAdapter = {
         return count;
     },
 
-    /** Always true — the adapter itself is always operational (falls back to memory). */
+    /** The adapter is usable when Redis is connected, or when memory fallback is allowed. */
     get isOpen(): boolean {
-        return true;
+        return redisAvailable || allowMemoryFallback;
     },
 };
 

@@ -1,5 +1,6 @@
 import { io, Socket } from "socket.io-client";
-import { ENV } from "@/src/config/clientEnv";
+import { CLIENT_ENV as ENV } from "@/src/config/env.client";
+import { getAccessToken } from "@/src/lib/apiClient";
 
 // SOCKET CLIENT
 let _socket: Socket | null = null;
@@ -15,9 +16,7 @@ export function getSocket(): Socket {
             withCredentials: true,
             auth: {
                 get token() {
-                    return typeof window !== "undefined"
-                        ? localStorage.getItem("access_token") ?? ""
-                        : "";
+                    return getAccessToken() ?? "";
                 },
             },
         });

@@ -58,35 +58,46 @@ const serverSchema = z.object({
 
 type ServerEnv = z.infer<typeof serverSchema>;
 
-const parsedServerEnv = serverSchema.safeParse(process.env);
-
-if (!parsedServerEnv.success) {
-    console.error("Invalid SERVER ENV:");
-    console.error(parsedServerEnv.error.format());
-    throw new Error("Invalid server environment variables");
-}
-
-const serverEnv = parsedServerEnv.data as ServerEnv;
-
-const FIREBASE_PRIVATE_KEY = serverEnv.FIREBASE_PRIVATE_KEY
-    ? serverEnv.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
-    : "";
-
-const CLIENT_URLS = Array.from(
-    new Set([
-        ...defaultLocalClientUrls,
-        ...splitAndValidateUrls(serverEnv.CLIENT_URL, "CLIENT_URL"),
-        ...splitAndValidateUrls(serverEnv.CLIENT_URLS, "CLIENT_URLS"),
-    ])
-);
-
-export const SERVER_ENV = {
-    ...serverEnv,
-    CLIENT_URLS,
-    FIREBASE_PRIVATE_KEY,
-} as ServerEnv & {
+type ServerRuntimeEnv = Omit<ServerEnv, "CLIENT_URLS" | "FIREBASE_PRIVATE_KEY"> & {
     CLIENT_URLS: string[];
     FIREBASE_PRIVATE_KEY: string;
 };
 
-export const ENV = SERVER_ENV;
+let cachedServerEnv: ServerRuntimeEnv | null = null;
+
+const getServerEnv = (): ServerRuntimeEnv => {
+    if (cachedServerEnv) return cachedServerEnv;
+
+    const parsedServerEnv = serverSchema.safeParse(process.env);
+
+    if (!parsedServerEnv.success) {
+        console.error("Invalid SERVER ENV:");
+        console.error(parsedServerEnv.error.format());
+        throw new Error("Invalid server environment variables");
+    }
+
+    const serverEnv = parsedServerEnv.data;
+    const FIREBASE_PRIVATE_KEY = serverEnv.FIREBASE_PRIVATE_KEY
+        ? serverEnv.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
+        : "";
+
+    const CLIENT_URLS = Array.from(
+        new Set([
+            ...defaultLocalClientUrls,
+            ...splitAndValidateUrls(serverEnv.CLIENT_URL, "CLIENT_URL"),
+            ...splitAndValidateUrls(serverEnv.CLIENT_URLS, "CLIENT_URLS"),
+        ])
+    );
+
+    cachedServerEnv = {
+        ...serverEnv,
+        CLIENT_URLS,
+        FIREBASE_PRIVATE_KEY,
+    };
+
+    return cachedServerEnv;
+};
+
+export const SERVER_ENV = new Proxy({} as ServerRuntimeEnv, {
+    get: (_target, prop: string) => getServerEnv()[prop as keyof ServerRuntimeEnv],
+});

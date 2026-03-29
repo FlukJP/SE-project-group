@@ -1,4 +1,4 @@
-import { ENV } from "@/src/config/clientEnv";
+import { CLIENT_ENV as ENV } from "@/src/config/env.client";
 
 // API_BASE
 export const API_BASE = ENV.API_BASE;
@@ -12,6 +12,17 @@ if (!API_BASE) {
 }
 
 const BASE = API_BASE;
+let accessToken: string | null = null;
+
+export const getAccessToken = () => accessToken;
+
+export const setAccessToken = (token: string | null) => {
+    accessToken = token;
+};
+
+export const clearAccessToken = () => {
+    accessToken = null;
+};
 
 // ERROR CLASS
 /** Represents an HTTP error response from the API, carrying the status code alongside the message. */
@@ -39,13 +50,11 @@ const dispatchSessionExpired = () => {
 };
 
 /**
- * Attempts to obtain a new access token using the stored refresh token.
- * Clears both tokens and dispatches session:expired if the refresh fails.
+ * Attempts to obtain a new access token using the HttpOnly refresh-token cookie.
+ * Clears the in-memory access token and dispatches session:expired if the refresh fails.
  */
 async function refreshAccessToken(): Promise<string | null> {
-    const refreshToken =
-        typeof window !== "undefined" ? localStorage.getItem("refresh_token") : null;
-    if (!refreshToken) {
+    if (typeof window === "undefined") {
         dispatchSessionExpired();
         return null;
     }
@@ -54,40 +63,45 @@ async function refreshAccessToken(): Promise<string | null> {
         const res = await fetch(`${BASE}/api/auth/refresh-token`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ refresh_token: refreshToken }),
+            credentials: "include",
         });
         const json = await res.json();
 
         if (res.ok && json.success) {
-            localStorage.setItem("access_token", json.access_token);
-            return json.access_token as string;
+            const newToken = json.access_token as string;
+            setAccessToken(newToken);
+            return newToken;
         }
     } catch (err) {
         console.error("[apiClient] Token refresh network error:", err);
     }
 
-    // Refresh failed — clear session
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+    clearAccessToken();
     dispatchSessionExpired();
     return null;
 }
+
+export const restoreSession = async (): Promise<string | null> => refreshAccessToken();
+
+type ApiFetchOptions = RequestInit & {
+    skipAuthRefresh?: boolean;
+};
 
 // CORE FETCH
 /**
  * Sends an authenticated HTTP request to the API and returns the parsed response.
  * Automatically retries once with a refreshed access token on a 401 Unauthorized response.
  */
-export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const token =
-        typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
+    const token = getAccessToken();
+    const { skipAuthRefresh = false, ...requestOptions } = options;
 
     const headers: Record<string, string> = {
-        ...(options.headers as Record<string, string>),
+        ...(requestOptions.headers as Record<string, string>),
     };
 
-    // Don't set Content-Type for FormData — browser sets it with boundary automatically
-    if (!(options.body instanceof FormData)) {
+    // Don't set Content-Type for FormData; the browser sets it with boundary automatically.
+    if (!(requestOptions.body instanceof FormData)) {
         headers["Content-Type"] = "application/json";
     }
 
@@ -95,10 +109,14 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
         headers["Authorization"] = `Bearer ${token}`;
     }
 
-    let res = await fetch(`${BASE}/api${path}`, { ...options, headers });
+    let res = await fetch(`${BASE}/api${path}`, {
+        ...requestOptions,
+        headers,
+        credentials: "include",
+    });
 
-    // 401 → attempt token refresh once
-    if (res.status === 401 && typeof window !== "undefined") {
+    // 401 -> attempt token refresh once
+    if (res.status === 401 && typeof window !== "undefined" && !skipAuthRefresh) {
         if (!refreshPromise) {
             refreshPromise = refreshAccessToken().finally(() => {
                 refreshPromise = null;
@@ -108,9 +126,12 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
         if (newToken) {
             headers["Authorization"] = `Bearer ${newToken}`;
-            res = await fetch(`${BASE}/api${path}`, { ...options, headers });
+            res = await fetch(`${BASE}/api${path}`, {
+                ...requestOptions,
+                headers,
+                credentials: "include",
+            });
         } else {
-            // Refresh failed — throw immediately instead of retrying with no token
             throw new ApiError("Session expired. Please log in again.", 401);
         }
     }

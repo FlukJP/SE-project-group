@@ -1,7 +1,41 @@
-import { Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import { AuthService } from "../services/auth.service";
 import { AuthRequest } from "../middleware/auth.middleware";
 import { AppError } from "../errors/AppError";
+import { REFRESH_TOKEN_TTL_SECONDS } from "../config/constants";
+
+const getRefreshCookieOptions = () => {
+    const isProduction = process.env.NODE_ENV === "production";
+
+    return {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
+        path: "/api/auth",
+        maxAge: REFRESH_TOKEN_TTL_SECONDS * 1000,
+    };
+};
+
+const setRefreshTokenCookie = (res: Response, refreshToken: string) => {
+    res.cookie("refresh_token", refreshToken, getRefreshCookieOptions());
+};
+
+const clearRefreshTokenCookie = (res: Response) => {
+    res.clearCookie("refresh_token", getRefreshCookieOptions());
+};
+
+const readCookie = (req: Request, name: string): string | null => {
+    const rawCookie = req.headers.cookie;
+    if (!rawCookie) return null;
+
+    const cookies = rawCookie.split(";").map((part) => part.trim());
+    for (const cookie of cookies) {
+        if (!cookie.startsWith(`${name}=`)) continue;
+        return decodeURIComponent(cookie.slice(name.length + 1));
+    }
+
+    return null;
+};
 
 export const AuthController = {
     /** Handle user registration and respond with the new user ID */
@@ -33,11 +67,13 @@ export const AuthController = {
         try {
             const { email, password } = req.body;
             const result = await AuthService.login({ email, password });
+            setRefreshTokenCookie(res, result.refresh_token);
 
             res.status(200).json({
                 success: true,
                 message: "Login successful",
-                ...result,
+                access_token: result.access_token,
+                user: result.user,
             });
         } catch (error) {
             next(error);
@@ -51,6 +87,7 @@ export const AuthController = {
             if (!token) throw new AppError("Token is required", 400);
 
             await AuthService.logout(token);
+            clearRefreshTokenCookie(res);
 
             res.status(200).json({
                 success: true,
@@ -64,7 +101,7 @@ export const AuthController = {
     /** Exchange a valid refresh token for a new access token */
     refreshToken: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
-            const { refresh_token } = req.body;
+            const refresh_token = req.body.refresh_token || readCookie(req, "refresh_token");
             if (!refresh_token) throw new AppError("Refresh token is required", 400);
 
             const result = await AuthService.refreshToken(refresh_token);
@@ -120,12 +157,12 @@ export const AuthController = {
             if (!email || !otp) throw new AppError("Email and OTP are required", 400);
 
             const result = await AuthService.verifyOTP(email, otp);
+            setRefreshTokenCookie(res, result.refresh_token);
 
             res.status(200).json({
                 success: true,
                 message: "OTP verified successfully",
                 access_token: result.access_token,
-                refresh_token: result.refresh_token,
             });
         } catch (error) {
             next(error);
@@ -171,11 +208,12 @@ export const AuthController = {
             const { phone, otp } = req.body;
             if (!phone || !otp) throw new AppError("Phone number and OTP are required", 400);
             const result = await AuthService.verifyPhoneOTP(phone, otp);
+            setRefreshTokenCookie(res, result.refresh_token);
 
             res.status(200).json({
                 success: true,
                 message: "Phone number verified successfully",
-                ...result,
+                access_token: result.access_token,
             });
         } catch (error) {
             next(error);
@@ -188,11 +226,12 @@ export const AuthController = {
             const { idToken } = req.body;
             if (!idToken) throw new AppError("Firebase ID token is required", 400);
             const result = await AuthService.verifyPhoneFirebase(idToken);
+            setRefreshTokenCookie(res, result.refresh_token);
 
             res.status(200).json({
                 success: true,
                 message: "Phone number verified successfully",
-                ...result,
+                access_token: result.access_token,
             });
         } catch (error) {
             next(error);

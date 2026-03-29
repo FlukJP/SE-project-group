@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { ENV } from "@/src/config/clientEnv";
+import { CLIENT_ENV as ENV } from "@/src/config/env.client";
 
 // Firebase client-side config
 const firebaseConfig = {
