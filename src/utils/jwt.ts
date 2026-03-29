@@ -1,4 +1,4 @@
-import { ENV } from "@/src/config/env";
+import { ENV } from "@/src/config/serverEnv";
 import jwt from "jsonwebtoken";
 
 export interface TokenPayload extends jwt.JwtPayload {

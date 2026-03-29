@@ -1,7 +1,7 @@
 import mysql from "mysql2/promise";
 import path from "path";
 import fs from "fs";
-import { ENV } from "../config/env";
+import { ENV } from "../config/serverEnv";
 
 // SSL CA
 const resolveCA = (): Buffer => {

@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { ENV } from "../config/env";
+import { ENV } from "../config/serverEnv";
 
 // TYPES
 export type SendEmailOptions = {

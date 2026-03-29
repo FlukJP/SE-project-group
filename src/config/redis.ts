@@ -1,5 +1,5 @@
 import { createClient } from "redis";
-import { ENV } from "./env";
+import { ENV } from "./serverEnv";
 
 // CLIENT SETUP
 const redisClient = createClient({

@@ -1,6 +1,6 @@
 import rateLimit from 'express-rate-limit';
 import 'dotenv/config';
-import { ENV } from '../config/env';
+import { ENV } from "../config/serverEnv";
 
 const isDevMode = ENV.NODE_ENV !== 'production';
 

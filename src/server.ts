@@ -12,7 +12,7 @@ import { AppError } from "./errors/AppError";
 import { errorHandler } from "./middleware/error.middleware";
 import { globalLimiter } from "./middleware/rateLimit.middleware";
 import { connectRedis, disconnectRedis, isRedisAvailable } from "./config/redis";
-import { ENV } from "./config/env";
+import { ENV } from "./config/serverEnv";
 import pool from "./lib/mysql";
 import { ChatModel } from "./models/chatModel";
 import { verifyAccessToken } from "./utils/jwt";

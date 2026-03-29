@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import { ENV } from "@/src/config/env";
+import { ENV } from "@/src/config/clientEnv";
 
 // SOCKET CLIENT
 let _socket: Socket | null = null;

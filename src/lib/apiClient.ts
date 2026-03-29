@@ -1,5 +1,4 @@
-
-import { ENV } from "@/src/config/env";
+import { ENV } from "@/src/config/clientEnv";
 
 // API_BASE
 export const API_BASE = ENV.API_BASE;

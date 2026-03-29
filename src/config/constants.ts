@@ -1,4 +1,4 @@
-import { ENV } from './env';
+import { ENV } from "./serverEnv";
 
 // Redis
 export const REDIS_URL = ENV.REDIS_URL;
