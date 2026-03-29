@@ -30,7 +30,10 @@ vi.mock('@/src/config/redis', () => {
         isRedisAvailable: vi.fn(() => true),
     };
 });
-vi.mock('@/src/utils/emailSender', () => ({ sendEmail: vi.fn(async () => {}) }));
+vi.mock('@/src/utils/emailSender', () => ({
+    sendEmail: vi.fn(async () => {}),
+    sendEmailWithRetry: vi.fn(async () => {}),
+}));
 vi.mock('@/src/config/env', () => ({
     ENV: {
         JWT_SECRET: 'test-secret-key-that-is-long-enough',

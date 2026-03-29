@@ -9,13 +9,37 @@ import { ENV } from "./env";
 const serviceAccountPath = path.resolve(process.cwd(), "firebase-service-account.json");
 const storageBucket = ENV.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
 
+const loadServiceAccount = (): admin.ServiceAccount | undefined => {
+    if (!ENV.FIREBASE_SERVICE_ACCOUNT) return undefined;
+
+    const rawValue = ENV.FIREBASE_SERVICE_ACCOUNT.trim();
+
+    try {
+        if (rawValue.startsWith("{")) {
+            const parsed = JSON.parse(rawValue) as admin.ServiceAccount & { private_key?: string };
+            if (parsed.private_key) {
+                parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
+            }
+            return parsed;
+        }
+
+        const keyPath = path.resolve(rawValue);
+        return JSON.parse(fs.readFileSync(keyPath, "utf8")) as admin.ServiceAccount;
+    } catch (error) {
+        console.error("[FirebaseAdmin] Failed to load FIREBASE_SERVICE_ACCOUNT");
+        if (error instanceof Error) {
+            console.error(error.message);
+        }
+        return undefined;
+    }
+};
+
 if (!admin.apps.length) {
     let serviceAccount: object | undefined;
 
     if (ENV.FIREBASE_SERVICE_ACCOUNT) {
-        // Production: loaded from environment variable (JSON string)
-        const keyPath = path.resolve(ENV.FIREBASE_SERVICE_ACCOUNT as string);
-        serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+        // Production: support either a JSON string or a file path in the env var.
+        serviceAccount = loadServiceAccount();
     } else if (fs.existsSync(serviceAccountPath)) {
         // Local dev: loaded from file
         serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf-8"));

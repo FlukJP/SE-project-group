@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import type firebaseAdminType from "firebase-admin";
 import { User, Role } from "@/src/types/User";
 import { UserModel } from "@/src/models/UserModel";
 import { AppError } from "@/src/errors/AppError";
@@ -10,7 +11,6 @@ import redisClient, { connectRedis } from "@/src/config/redis";
 import { OTP_TTL_SECONDS, RATE_LIMIT_TTL_SECONDS, MAX_OTP_REQUESTS, MAX_OTP_ATTEMPTS, SALT_ROUNDS } from "@/src/config/constants";
 import { REFRESH_TOKEN_TTL_SECONDS } from "@/src/config/constants";
 import { generateAccessToken, generateRefreshToken, TokenPayload } from "@/src/utils/jwt";
-import admin from "@/src/config/firebaseAdmin";
 import { ENV } from "../config/env";
 
 /** Increment a Redis counter and throw a rate-limit error if the limit is exceeded within the TTL window */
@@ -205,7 +205,7 @@ export const AuthService = {
         } catch (error) {
             console.error(`[OTP] Failed to send OTP to ${email}`, error);
             await redisClient.del(`otp:${email}`);
-            throw error;
+            throw new AppError("OTP email service is unavailable. Please try again later.", 503);
         }
     },
 
@@ -284,11 +284,17 @@ export const AuthService = {
         const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
         await redisClient.setEx(`otp:phone:${phone}`, OTP_TTL_SECONDS, hashedOtp);
 
-        await sendEmailWithRetry({
-            to: user.Email,
-            subject: "Phone Verification OTP (sent via email)",
-            text: `Your OTP to verify phone number ${phone} is ${otp}\nThis code will expire in ${OTP_TTL_SECONDS / 60} minutes.`
-        });
+        try {
+            await sendEmailWithRetry({
+                to: user.Email,
+                subject: "Phone Verification OTP (sent via email)",
+                text: `Your OTP to verify phone number ${phone} is ${otp}\nThis code will expire in ${OTP_TTL_SECONDS / 60} minutes.`
+            });
+        } catch (error) {
+            console.error(`[OTP] Failed to send phone OTP for ${phone}`, error);
+            await redisClient.del(`otp:phone:${phone}`);
+            throw new AppError("OTP email service is unavailable. Please try again later.", 503);
+        }
     },
 
     /** Verify the phone OTP, mark the phone as verified, and return new tokens */
@@ -329,7 +335,9 @@ export const AuthService = {
 
         let firebasePhone: string | undefined;
         try {
-            const decoded = await admin.auth().verifyIdToken(idToken);
+            const firebaseAdmin = (await import("../config/firebaseAdmin.js"))
+                .default as unknown as typeof firebaseAdminType;
+            const decoded = await firebaseAdmin.auth().verifyIdToken(idToken);
             firebasePhone = decoded.phone_number;
         } catch {
             throw new AppError("Invalid Firebase ID token", 401);

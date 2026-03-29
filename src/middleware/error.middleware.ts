@@ -17,6 +17,7 @@ const STATUS_CODE_MAP: Record<number, string> = {
     409: 'CONFLICT',
     422: 'VALIDATION_ERROR',
     429: 'TOO_MANY_REQUESTS',
+    503: 'SERVICE_UNAVAILABLE',
     500: 'INTERNAL_ERROR',
 };
 

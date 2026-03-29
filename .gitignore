@@ -48,7 +48,7 @@ next-env.d.ts
 # claude temp files
 tmpclaude-*
 
-firebase-service-account.json
+firebase-*.json
 
 dist
 .cursor
