@@ -1,11 +1,8 @@
 import admin from "firebase-admin";
-import path from "path";
 import fs from "fs";
-import { ENV } from "./env";
+import path from "path";
+import { SERVER_ENV as ENV } from "@/src/config/env";
 
-
-// Initializes Firebase Admin SDK using a local service account file if present,
-// otherwise falls back to default initialization (e.g., Application Default Credentials).
 const serviceAccountPath = path.resolve(process.cwd(), "firebase-service-account.json");
 const storageBucket = ENV.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
 
@@ -16,10 +13,14 @@ const loadServiceAccount = (): admin.ServiceAccount | undefined => {
 
     try {
         if (rawValue.startsWith("{")) {
-            const parsed = JSON.parse(rawValue) as admin.ServiceAccount & { private_key?: string };
+            const parsed = JSON.parse(rawValue) as admin.ServiceAccount & {
+                private_key?: string;
+            };
+
             if (parsed.private_key) {
                 parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
             }
+
             return parsed;
         }
 
@@ -35,23 +36,25 @@ const loadServiceAccount = (): admin.ServiceAccount | undefined => {
 };
 
 if (!admin.apps.length) {
-    let serviceAccount: object | undefined;
+    let serviceAccount: admin.ServiceAccount | undefined;
 
     if (ENV.FIREBASE_SERVICE_ACCOUNT) {
-        // Production: support either a JSON string or a file path in the env var.
         serviceAccount = loadServiceAccount();
     } else if (fs.existsSync(serviceAccountPath)) {
-        // Local dev: loaded from file
-        serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf-8"));
+        serviceAccount = JSON.parse(
+            fs.readFileSync(serviceAccountPath, "utf-8")
+        ) as admin.ServiceAccount;
     }
 
     if (serviceAccount) {
         admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+            credential: admin.credential.cert(serviceAccount),
             storageBucket,
         });
     } else {
-        console.warn("No Firebase service account found. Firebase Admin initialized without credentials.");
+        console.warn(
+            "No Firebase service account found. Firebase Admin initialized without credentials."
+        );
         admin.initializeApp({ storageBucket });
     }
 }

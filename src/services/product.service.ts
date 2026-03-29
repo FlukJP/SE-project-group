@@ -89,13 +89,16 @@ export const ProductService = {
         return { updated, oldImageURL: product.Image_URL };
     },
 
-    /** Delete a product and clean up its associated images; admin users may bypass ownership checks */
+    /** Delete a product from the database first, then clean up its associated images. */
     deleteProduct: async (productID: number, userID: number, isAdmin: boolean = false) => {
         const product = await ProductModel.findByID(productID);
         if (!product) throw new AppError("Product not found", 404);
         if (product.Seller_ID !== userID && !isAdmin) throw new AppError("Forbidden: You are not the owner of this product", 403);
 
+        const deleted = await ProductModel.deleteProduct(productID);
+        if (!deleted) throw new AppError("Failed to delete product", 500);
+
         if (product.Image_URL) deleteStorageImages(product.Image_URL).catch(() => {});
-        return await ProductModel.deleteProduct(productID);
+        return true;
     }
 };

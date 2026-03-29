@@ -2,7 +2,7 @@ export { API_BASE, ApiError, apiFetch } from "./apiClient";
 import { apiFetch } from "./apiClient";
 
 import type { ProductWithSeller, Product } from "@/src/types/Product";
-import type { User } from "@/src/types/User";
+import type { User, UpdateUserData } from "@/src/types/User";
 import type { Report } from "@/src/types/Report";
 import type { ChatRoomWithPartner, Chat } from "@/src/types/Chat";
 import type { MessageWithSender } from "@/src/types/Messages";
@@ -13,6 +13,10 @@ import type { OrderWithDetails } from "@/src/types/Order";
 export type { CategoryData, PopularCategoryData };
 export type { ReviewData, SellerRatingData };
 export type { OrderWithDetails };
+
+type SuccessResponse = { success: boolean };
+type AccessTokenResponse = SuccessResponse & { access_token: string };
+type LoginResponse = AccessTokenResponse & { user: User };
 
 // API methods for managing products — listing, fetching, creating, updating, and deleting.
 export const productApi = {
@@ -50,57 +54,59 @@ export const productApi = {
 // API methods for authentication — login, register, logout, and OTP flows.
 export const authApi = {
     login: (email: string, password: string) =>
-        apiFetch<{
-            success: boolean;
-            access_token: string;
-            refresh_token: string;
-            user: User;
-        }>("/auth/login", {
+        apiFetch<LoginResponse>("/auth/login", {
             method: "POST",
             body: JSON.stringify({ email, password }),
+            skipAuthRefresh: true,
         }),
     register: (data: { username: string; email: string; password: string; phone: string; address?: string }) =>
-        apiFetch<{ success: boolean; userId: number }>("/auth/register", {
+        apiFetch<SuccessResponse & { userId: number }>("/auth/register", {
             method: "POST",
             body: JSON.stringify(data),
+            skipAuthRefresh: true,
         }),
     logout: () =>
-        apiFetch<{ success: boolean }>("/auth/logout", { method: "POST" }),
+        apiFetch<SuccessResponse>("/auth/logout", { method: "POST" }),
     requestOTP: (email: string) =>
-        apiFetch<{ success: boolean; message: string }>("/auth/request-otp", {
+        apiFetch<SuccessResponse & { message: string }>("/auth/request-otp", {
             method: "POST",
             body: JSON.stringify({ email }),
+            skipAuthRefresh: true,
         }),
     verifyOTP: (email: string, otp: string) =>
-        apiFetch<{ success: boolean; access_token: string; refresh_token: string }>("/auth/verify-otp", {
+        apiFetch<AccessTokenResponse>("/auth/verify-otp", {
             method: "POST",
             body: JSON.stringify({ email, otp }),
+            skipAuthRefresh: true,
         }),
     requestPhoneOTP: (phone: string) =>
-        apiFetch<{ success: boolean; message: string }>("/auth/request-phone-otp", {
+        apiFetch<SuccessResponse & { message: string }>("/auth/request-phone-otp", {
             method: "POST",
             body: JSON.stringify({ phone }),
+            skipAuthRefresh: true,
         }),
     verifyPhoneOTP: (phone: string, otp: string) =>
-        apiFetch<{ success: boolean; access_token: string; refresh_token: string }>("/auth/verify-phone-otp", {
+        apiFetch<AccessTokenResponse>("/auth/verify-phone-otp", {
             method: "POST",
             body: JSON.stringify({ phone, otp }),
+            skipAuthRefresh: true,
         }),
     verifyPhoneFirebase: (idToken: string) =>
-        apiFetch<{ success: boolean; access_token: string; refresh_token: string }>("/auth/verify-phone-firebase", {
+        apiFetch<AccessTokenResponse>("/auth/verify-phone-firebase", {
             method: "POST",
             body: JSON.stringify({ idToken }),
+            skipAuthRefresh: true,
         }),
 };
 
 // API methods for user profile — fetching and updating the current user or any user by ID.
 export const userApi = {
     getMe: () =>
-        apiFetch<{ success: boolean; data: User }>("/users/me"),
+        apiFetch<SuccessResponse & { data: User }>("/users/me"),
     getById: (id: number | string) =>
-        apiFetch<{ success: boolean; data: User }>(`/users/${id}`),
-    updateMe: (data: Record<string, unknown>) =>
-        apiFetch<{ success: boolean }>("/users/me", {
+        apiFetch<SuccessResponse & { data: User }>(`/users/${id}`),
+    updateMe: (data: UpdateUserData) =>
+        apiFetch<SuccessResponse>("/users/me", {
             method: "PUT",
             body: JSON.stringify(data),
         }),

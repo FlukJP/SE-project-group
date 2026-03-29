@@ -5,7 +5,7 @@ import { authApi } from "@/src/lib/api";
 
 interface EmailOTPProps {
     email: string;
-    onVerified: (data: { access_token: string; refresh_token: string }) => void;
+    onVerified: (data: { access_token: string }) => void;
     onError: (message: string) => void;
 }
 
@@ -62,7 +62,6 @@ export default function EmailOTP({ email, onVerified, onError }: EmailOTPProps) 
             const response = await authApi.verifyOTP(email, otp);
             onVerified({
                 access_token: response.access_token,
-                refresh_token: response.refresh_token,
             });
         } catch (err: unknown) {
             onError(err instanceof Error ? err.message : "รหัส OTP ไม่ถูกต้อง");

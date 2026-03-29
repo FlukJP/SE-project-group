@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
 import { AuthRequest } from './auth.middleware';
-import { ENV } from '../config/env';
+import { SERVER_ENV as ENV } from "../config/env";
 
 interface HttpError extends Error {
     code?: string;

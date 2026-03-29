@@ -10,6 +10,7 @@ import {
 } from "react";
 import type { User } from "@/src/types/User";
 import { authApi, userApi } from "@/src/lib/api";
+import { clearAccessToken, restoreSession, setAccessToken } from "@/src/lib/apiClient";
 import { getSocket } from "@/src/lib/socket";
 
 interface AuthState {
@@ -19,7 +20,7 @@ interface AuthState {
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     refreshUser: () => Promise<void>;
-    setTokensAndLoadUser: (accessToken: string, refreshToken: string) => Promise<void>;
+    setTokensAndLoadUser: (accessToken: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -31,33 +32,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         if (typeof window === "undefined") return;
-        const token = localStorage.getItem("access_token");
-        if (!token) return;
 
-        // Defer setIsLoading into a microtask to avoid synchronous state updates
-        // in the effect body, which can cause hydration mismatches.
+        let cancelled = false;
+
+        const handleSessionExpired = () => {
+            clearAccessToken();
+            setUser(null);
+            const s = getSocket();
+            if (s.connected) s.disconnect();
+        };
+
+        window.addEventListener("session:expired", handleSessionExpired);
+
         Promise.resolve()
-            .then(() => {
+            .then(async () => {
                 setIsLoading(true);
-                return userApi.getMe();
+                const restored = await restoreSession();
+                if (!restored) {
+                    if (!cancelled) setUser(null);
+                    return;
+                }
+
+                const res = await userApi.getMe();
+                if (!cancelled) setUser(res.data);
             })
-            .then((res) => setUser(res.data))
             .catch(() => {
-                localStorage.removeItem("access_token");
-                localStorage.removeItem("refresh_token");
+                clearAccessToken();
+                if (!cancelled) setUser(null);
             })
-            .finally(() => setIsLoading(false));
+            .finally(() => {
+                if (!cancelled) setIsLoading(false);
+            });
+
+        return () => {
+            cancelled = true;
+            window.removeEventListener("session:expired", handleSessionExpired);
+        };
     }, []);
 
-    // Authenticates the user with email and password, then stores the tokens and sets user state.
+    // Authenticates the user with email and password, stores the access token in memory, and sets user state.
     const login = useCallback(async (email: string, password: string) => {
         const res = await authApi.login(email, password);
-        localStorage.setItem("access_token", res.access_token);
-        localStorage.setItem("refresh_token", res.refresh_token);
+        setAccessToken(res.access_token);
         setUser(res.user);
     }, []);
 
-    // Logs out the user by calling the logout API, disconnecting the socket, and clearing tokens.
+    // Logs out the user by calling the logout API, disconnecting the socket, and clearing auth state.
     const logout = useCallback(async () => {
         try {
             await authApi.logout();
@@ -66,8 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const s = getSocket();
             if (s.connected) s.disconnect();
         }
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
+        clearAccessToken();
         setUser(null);
     }, []);
 
@@ -77,16 +96,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(res.data);
     }, []);
 
-    // Stores the given tokens, loads the user profile, and rolls back both tokens if the request fails.
-    const setTokensAndLoadUser = useCallback(async (accessToken: string, refreshToken: string) => {
-        localStorage.setItem("access_token", accessToken);
-        localStorage.setItem("refresh_token", refreshToken);
+    // Stores the given access token in memory, loads the user profile, and rolls back if the request fails.
+    const setTokensAndLoadUser = useCallback(async (accessToken: string) => {
+        setAccessToken(accessToken);
         try {
             const res = await userApi.getMe();
             setUser(res.data);
         } catch (err) {
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("refresh_token");
+            clearAccessToken();
             setUser(null);
             throw err;
         }

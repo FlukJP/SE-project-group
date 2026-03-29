@@ -1,4 +1,4 @@
-export type Role = 'customer' | 'admin';
+export type Role = "customer" | "admin";
 
 export interface User {
     User_ID?: number;
@@ -16,14 +16,16 @@ export interface User {
     Is_Banned?: boolean | number;
 }
 
-export type UpdateUserData = Partial<Pick<User, "Username" | "Phone_number" | "Address" | "Avatar_URL">>;
+export type UpdateUserData = Partial<
+    Pick<User, "Username" | "Phone_number" | "Address" | "Avatar_URL">
+>;
 
 export const pickUpdateFields = (data: Partial<User>): UpdateUserData => {
     const result: UpdateUserData = {};
     if (data.Username !== undefined) result.Username = data.Username;
     if (data.Phone_number !== undefined) result.Phone_number = data.Phone_number;
     if (data.Address !== undefined) result.Address = data.Address;
-    if (data.Avatar_URL !== undefined) result.Avatar_URL = data.Avatar_URL; // 🌟 เพิ่มบรรทัดนี้
+    if (data.Avatar_URL !== undefined) result.Avatar_URL = data.Avatar_URL;
 
     return result;
-}
+};

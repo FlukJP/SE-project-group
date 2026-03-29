@@ -1,52 +1,107 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+import { CLIENT_ENV as ENV } from "@/src/config/env.client";
 
-// Represents an HTTP error response from the API, carrying the status code alongside the message.
+// API_BASE
+export const API_BASE = ENV.API_BASE;
+
+if (!API_BASE) {
+    console.error(
+        "[apiClient] NEXT_PUBLIC_API_URL is not set.\n" +
+        "Set it in your deployment environment so the frontend can reach the backend.\n" +
+        "All API requests will fail until this is set."
+    );
+}
+
+const BASE = API_BASE;
+let accessToken: string | null = null;
+
+export const getAccessToken = () => accessToken;
+
+export const setAccessToken = (token: string | null) => {
+    accessToken = token;
+};
+
+export const clearAccessToken = () => {
+    accessToken = null;
+};
+
+// ERROR CLASS
+/** Represents an HTTP error response from the API, carrying the status code alongside the message. */
 export class ApiError extends Error {
     status: number;
     constructor(message: string, status: number) {
         super(message);
+        this.name = "ApiError";
         this.status = status;
     }
 }
 
-// Shared refresh promise used to prevent concurrent token refresh race conditions.
+// TOKEN REFRESH
+/** Shared promise to prevent concurrent token refresh race conditions. */
 let refreshPromise: Promise<string | null> | null = null;
 
-// Attempts to obtain a new access token using the stored refresh token.
-// Removes both tokens from localStorage and returns null if the refresh request fails.
+/**
+ * Dispatch a custom event so AuthContext (or any listener) can react to session expiry.
+ * This avoids a hard dependency between apiClient and AuthContext.
+ */
+const dispatchSessionExpired = () => {
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("session:expired"));
+    }
+};
+
+/**
+ * Attempts to obtain a new access token using the HttpOnly refresh-token cookie.
+ * Clears the in-memory access token and dispatches session:expired if the refresh fails.
+ */
 async function refreshAccessToken(): Promise<string | null> {
-    const refreshToken = localStorage.getItem("refresh_token");
-    if (!refreshToken) return null;
+    if (typeof window === "undefined") {
+        dispatchSessionExpired();
+        return null;
+    }
 
     try {
-        const refreshRes = await fetch(`${API_BASE}/api/auth/refresh-token`, {
+        const res = await fetch(`${BASE}/api/auth/refresh-token`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ refresh_token: refreshToken }),
+            credentials: "include",
         });
-        const refreshJson = await refreshRes.json();
-        if (refreshRes.ok && refreshJson.success) {
-            localStorage.setItem("access_token", refreshJson.access_token);
-            return refreshJson.access_token;
-        }
-    } catch {}
+        const json = await res.json();
 
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+        if (res.ok && json.success) {
+            const newToken = json.access_token as string;
+            setAccessToken(newToken);
+            return newToken;
+        }
+    } catch (err) {
+        console.error("[apiClient] Token refresh network error:", err);
+    }
+
+    clearAccessToken();
+    dispatchSessionExpired();
     return null;
 }
 
-// Sends an authenticated HTTP request to the API and returns the parsed response.
-// Automatically retries once with a refreshed access token on a 401 Unauthorized response.
-export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const token =
-        typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+export const restoreSession = async (): Promise<string | null> => refreshAccessToken();
+
+type ApiFetchOptions = RequestInit & {
+    skipAuthRefresh?: boolean;
+};
+
+// CORE FETCH
+/**
+ * Sends an authenticated HTTP request to the API and returns the parsed response.
+ * Automatically retries once with a refreshed access token on a 401 Unauthorized response.
+ */
+export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
+    const token = getAccessToken();
+    const { skipAuthRefresh = false, ...requestOptions } = options;
 
     const headers: Record<string, string> = {
-        ...(options.headers as Record<string, string>),
+        ...(requestOptions.headers as Record<string, string>),
     };
 
-    if (!(options.body instanceof FormData)) {
+    // Don't set Content-Type for FormData; the browser sets it with boundary automatically.
+    if (!(requestOptions.body instanceof FormData)) {
         headers["Content-Type"] = "application/json";
     }
 
@@ -54,18 +109,30 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
         headers["Authorization"] = `Bearer ${token}`;
     }
 
-    let res = await fetch(`${API_BASE}/api${path}`, { ...options, headers });
+    let res = await fetch(`${BASE}/api${path}`, {
+        ...requestOptions,
+        headers,
+        credentials: "include",
+    });
 
-    if (res.status === 401 && typeof window !== "undefined") {
+    // 401 -> attempt token refresh once
+    if (res.status === 401 && typeof window !== "undefined" && !skipAuthRefresh) {
         if (!refreshPromise) {
             refreshPromise = refreshAccessToken().finally(() => {
                 refreshPromise = null;
             });
         }
         const newToken = await refreshPromise;
+
         if (newToken) {
             headers["Authorization"] = `Bearer ${newToken}`;
-            res = await fetch(`${API_BASE}/api${path}`, { ...options, headers });
+            res = await fetch(`${BASE}/api${path}`, {
+                ...requestOptions,
+                headers,
+                credentials: "include",
+            });
+        } else {
+            throw new ApiError("Session expired. Please log in again.", 401);
         }
     }
 
@@ -80,7 +147,10 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     }
 
     if (!res.ok || !json.success) {
-        throw new ApiError((json?.message as string) || `Request failed (${res.status})`, res.status);
+        throw new ApiError(
+            (json?.message as string) || `Request failed (${res.status})`,
+            res.status
+        );
     }
 
     return json as T;
