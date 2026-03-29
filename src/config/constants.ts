@@ -18,18 +18,20 @@ export const MAX_FILE_SIZE = 5 * 1024 * 1024;
 export const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // Converts a file size string in MB to bytes.
-const parseFileSize = (sizeInMB: string): number => parseInt(sizeInMB) * 1024 * 1024;
+const parseFileSize = (sizeInMB: number): number => sizeInMB * 1024 * 1024;
 
 export const UPLOAD_CONFIG = {
     ALLOWED_MIMES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
     PRODUCT: {
-        MAX_SIZE: parseFileSize(ENV.PRODUCT_MAX_SIZE.toString()),
+        // ใส่ fallback || 5 เข้าไปเพื่อบอก TypeScript ว่าถ้าไม่มีค่า ให้ใช้เลข 5 แทนนะ
+        MAX_SIZE: parseFileSize(ENV.PRODUCT_MAX_SIZE || 5),
         CLOUD_FOLDER: 'products',
     },
     USER: {
-        MAX_SIZE: parseFileSize(ENV.USER_MAX_SIZE.toString()),
+        // ใส่ fallback || 2 เข้าไป (สมมติให้รูปโปรไฟล์อัปได้สูงสุด 2MB)
+        MAX_SIZE: parseFileSize(ENV.USER_MAX_SIZE || 2),
         CLOUD_FOLDER: 'users',
-    },
+    }
 };
 
 export const UPLOAD_ERRORS = {

@@ -39,6 +39,8 @@ vi.mock('@/src/config/env', () => ({
         JWT_EXPIRES_IN: 3600,
         JWT_REFRESH_SECRET: 'test-refresh-secret',
         JWT_REFRESH_EXPIRES_IN: '7d',
+        PRODUCT_MAX_SIZE: 5, 
+        USER_MAX_SIZE: 2,
     },
 }));
 

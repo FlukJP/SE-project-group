@@ -1,7 +1,7 @@
-import { Response, NextFunction } from 'express';
-import { AuthService } from '../services/auth.service';
-import { AuthRequest } from '../middleware/auth.middleware';
-import { AppError } from '../errors/AppError';
+import { Response, NextFunction } from "express";
+import { AuthService } from "../services/auth.service";
+import { AuthRequest } from "../middleware/auth.middleware";
+import { AppError } from "../errors/AppError";
 
 export const AuthController = {
     /** Handle user registration and respond with the new user ID */
@@ -15,12 +15,12 @@ export const AuthController = {
                 Password: password,
                 Phone_number: phone,
                 Address: address || undefined,
-                Role: 'customer',
+                Role: "customer",
             });
 
             res.status(201).json({
                 success: true,
-                message: "Registration successful. Please check your email for OTP verification.",
+                message: "Registration successful. A verification OTP has been sent to your email.",
                 userId: insertId,
             });
         } catch (error) {
@@ -47,8 +47,7 @@ export const AuthController = {
     /** Invalidate the current access token and remove the stored refresh token */
     logout: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
-            const authHeader = req.headers.authorization;
-            const token = authHeader?.split(' ')[1];
+            const token = req.headers.authorization?.split(" ")[1];
             if (!token) throw new AppError("Token is required", 400);
 
             await AuthService.logout(token);
@@ -100,7 +99,8 @@ export const AuthController = {
     requestOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { email } = req.body;
-            if (!email) return next(new AppError("Email is required", 400));
+            if (!email) throw new AppError("Email is required", 400);
+
             await AuthService.requestOTP(email);
 
             res.status(200).json({
@@ -117,7 +117,8 @@ export const AuthController = {
         try {
             const email = req.body.email?.toLowerCase().trim();
             const otp = req.body.otp?.toString().trim();
-            if (!email || !otp) return next(new AppError("Email and OTP are required", 400));
+            if (!email || !otp) throw new AppError("Email and OTP are required", 400);
+
             const result = await AuthService.verifyOTP(email, otp);
 
             res.status(200).json({
@@ -135,6 +136,7 @@ export const AuthController = {
     resetPassword: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { email, otp, newPassword } = req.body;
+            if (!email || !otp || !newPassword) throw new AppError("Email, OTP and new password are required", 400);
             await AuthService.resetPasswordWithOTP(email, otp, newPassword);
 
             res.status(200).json({
@@ -150,6 +152,7 @@ export const AuthController = {
     requestPhoneOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { phone } = req.body;
+            if (!phone) throw new AppError("Phone number is required", 400);
             await AuthService.requestPhoneOTP(phone);
 
             res.status(200).json({
@@ -166,6 +169,7 @@ export const AuthController = {
     verifyPhoneOTP: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { phone, otp } = req.body;
+            if (!phone || !otp) throw new AppError("Phone number and OTP are required", 400);
             const result = await AuthService.verifyPhoneOTP(phone, otp);
 
             res.status(200).json({
@@ -182,6 +186,7 @@ export const AuthController = {
     verifyPhoneFirebase: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
             const { idToken } = req.body;
+            if (!idToken) throw new AppError("Firebase ID token is required", 400);
             const result = await AuthService.verifyPhoneFirebase(idToken);
 
             res.status(200).json({

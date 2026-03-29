@@ -1,102 +1,139 @@
-import nodemailer from 'nodemailer';
-import { ENV } from '../config/env';
+import nodemailer from "nodemailer";
+import { ENV } from "../config/env";
 
-// Nodemailer transport configured with Gmail credentials from environment variables.
+// TYPES
+export type SendEmailOptions = {
+    to: string;
+    subject: string;
+    text?: string;
+    html?: string;
+};
+
+type EmailResult = Awaited<ReturnType<nodemailer.Transporter["sendMail"]>>;
+
+// TRANSPORTER SINGLETON
 let transporter: nodemailer.Transporter | null = null;
 
-const createTransporter = () => {
+const createTransporter = (): nodemailer.Transporter => {
     return nodemailer.createTransport({
-        service: 'gmail',
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
         auth: {
             user: ENV.EMAIL_USER,
-            pass: ENV.EMAIL_PASS, // ต้องเป็น App Password
+            pass: ENV.EMAIL_PASS,
         },
-        connectionTimeout: 10000, // 10s
+        connectionTimeout: 10_000,
     });
 };
 
-export const getTransporter = () => {
+export const getTransporter = (): nodemailer.Transporter => {
     if (!transporter) {
         transporter = createTransporter();
     }
     return transporter;
 };
 
-// Verify connection ตอนเริ่ม server (optional)
-export const verifyEmailConfig = async () => {
+// The function sets the variable `transporter` to `null`.
+const resetTransporter = (): void => {
+    transporter = null;
+};
+
+// ERROR HELPER
+const formatEmailError = (error: unknown): string => {
+    if (!(error instanceof Error)) return "Unknown error";
+
+    const msg = error.message;
+
+    if (msg.includes("Invalid login") || msg.includes("535")) {
+        return `Auth failed — ตรวจสอบ EMAIL_USER และ App Password (${msg})`;
+    }
+    if (msg.includes("ETIMEDOUT") || msg.includes("ECONNREFUSED")) {
+        return `Network error — ตรวจสอบ firewall หรือ SMTP host (${msg})`;
+    }
+    if (msg.includes("ENOTFOUND")) {
+        return `DNS error — ไม่พบ smtp.gmail.com ตรวจสอบ internet connection (${msg})`;
+    }
+
+    return msg;
+};
+
+// VERIFY CONNECTION
+export const verifyEmailConfig = async (): Promise<boolean> => {
     try {
-        const t = getTransporter();
-        await t.verify();
-        console.log('[Email] SMTP connection verified');
+        await getTransporter().verify();
+        console.log("[Email] SMTP connection verified");
         return true;
     } catch (error) {
-        console.error('[Email] SMTP verification failed');
-
-        if (error instanceof Error) {
-            console.error(error.message);
-
-            if (error.message.includes('Invalid login')) {
-                console.error('[Email] ตรวจสอบ App Password หรือ EMAIL_USER/EMAIL_PASS');
-            }
-        }
-
-        console.error(JSON.stringify(error, null, 2));
+        const reason = formatEmailError(error);
+        console.error(`[Email] SMTP verification failed: ${reason}`);
+        // reset เพื่อให้ครั้งถัดไป create transporter ใหม่
+        resetTransporter();
         return false;
     }
 };
 
-export const sendEmailWithRetry = async (
-    options: SendEmailOptions,
-    maxRetries = 3
-) => {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            return await sendEmail(options);
-        } catch (error) {
-            if (i === maxRetries - 1) throw error;
-            const delay = 1000 * Math.pow(2, i); // 1s, 2s, 4s
-            console.warn(`[Email] Retry ${i + 1} in ${delay}ms`);
-            await new Promise((r) => setTimeout(r, delay));
-        }
-    }
-};
-
-// Sends an email with the given recipient, subject, and plain-text body.
-type SendEmailOptions = {
-    to: string;
-    subject: string;
-    text?: string;
-    html?: string; 
-};
-
+// SEND EMAIL (core)
 export const sendEmail = async ({
     to,
     subject,
     text,
     html,
-}: SendEmailOptions) => {
-    if (!ENV.EMAIL_USER || !ENV.EMAIL_PASS) throw new Error('Email credentials not configured');
+}: SendEmailOptions): Promise<EmailResult> => {
+    const resolvedText = text ?? "No content";
+    const resolvedHtml = html ?? `<p>${resolvedText}</p>`;
+
     try {
         const info = await getTransporter().sendMail({
             from: `"Marketplace" <${ENV.EMAIL_USER}>`,
             to,
             subject,
-            text,
-            html,
+            text: resolvedText,
+            html: resolvedHtml,
         });
-        console.log(`[Email] Sent to ${to}: ${info.messageId}`);
+
+        console.log(`[Email] Sent to ${to} — messageId: ${info.messageId}`);
         return info;
     } catch (error) {
-        console.error('[Email] Failed to send');
+        const reason = formatEmailError(error);
+        console.error(`[Email] Failed to send to ${to}: ${reason}`);
 
-        if (error instanceof Error) {
-            console.error(error.message);
-
-            if (error.message.includes('Invalid login')) console.error('App Password is wrong?');
-            if (error.message.includes('ETIMEDOUT')) console.error(' Network / Firewall problem');
+        if (
+            error instanceof Error &&
+            (error.message.includes("Invalid login") ||
+                error.message.includes("ETIMEDOUT") ||
+                error.message.includes("ECONNREFUSED"))
+        ) {
+            resetTransporter();
         }
-        console.error(JSON.stringify(error, null, 2));
-        throw new Error(`Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`
-        );
+
+        throw new Error(`Failed to send email to "${to}": ${reason}`);
     }
+};
+
+// SEND WITH RETRY
+export const sendEmailWithRetry = async (
+    options: SendEmailOptions,
+    maxRetries = 3
+): Promise<EmailResult> => {
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            return await sendEmail(options);
+        } catch (error) {
+            lastError = error;
+
+            if (attempt < maxRetries - 1) {
+                const delay = 1000 * Math.pow(2, attempt);
+                console.warn(
+                    `[Email] Attempt ${attempt + 1}/${maxRetries} failed — retrying in ${delay}ms`
+                );
+                await new Promise((resolve) => setTimeout(resolve, delay));
+            }
+        }
+    }
+
+    console.error(`[Email] All ${maxRetries} attempts failed`);
+    throw lastError;
 };

@@ -49,6 +49,7 @@ next-env.d.ts
 tmpclaude-*
 
 firebase-service-account.json
+firebase-key.json
 
 dist
 .cursor

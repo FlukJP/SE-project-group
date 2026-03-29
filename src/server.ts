@@ -44,10 +44,7 @@ io.use((socket, next) => {
         return next(new Error("Authentication required"));
     }
     try {
-        const decoded = jwt.verify(token, ENV.JWT_SECRET, {
-            issuer: ENV.JWT_ISSUER,
-            audience: ENV.JWT_AUDIENCE,
-        }) as { userID: number; role: string };
+        const decoded = jwt.verify(token, ENV.JWT_SECRET as string) as { userID: number; role: string };
         (socket as AuthenticatedSocket).user = decoded;
         next();
     } catch {
@@ -153,8 +150,8 @@ async function shutdown(signal: string) {
     console.log(`\n[${signal}] shutting down...`);
     server.close(() => console.log('[HTTP] closed'));
     io.close(() => console.log('[Socket] closed'));
-    try { await disconnectRedis(); } catch {}
-    try { await pool.end(); console.log('[MySQL] pool closed'); } catch {}
+    try { await disconnectRedis(); } catch { }
+    try { await pool.end(); console.log('[MySQL] pool closed'); } catch { }
     process.exit(0);
 }
 
