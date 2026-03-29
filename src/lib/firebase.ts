@@ -1,7 +1,8 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { ENV } from "../config/env";
+import { CLIENT_ENV as ENV } from "@/src/config/env.client";
 
+// Firebase client-side config
 const firebaseConfig = {
     apiKey: ENV.NEXT_PUBLIC_FIREBASE_API_KEY,
     authDomain: ENV.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -11,6 +12,6 @@ const firebaseConfig = {
     appId: ENV.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initializes the Firebase app once and exports the Auth instance for client-side use.
+/** Initializes the Firebase app once and exports the Auth instance for client-side use. */
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const firebaseAuth = getAuth(app);

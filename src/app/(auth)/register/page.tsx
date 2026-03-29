@@ -155,9 +155,9 @@ export default function RegisterPage() {
     }
   };
 
-  const handleEmailVerified = async (data: { access_token: string; refresh_token: string }) => {
+  const handleEmailVerified = async (data: { access_token: string }) => {
     try {
-      await setTokensAndLoadUser(data.access_token, data.refresh_token);
+      await setTokensAndLoadUser(data.access_token);
       setError("");
       setStep("phone-otp");
     } catch {
@@ -168,7 +168,7 @@ export default function RegisterPage() {
   const handlePhoneVerified = async (data: { idToken: string }) => {
     try {
       const result = await authApi.verifyPhoneFirebase(data.idToken);
-      await setTokensAndLoadUser(result.access_token, result.refresh_token);
+      await setTokensAndLoadUser(result.access_token);
       router.push("/");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : AUTH_TEXT.register.phoneVerifyFailed);

@@ -13,11 +13,22 @@ type FieldRule = {
 };
 
 type Schema = Record<string, FieldRule>;
+type ValidateBodyOptions = {
+    allowUnknown?: boolean;
+};
 
 /** Return an Express middleware that validates req.body against the provided field schema */
-export function validateBody(schema: Schema) {
+export function validateBody(schema: Schema, options: ValidateBodyOptions = {}) {
     return (req: Request, _res: Response, next: NextFunction) => {
         const errors: string[] = [];
+        const allowUnknown = options.allowUnknown ?? true;
+
+        if (!allowUnknown) {
+            const unknownFields = Object.keys(req.body).filter((field) => !(field in schema));
+            if (unknownFields.length > 0) {
+                errors.push(`Unknown fields: ${unknownFields.join(', ')}`);
+            }
+        }
 
         for (const [field, rules] of Object.entries(schema)) {
             const value = req.body[field];
@@ -103,7 +114,7 @@ export const loginSchema: Schema = {
 };
 
 export const refreshTokenSchema: Schema = {
-    refresh_token: { required: true, type: 'string' },
+    refresh_token: { type: 'string' },
 };
 
 export const changePasswordSchema: Schema = {
@@ -137,6 +148,12 @@ export const verifyPhoneOtpSchema: Schema = {
 
 export const verifyPhoneFirebaseSchema: Schema = {
     idToken: { required: true, type: 'string' },
+};
+
+export const profileUpdateSchema: Schema = {
+    Username: { type: 'string', custom: (v) => validateUsername(v as string) ? null : 'Username must be 2-50 characters (letters, numbers, spaces, underscores, hyphens, Thai)' },
+    Phone_number: { type: 'string', custom: (v) => validatePhoneNumber(v as string) ? null : 'Phone number must be 10 digits' },
+    Address: { type: 'string', min: 1, max: 255 },
 };
 
 // Order schemas

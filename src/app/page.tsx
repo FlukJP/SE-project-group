@@ -25,7 +25,7 @@ export default function HomePage() {
   // Key changes when user logs in → SWR auto-revalidates to exclude own listings
   const userId = user?.User_ID;
   const params = useMemo<Record<string, string>>(() => {
-    const p: Record<string, string> = { limit: "20", sortBy: "random" };
+    const p: Record<string, string> = { limit: "20", sortBy: "Created_at" };
     if (userId) p.excludeSeller = String(userId);
     return p;
   }, [userId]);

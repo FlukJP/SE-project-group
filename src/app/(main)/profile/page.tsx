@@ -145,7 +145,7 @@ useEffect(() => {
                   isPhoneVerified={!!user?.Is_Phone_Verified}
                   onSaved={refreshUser}
                   onVerified={async (data) => {
-                    await setTokensAndLoadUser(data.access_token, data.refresh_token);
+                    await setTokensAndLoadUser(data.access_token);
                   }}
                 />
               )}
@@ -191,7 +191,7 @@ function ProfileInfo({
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   onSaved: () => Promise<void>;
-  onVerified: (data: { access_token: string; refresh_token: string }) => Promise<void>;
+  onVerified: (data: { access_token: string }) => Promise<void>;
 }) {
   const [username, setUsername] = useState(initialUsername);
   const [phone, setPhone] = useState(initialPhone);
@@ -238,7 +238,7 @@ function ProfileInfo({
     }
   };
 
-  const handleOTPVerified = async (data: { access_token: string; refresh_token: string }) => {
+  const handleOTPVerified = async (data: { access_token: string }) => {
     await onVerified(data);
     setShowEmailOTP(false);
   };

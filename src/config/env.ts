@@ -1,151 +1,103 @@
-import "dotenv/config";
+import { z } from "zod";
 
-// Check if we're in Next.js build phase (Vercel deployment)
-const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+const defaultLocalClientUrls = ["http://localhost:3000", "http://localhost:3001"];
 
-const isClient = typeof window !== 'undefined';
+const splitAndValidateUrls = (value: string | undefined, label: string): string[] => {
+    if (!value) return [];
 
-// Returns the trimmed value of an environment variable, throwing if it is missing or empty.
-function requireString(name: string): string {
-    if (isBuildPhase) {
-        // During build phase, return placeholder to avoid breaking the build
-        return `PLACEHOLDER_${name}`;
-    }
-
-    if (isClient && !name.startsWith('NEXT_PUBLIC_')) {
-        return "";
-    }
-    const value = process.env[name];
-    if (!value || value.trim().length === 0) {
-        throw new Error(`Environment variable ${name} is required but not defined or empty`);
-    }
-    return value.trim();
-}
-
-// Returns the value of an environment variable as a positive integer, throwing if invalid.
-function requirePositiveInt(name: string): number {
-    if (isBuildPhase) {
-        // During build phase, return placeholder to avoid breaking the build
-        return 3600; // 1 hour placeholder
-    }
-    if (isClient && !name.startsWith('NEXT_PUBLIC_')) {
-        return 0;
-    }
-    const raw = process.env[name];
-    const value = Number(raw);
-    if (!raw || isNaN(value) || !Number.isInteger(value) || value <= 0) {
-        throw new Error(`Environment variable ${name} must be a positive integer (got "${raw}")`);
-    }
-    return value;
-}
-
-// Returns the value of an environment variable as a validated URL string, throwing if malformed.
-function requireUrl(name: string): string {
-    if (isBuildPhase) {
-        // During build phase, return placeholder to avoid breaking the build
-        return "https://placeholder.com";
-    }
-
-    if (isClient && !name.startsWith('NEXT_PUBLIC_')) {
-        return "";
-    }
-    const value = requireString(name);
-    try {
-        new URL(value);
-    } catch {
-        throw new Error(`Environment variable ${name} must be a valid URL (got "${value}")`);
-    }
-    return value;
-}
-
-// Server & Client
-const PORT = process.env.PORT ? requirePositiveInt("PORT") : 5000;
-const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
-if (!NEXT_PUBLIC_API_URL) {
-    throw new Error('Environment variable NEXT_PUBLIC_API_URL is required');
-}
-const SOCKET_URL = NEXT_PUBLIC_API_URL;
-const CLIENT_URL = process.env.CLIENT_URL;
-
-// JWT & Auth
-const JWT_SECRET = requireString("JWT_SECRET");
-const JWT_ISSUER = requireString("JWT_ISSUER");
-const JWT_AUDIENCE = requireString("JWT_AUDIENCE");
-const JWT_EXPIRES_IN = requirePositiveInt("JWT_EXPIRES_IN");
-const JWT_REFRESH_SECRET = requireString("JWT_REFRESH_SECRET");
-const JWT_REFRESH_EXPIRES_IN = requireString("JWT_REFRESH_EXPIRES_IN");
-const OTP_EXPIRY = requirePositiveInt("OTP_EXPIRY");
-
-// Database (MySQL)
-const DB_HOST = requireString("DB_HOST");
-const DB_USER = requireString("DB_USER");
-const DB_NAME = requireString("DB_NAME");
-const DB_PORT = requirePositiveInt("DB_PORT");
-const DB_PASS = process.env.DB_PASS ?? "";
-const DB_SSL_CA = process.env.DB_SSL_CA ?? 'ca.pem';
-
-// Redis
-const REDIS_URL = requireString("REDIS_URL");
-
-// Email
-const NODE_ENV = process.env.NODE_ENV || "development";
-let EMAIL_USER = process.env.EMAIL_USER ?? "";
-let EMAIL_PASS = process.env.EMAIL_PASS ?? "";
-if (NODE_ENV === "production" && !isBuildPhase) {
-    EMAIL_USER = requireString("EMAIL_USER");
-    EMAIL_PASS = requireString("EMAIL_PASS");
-}
-
-// Firebase
-const NEXT_PUBLIC_FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "";
-const NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "";
-const NEXT_PUBLIC_FIREBASE_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "";
-const NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "";
-const NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "";
-const NEXT_PUBLIC_FIREBASE_APP_ID = process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "";
-const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT ?? "";
-
-// File Upload Limits
-const PRODUCT_MAX_SIZE = requirePositiveInt("PRODUCT_MAX_SIZE");
-const USER_MAX_SIZE = requirePositiveInt("USER_MAX_SIZE");
-
-// Export all environment variables as a single object
-export const ENV = {
-    NODE_ENV,
-    PORT,
-    // Client
-    SOCKET_URL,
-    CLIENT_URL,
-    NEXT_PUBLIC_API_URL,
-    // JWT
-    JWT_SECRET,
-    JWT_ISSUER,
-    JWT_AUDIENCE,
-    JWT_EXPIRES_IN,
-    JWT_REFRESH_SECRET,
-    JWT_REFRESH_EXPIRES_IN,
-    OTP_EXPIRY,
-    // Database
-    DB_HOST,
-    DB_USER,
-    DB_PASS,
-    DB_NAME,
-    DB_PORT,
-    DB_SSL_CA,
-    // Redis
-    REDIS_URL,
-    // Email
-    EMAIL_USER,
-    EMAIL_PASS,
-    // Firebase
-    NEXT_PUBLIC_FIREBASE_API_KEY,
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    NEXT_PUBLIC_FIREBASE_APP_ID,
-    FIREBASE_SERVICE_ACCOUNT,
-    // Uploads
-    PRODUCT_MAX_SIZE,
-    USER_MAX_SIZE
+    return value
+        .split(",")
+        .map((url) => url.trim())
+        .filter(Boolean)
+        .map((url) => {
+            try {
+                return new URL(url).toString().replace(/\/$/, "");
+            } catch {
+                throw new Error(`Invalid URL in ${label}: ${url}`);
+            }
+        });
 };
+
+const serverSchema = z.object({
+    NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    PORT: z.coerce.number().int().positive().default(5000),
+    CLIENT_URL: z.string().default(defaultLocalClientUrls[0]),
+    CLIENT_URLS: z.string().optional().default(""),
+
+    JWT_SECRET: z.string().min(10),
+    JWT_ISSUER: z.string(),
+    JWT_AUDIENCE: z.string(),
+    JWT_EXPIRES_IN: z.coerce.number().positive(),
+    JWT_REFRESH_SECRET: z.string().min(10),
+    JWT_REFRESH_EXPIRES_IN: z.string(),
+
+    OTP_EXPIRY: z.coerce.number().positive(),
+
+    DB_HOST: z.string(),
+    DB_USER: z.string(),
+    DB_NAME: z.string(),
+    DB_PORT: z.coerce.number().positive(),
+    DB_PASS: z.string().optional().default(""),
+    DB_SSL_CA: z.string().optional().default("ca.pem"),
+
+    REDIS_URL: z.string().url(),
+
+    EMAIL_USER: z.string().email(),
+    EMAIL_PASS: z.string().min(6),
+
+    FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
+    FIREBASE_PROJECT_ID: z.string().optional(),
+    FIREBASE_CLIENT_EMAIL: z.string().optional(),
+    FIREBASE_PRIVATE_KEY: z.string().optional(),
+
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().default(""),
+
+    PRODUCT_MAX_SIZE: z.coerce.number().positive(),
+    USER_MAX_SIZE: z.coerce.number().positive(),
+});
+
+type ServerEnv = z.infer<typeof serverSchema>;
+
+type ServerRuntimeEnv = Omit<ServerEnv, "CLIENT_URLS" | "FIREBASE_PRIVATE_KEY"> & {
+    CLIENT_URLS: string[];
+    FIREBASE_PRIVATE_KEY: string;
+};
+
+let cachedServerEnv: ServerRuntimeEnv | null = null;
+
+const getServerEnv = (): ServerRuntimeEnv => {
+    if (cachedServerEnv) return cachedServerEnv;
+
+    const parsedServerEnv = serverSchema.safeParse(process.env);
+
+    if (!parsedServerEnv.success) {
+        console.error("Invalid SERVER ENV:");
+        console.error(parsedServerEnv.error.format());
+        throw new Error("Invalid server environment variables");
+    }
+
+    const serverEnv = parsedServerEnv.data;
+    const FIREBASE_PRIVATE_KEY = serverEnv.FIREBASE_PRIVATE_KEY
+        ? serverEnv.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
+        : "";
+
+    const CLIENT_URLS = Array.from(
+        new Set([
+            ...defaultLocalClientUrls,
+            ...splitAndValidateUrls(serverEnv.CLIENT_URL, "CLIENT_URL"),
+            ...splitAndValidateUrls(serverEnv.CLIENT_URLS, "CLIENT_URLS"),
+        ])
+    );
+
+    cachedServerEnv = {
+        ...serverEnv,
+        CLIENT_URLS,
+        FIREBASE_PRIVATE_KEY,
+    };
+
+    return cachedServerEnv;
+};
+
+export const SERVER_ENV = new Proxy({} as ServerRuntimeEnv, {
+    get: (_target, prop: string) => getServerEnv()[prop as keyof ServerRuntimeEnv],
+});
