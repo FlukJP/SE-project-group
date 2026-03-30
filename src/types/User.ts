@@ -18,12 +18,13 @@ export interface User {
 }
 
 export type UpdateUserData = Partial<
-    Pick<User, "Username" | "Phone_number" | "Address" | "Avatar_URL" | "Auto_Reply_Message">
+    Pick<User, "Username" | "Email" | "Phone_number" | "Address" | "Avatar_URL" | "Auto_Reply_Message">
 >;
 
 export const pickUpdateFields = (data: Partial<User>): UpdateUserData => {
     const result: UpdateUserData = {};
     if (data.Username !== undefined) result.Username = data.Username;
+    if (data.Email !== undefined) result.Email = data.Email;
     if (data.Phone_number !== undefined) result.Phone_number = data.Phone_number;
     if (data.Address !== undefined) result.Address = data.Address;
     if (data.Avatar_URL !== undefined) result.Avatar_URL = data.Avatar_URL;

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
-import { reviewApi, reportApi, orderApi, API_BASE } from "@/src/lib/api";
+import { reviewApi, reportApi, orderApi, resolveMediaUrl } from "@/src/lib/api";
 import { UserProfileSkeleton } from "@/src/components/ui/Skeleton";
 import {
   FormErrorNotice,
@@ -330,7 +330,7 @@ export default function PublicProfilePage() {
               <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full bg-[#E6D5C3]">
                 {seller.Avatar_URL ? (
                   <img
-                    src={`${API_BASE}${seller.Avatar_URL}`}
+                    src={resolveMediaUrl(seller.Avatar_URL)}
                     alt={seller.Username}
                     className="h-full w-full object-cover"
                   />

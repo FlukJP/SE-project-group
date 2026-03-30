@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/contexts/AuthContext";
-import { API_BASE, chatApi } from "@/src/lib/api";
+import { chatApi, resolveMediaUrl } from "@/src/lib/api";
 import type { ChatRoomWithPartner } from "@/src/types/Chat";
 
 function formatChatDate(value?: Date | string) {
@@ -250,7 +250,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick?: () => void }) 
                                 >
                                     {user?.Avatar_URL ? (
                                         <img
-                                            src={`${API_BASE}${user.Avatar_URL}`}
+                                            src={resolveMediaUrl(user.Avatar_URL)}
                                             alt=""
                                             className="h-full w-full rounded-full object-cover"
                                         />

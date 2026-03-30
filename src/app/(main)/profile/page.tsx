@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, startTransition, useEffect, useMemo, useState } from "react";
+import { Suspense, startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/src/components/layout/Navbar";
@@ -10,6 +10,7 @@ import {
   orderApi,
   productApi,
   reviewApi,
+  resolveMediaUrl,
   userApi,
   type OrderWithDetails,
   type ReviewData,
@@ -118,7 +119,7 @@ function ProfilePageContent() {
           <div className="mb-8 flex items-center gap-6 rounded-xl border border-[#DCD0C0] bg-[#E6D5C3] p-6">
             <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-[#E6D5C3] text-3xl">
               {user?.Avatar_URL ? (
-                <img src={`${API_BASE}${user.Avatar_URL}`} alt="" className="h-full w-full object-cover" />
+                <img src={resolveMediaUrl(user.Avatar_URL)} alt="" className="h-full w-full object-cover" />
               ) : (
                 "👤"
               )}
@@ -141,11 +142,12 @@ function ProfilePageContent() {
             <section className="rounded-xl border border-[#E6D5C3] bg-white p-6">
               {activeTab === "profile" && (
                 <ProfileInfo
-                  key={`${user?.Username}-${user?.Phone_number}-${user?.Is_Email_Verified}-${user?.Is_Phone_Verified}-${user?.Address}`}
+                  key={`${user?.Username}-${user?.Email}-${user?.Phone_number}-${user?.Is_Email_Verified}-${user?.Is_Phone_Verified}-${user?.Address}-${user?.Avatar_URL}`}
                   username={user?.Username || ""}
-                  phone={user?.Phone_number || ""}
                   email={user?.Email || ""}
+                  phone={user?.Phone_number || ""}
                   address={user?.Address || ""}
+                  avatarUrl={user?.Avatar_URL || ""}
                   isEmailVerified={!!user?.Is_Email_Verified}
                   isPhoneVerified={!!user?.Is_Phone_Verified}
                   onSaved={refreshUser}
@@ -176,45 +178,123 @@ function InputField(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={getFormFieldClassName({ size: "lg", readOnly: props.readOnly })} />;
 }
 
+async function createSquareAvatarBlob(
+  imageSrc: string,
+  zoom: number,
+  offsetX: number,
+  offsetY: number,
+  outputSize = 512
+): Promise<Blob> {
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("ไม่สามารถโหลดรูปที่เลือกได้"));
+    img.src = imageSrc;
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = outputSize;
+  canvas.height = outputSize;
+  const ctx = canvas.getContext("2d");
+
+  if (!ctx) {
+    throw new Error("ไม่สามารถเตรียมพื้นที่ครอปรูปได้");
+  }
+
+  const baseScale = Math.max(outputSize / image.width, outputSize / image.height);
+  const drawWidth = image.width * baseScale * zoom;
+  const drawHeight = image.height * baseScale * zoom;
+  const maxOffsetX = Math.max(0, (drawWidth - outputSize) / 2);
+  const maxOffsetY = Math.max(0, (drawHeight - outputSize) / 2);
+  const safeOffsetX = Math.min(maxOffsetX, Math.max(-maxOffsetX, offsetX));
+  const safeOffsetY = Math.min(maxOffsetY, Math.max(-maxOffsetY, offsetY));
+  const dx = (outputSize - drawWidth) / 2 + safeOffsetX;
+  const dy = (outputSize - drawHeight) / 2 + safeOffsetY;
+
+  ctx.clearRect(0, 0, outputSize, outputSize);
+  ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
+
+  return await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("ไม่สามารถสร้างไฟล์รูปโปรไฟล์ได้"));
+    }, "image/jpeg", 0.92);
+  });
+}
+
 function ProfileInfo({
   username: initialUsername,
+  email: initialEmail,
   phone: initialPhone,
-  email,
   address: initialAddress,
+  avatarUrl: initialAvatarUrl,
   isEmailVerified,
   isPhoneVerified,
   onSaved,
   onVerified,
 }: {
   username: string;
-  phone: string;
   email: string;
+  phone: string;
   address: string;
+  avatarUrl: string;
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   onSaved: () => Promise<void>;
   onVerified: (data: { access_token: string }) => Promise<void>;
 }) {
   const [username, setUsername] = useState(initialUsername);
+  const [email, setEmail] = useState(initialEmail);
   const [phone, setPhone] = useState(initialPhone);
   const [address, setAddress] = useState(initialAddress);
+  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
+  const [isEditing, setIsEditing] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [pendingAvatarSrc, setPendingAvatarSrc] = useState("");
+  const [avatarZoom, setAvatarZoom] = useState(1);
+  const [avatarOffsetX, setAvatarOffsetX] = useState(0);
+  const [avatarOffsetY, setAvatarOffsetY] = useState(0);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [showEmailOTP, setShowEmailOTP] = useState(false);
   const [showPhoneOTP, setShowPhoneOTP] = useState(false);
   const [otpError, setOtpError] = useState("");
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setUsername(initialUsername), [initialUsername]);
+  useEffect(() => setEmail(initialEmail), [initialEmail]);
   useEffect(() => setPhone(initialPhone), [initialPhone]);
   useEffect(() => setAddress(initialAddress), [initialAddress]);
+  useEffect(() => setAvatarUrl(initialAvatarUrl), [initialAvatarUrl]);
+  useEffect(() => {
+    return () => {
+      if (pendingAvatarSrc) {
+        URL.revokeObjectURL(pendingAvatarSrc);
+      }
+    };
+  }, [pendingAvatarSrc]);
 
   const handleSave = async () => {
     if (saving) return;
-    if (!username.trim()) {
+    const normalizedUsername = username.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPhone = phone.replace(/\D/g, "");
+    const normalizedAddress = address.trim();
+    const emailChanged = normalizedEmail !== initialEmail.trim().toLowerCase();
+    const phoneChanged = normalizedPhone !== initialPhone.replace(/\D/g, "");
+    if (!normalizedUsername) {
       setMessage("กรุณากรอกชื่อผู้ใช้");
       return;
     }
-    if (phone && !/^0\d{9}$/.test(phone.replace(/\D/g, ""))) {
+    if (!normalizedEmail) {
+      setMessage("กรุณากรอกอีเมล");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setMessage("อีเมลไม่ถูกต้อง");
+      return;
+    }
+    if (normalizedPhone && !/^0\d{9}$/.test(normalizedPhone)) {
       setMessage("เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักขึ้นต้นด้วย 0");
       return;
     }
@@ -224,17 +304,101 @@ function ProfileInfo({
 
     try {
       await userApi.updateMe({
-        Username: username.trim(),
-        Phone_number: phone.trim(),
-        Address: address.trim(),
+        Username: normalizedUsername,
+        Email: normalizedEmail,
+        Phone_number: normalizedPhone,
+        Address: normalizedAddress,
       });
       await onSaved();
-      setMessage("บันทึกสำเร็จ");
+      if (emailChanged) {
+        setShowEmailOTP(true);
+        setShowPhoneOTP(false);
+        setOtpError("");
+        setMessage("บันทึกสำเร็จ กรุณายืนยันอีเมลใหม่ด้วย OTP");
+      } else if (phoneChanged && normalizedPhone) {
+        setShowPhoneOTP(true);
+        setShowEmailOTP(false);
+        setOtpError("");
+        setMessage("บันทึกสำเร็จ กรุณายืนยันเบอร์โทรใหม่ด้วย OTP");
+      } else {
+        setMessage("บันทึกสำเร็จ");
+      }
+      setIsEditing(false);
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setUsername(initialUsername);
+    setEmail(initialEmail);
+    setPhone(initialPhone);
+    setAddress(initialAddress);
+    setAvatarUrl(initialAvatarUrl);
+    if (pendingAvatarSrc) {
+      URL.revokeObjectURL(pendingAvatarSrc);
+    }
+    setPendingAvatarSrc("");
+    setAvatarZoom(1);
+    setAvatarOffsetX(0);
+    setAvatarOffsetY(0);
+    setMessage("");
+    setIsEditing(false);
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (pendingAvatarSrc) {
+      URL.revokeObjectURL(pendingAvatarSrc);
+    }
+
+    setPendingAvatarSrc(URL.createObjectURL(file));
+    setAvatarZoom(1);
+    setAvatarOffsetX(0);
+    setAvatarOffsetY(0);
+    setMessage("");
+    if (avatarInputRef.current) {
+      avatarInputRef.current.value = "";
+    }
+  };
+
+  const handleConfirmAvatarCrop = async () => {
+    if (!pendingAvatarSrc) return;
+
+    setAvatarUploading(true);
+    setMessage("");
+
+    try {
+      const croppedBlob = await createSquareAvatarBlob(pendingAvatarSrc, avatarZoom, avatarOffsetX, avatarOffsetY);
+      const formData = new FormData();
+      formData.append("avatar", croppedBlob, "avatar.jpg");
+      const response = await userApi.uploadAvatar(formData);
+      setAvatarUrl(response.avatar_url);
+      await onSaved();
+      URL.revokeObjectURL(pendingAvatarSrc);
+      setPendingAvatarSrc("");
+      setAvatarZoom(1);
+      setAvatarOffsetX(0);
+      setAvatarOffsetY(0);
+      setMessage("อัปเดตรูปโปรไฟล์สำเร็จ");
+    } catch (err: unknown) {
+      setMessage(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleCloseAvatarCrop = () => {
+    if (pendingAvatarSrc) {
+      URL.revokeObjectURL(pendingAvatarSrc);
+    }
+    setPendingAvatarSrc("");
+    setAvatarZoom(1);
+    setAvatarOffsetX(0);
+    setAvatarOffsetY(0);
   };
 
   const handleOTPVerified = async (data: { access_token: string }) => {
@@ -340,16 +504,147 @@ function ProfileInfo({
         )}
       </div>
 
+      <div className="mb-6 rounded-xl border border-[#E6D5C3] bg-white p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-full border border-[#E6D5C3] bg-[#F9F6F0] text-4xl">
+            {avatarUrl ? (
+              <img src={resolveMediaUrl(avatarUrl)} alt="รูปโปรไฟล์" className="h-full w-full object-cover" />
+            ) : (
+              "👤"
+            )}
+          </div>
+          <div className="flex-1">
+            <div className="text-sm font-semibold text-[#4A3B32]">รูปโปรไฟล์</div>
+            <p className="mt-1 text-sm text-[#A89F91]">กดเปลี่ยนรูปเมื่ออยู่ในโหมดแก้ไขข้อมูล</p>
+          </div>
+          <div>
+            <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={!isEditing || avatarUploading}
+              className="rounded-lg border border-[#D9734E] px-4 py-2 text-sm font-semibold text-[#D9734E] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {avatarUploading ? "กำลังอัปโหลด..." : "เปลี่ยนรูปโปรไฟล์"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {pendingAvatarSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#4A3B32]">ครอปรูปโปรไฟล์</h3>
+                <p className="mt-1 text-sm text-[#A89F91]">ปรับตำแหน่งให้พอดีก่อนยืนยันใช้เป็นรูปโปรไฟล์</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseAvatarCrop}
+                disabled={avatarUploading}
+                className="text-sm text-[#A89F91] hover:text-[#4A3B32] disabled:opacity-50"
+              >
+                ปิด
+              </button>
+            </div>
+
+            <div className="mb-5 flex justify-center">
+              <div className="relative h-64 w-64 overflow-hidden rounded-full border-4 border-[#E6D5C3] bg-[#F9F6F0]">
+                <img
+                  src={pendingAvatarSrc}
+                  alt="ตัวอย่างรูปโปรไฟล์"
+                  className="absolute left-1/2 top-1/2 h-full w-full max-w-none object-cover"
+                  style={{
+                    transform: `translate(calc(-50% + ${avatarOffsetX}px), calc(-50% + ${avatarOffsetY}px)) scale(${avatarZoom})`,
+                    transformOrigin: "center",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <div className="mb-1 flex items-center justify-between text-sm text-[#4A3B32]">
+                  <span>ซูม</span>
+                  <span>{avatarZoom.toFixed(1)}x</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="2.5"
+                  step="0.1"
+                  value={avatarZoom}
+                  onChange={(e) => setAvatarZoom(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <div className="mb-1 flex items-center justify-between text-sm text-[#4A3B32]">
+                  <span>เลื่อนซ้าย-ขวา</span>
+                  <span>{avatarOffsetX}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="-120"
+                  max="120"
+                  step="1"
+                  value={avatarOffsetX}
+                  onChange={(e) => setAvatarOffsetX(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <div className="mb-1 flex items-center justify-between text-sm text-[#4A3B32]">
+                  <span>เลื่อนขึ้น-ลง</span>
+                  <span>{avatarOffsetY}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="-120"
+                  max="120"
+                  step="1"
+                  value={avatarOffsetY}
+                  onChange={(e) => setAvatarOffsetY(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleCloseAvatarCrop}
+                disabled={avatarUploading}
+                className="rounded-lg border border-[#DCD0C0] px-5 py-2 font-semibold text-[#6E6258] disabled:opacity-50"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAvatarCrop}
+                disabled={avatarUploading}
+                className="rounded-lg bg-[#D9734E] px-5 py-2 font-semibold text-white disabled:opacity-50"
+              >
+                {avatarUploading ? "กำลังอัปโหลด..." : "ยืนยันใช้รูปนี้"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-xl space-y-5">
         <div>
           <Label>ชื่อผู้ใช้ (แสดงให้ผู้อื่นเห็น)</Label>
-          <InputField value={username} onChange={(e) => setUsername(e.target.value)} />
+          <InputField value={username} readOnly={!isEditing} onChange={(e) => setUsername(e.target.value)} />
         </div>
 
         <div>
           <Label>อีเมล</Label>
-          <InputField value={email} readOnly className="cursor-not-allowed bg-[#F9F6F0] text-[#A89F91]" />
-          <p className="mt-1 text-xs text-[#A89F91]">อีเมลไม่สามารถเปลี่ยนแปลงได้</p>
+          <InputField value={email} readOnly={!isEditing} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="name@example.com" />
+          <p className="mt-1 text-xs text-[#A89F91]">หากเปลี่ยนอีเมล ระบบจะรีเซ็ตสถานะการยืนยันและต้องยืนยัน OTP ใหม่</p>
         </div>
 
         <div className="mt-6 border-t border-[#DCD0C0] pt-6">
@@ -358,37 +653,60 @@ function ProfileInfo({
           <div className="space-y-4">
             <div>
               <Label>เบอร์โทรศัพท์</Label>
-              <InputField value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="เช่น 08x-xxx-xxxx" />
+              <InputField value={phone} readOnly={!isEditing} onChange={(e) => setPhone(e.target.value)} placeholder="เช่น 08x-xxx-xxxx" />
             </div>
 
             <div>
               <Label>ที่อยู่</Label>
               <TextareaField
                 value={address}
+                disabled={!isEditing}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="เช่น 123/4 ซอยสุขุมวิท 11 เขตพระนคร กรุงเทพมหานคร 10200"
                 rows={3}
-                textareaClassName={getFormFieldClassName({ size: "lg", resize: "none" })}
+                textareaClassName={getFormFieldClassName({ size: "lg", resize: "none", disabled: !isEditing })}
               />
             </div>
           </div>
         </div>
 
         {message &&
-          (message === "บันทึกสำเร็จ" ? (
+          ((message.includes("สำเร็จ") && !message.includes("ไม่สำเร็จ")) ? (
             <FormSuccessNotice message={message} />
           ) : (
             <FormErrorNotice message={message} />
           ))}
 
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded-lg bg-[#D9734E] px-6 py-2 font-semibold text-white disabled:opacity-50"
-        >
-          {saving ? "กำลังบันทึก..." : "บันทึก"}
-        </button>
+        <div className="flex flex-wrap gap-3">
+          {isEditing ? (
+            <>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="rounded-lg bg-[#D9734E] px-6 py-2 font-semibold text-white disabled:opacity-50"
+              >
+                {saving ? "กำลังบันทึก..." : "บันทึก"}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                disabled={saving}
+                className="rounded-lg border border-[#DCD0C0] px-6 py-2 font-semibold text-[#6E6258] disabled:opacity-50"
+              >
+                ยกเลิก
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className="rounded-lg bg-[#D9734E] px-6 py-2 font-semibold text-white"
+            >
+              แก้ไขข้อมูล
+            </button>
+          )}
+        </div>
       </div>
     </>
   );

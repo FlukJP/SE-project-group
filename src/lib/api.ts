@@ -1,5 +1,5 @@
 export { API_BASE, ApiError, apiFetch } from "./apiClient";
-import { apiFetch } from "./apiClient";
+import { API_BASE, apiFetch } from "./apiClient";
 
 import type { ProductWithSeller, Product } from "@/src/types/Product";
 import type { User, UpdateUserData } from "@/src/types/User";
@@ -110,6 +110,17 @@ export const userApi = {
             method: "PUT",
             body: JSON.stringify(data),
         }),
+    uploadAvatar: (formData: FormData) =>
+        apiFetch<SuccessResponse & { avatar_url: string; message: string }>("/users/me/avatar", {
+            method: "PUT",
+            body: formData,
+        }),
+};
+
+export const resolveMediaUrl = (value?: string | null) => {
+    if (!value) return "";
+    if (/^https?:\/\//i.test(value)) return value;
+    return `${API_BASE}${value}`;
 };
 
 // API methods for categories — listing, fetching popular, creating, updating, and deleting.

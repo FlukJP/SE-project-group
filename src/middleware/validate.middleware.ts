@@ -152,6 +152,7 @@ export const verifyPhoneFirebaseSchema: Schema = {
 
 export const profileUpdateSchema: Schema = {
     Username: { type: 'string', custom: (v) => validateUsername(v as string) ? null : 'Username must be 2-50 characters (letters, numbers, spaces, underscores, hyphens, Thai)' },
+    Email: { type: 'string', custom: (v) => validateEmail(v as string) ? null : 'Invalid email format' },
     Phone_number: { type: 'string', custom: (v) => validatePhoneNumber(v as string) ? null : 'Phone number must be 10 digits' },
     Address: { type: 'string', min: 1, max: 255 },
     Auto_Reply_Message: { type: 'string', max: 1000 },

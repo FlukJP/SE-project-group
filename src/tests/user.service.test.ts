@@ -51,6 +51,12 @@ describe('UserService', () => {
             ).rejects.toThrow('Phone number must be 10 digits');
         });
 
+        it('should throw on invalid email format', async () => {
+            await expect(
+                UserService.updateProfile({ userID: 1, updateData: { Email: 'invalid-email' } })
+            ).rejects.toThrow('Invalid email format');
+        });
+
         it('should throw 404 when user not found', async () => {
             vi.mocked(UserModel.findByIDSafe).mockResolvedValue(null);
 
@@ -80,6 +86,7 @@ describe('UserService', () => {
         it('should reset phone verification when phone number changes', async () => {
             vi.mocked(UserModel.findByIDSafe).mockResolvedValue(sampleUser);
             vi.mocked(UserModel.updateUser).mockResolvedValue(true);
+            vi.mocked(UserModel.findByPhone).mockResolvedValue(null);
 
             await UserService.updateProfile({ userID: 1, updateData: { Phone_number: '0899999999' } });
 
@@ -97,6 +104,35 @@ describe('UserService', () => {
 
             const callArgs = vi.mocked(UserModel.updateUser).mock.calls[0][1];
             expect(callArgs.Is_Phone_Verified).toBeUndefined();
+        });
+
+        it('should reset email verification when email changes', async () => {
+            vi.mocked(UserModel.findByIDSafe).mockResolvedValue({
+                ...sampleUser,
+                Is_Email_Verified: true,
+            });
+            vi.mocked(UserModel.findByEmailSafe).mockResolvedValue(null);
+            vi.mocked(UserModel.updateUser).mockResolvedValue(true);
+
+            await UserService.updateProfile({ userID: 1, updateData: { Email: 'new@email.com' } });
+
+            expect(UserModel.updateUser).toHaveBeenCalledWith(
+                1,
+                expect.objectContaining({ Email: 'new@email.com', Is_Email_Verified: false })
+            );
+        });
+
+        it('should throw when new email is already in use', async () => {
+            vi.mocked(UserModel.findByIDSafe).mockResolvedValue(sampleUser);
+            vi.mocked(UserModel.findByEmailSafe).mockResolvedValue({
+                ...sampleUser,
+                User_ID: 2,
+                Email: 'used@email.com',
+            });
+
+            await expect(
+                UserService.updateProfile({ userID: 1, updateData: { Email: 'used@email.com' } })
+            ).rejects.toThrow('Email already in use');
         });
 
         it('should update avatar URL successfully', async () => {
