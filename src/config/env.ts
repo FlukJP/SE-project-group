@@ -42,8 +42,11 @@ const serverSchema = z.object({
 
     REDIS_URL: z.string().url(),
 
-    EMAIL_USER: z.string().email(),
-    EMAIL_PASS: z.string().min(6),
+    RESEND_API_KEY: z.string().optional().default(""),
+    EMAIL_FROM: z
+        .string()
+        .optional()
+        .default("Marketplace <onboarding@resend.dev>"),
 
     FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
     FIREBASE_PROJECT_ID: z.string().optional(),
