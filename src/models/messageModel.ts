@@ -69,6 +69,18 @@ export const MessageModel = {
         return rows[0]?.UnreadCount || 0;
     },
 
+    /** Check whether a participant has already sent any message in a chat room */
+    hasMessageFromSender: async (chatID: number, senderID: number): Promise<boolean> => {
+        const sql = `
+            SELECT COUNT(*) AS MessageCount
+            FROM Message
+            WHERE Chat_ID = ? AND Sender_ID = ?
+        `;
+        interface CountResult extends RowDataPacket { MessageCount: number }
+        const [rows] = await db.query<CountResult[]>(sql, [chatID, senderID]);
+        return (rows[0]?.MessageCount || 0) > 0;
+    },
+
     /** Mark all unread messages in a chat as read for the given receiver */
     updateReadStatus: async (chatID: number, receiverID: number): Promise<void> => {
         const sql = `

@@ -12,6 +12,7 @@ function mockReq(overrides: Partial<AuthRequest> = {}): AuthRequest {
         params: {},
         query: {},
         body: {},
+        app: { get: vi.fn() },
         ...overrides,
     } as unknown as AuthRequest;
 }
@@ -151,7 +152,7 @@ describe('ChatController', () => {
     // ===== sendMessage =====
     describe('sendMessage', () => {
         it('should return 201 with messageId', async () => {
-            vi.mocked(ChatService.sendMessage).mockResolvedValue(42);
+            vi.mocked(ChatService.sendMessage).mockResolvedValue({ messageId: 42 });
 
             const req = mockReq({
                 params: { chatId: '1' },
@@ -184,7 +185,7 @@ describe('ChatController', () => {
         });
 
         it('should default to text type when type is not image', async () => {
-            vi.mocked(ChatService.sendMessage).mockResolvedValue(43);
+            vi.mocked(ChatService.sendMessage).mockResolvedValue({ messageId: 43 });
 
             const req = mockReq({
                 params: { chatId: '1' },
@@ -195,6 +196,37 @@ describe('ChatController', () => {
             await ChatController.sendMessage(req, res, next);
 
             expect(ChatService.sendMessage).toHaveBeenCalledWith(1, 10, 'Hello!', 'text');
+        });
+
+        it('should emit auto reply when service returns one', async () => {
+            const emit = vi.fn();
+            const to = vi.fn().mockReturnValue({ emit });
+            vi.mocked(ChatService.sendMessage).mockResolvedValue({
+                messageId: 42,
+                autoReply: {
+                    Messages_ID: 77,
+                    Chat_ID: 1,
+                    Sender_ID: 20,
+                    Content: 'ตอบกลับอัตโนมัติ',
+                    MessagesType: 'text',
+                    SenderName: 'Seller',
+                },
+            });
+
+            const req = mockReq({
+                params: { chatId: '1' },
+                body: { content: 'Hello!', type: 'text' },
+                app: { get: vi.fn().mockReturnValue({ to }) } as unknown as AuthRequest["app"],
+            });
+            const res = mockRes();
+
+            await ChatController.sendMessage(req, res, next);
+
+            expect(to).toHaveBeenCalledWith('1');
+            expect(emit).toHaveBeenCalledWith('newMessage', expect.objectContaining({
+                Messages_ID: 77,
+                Content: 'ตอบกลับอัตโนมัติ',
+            }));
         });
     });
 

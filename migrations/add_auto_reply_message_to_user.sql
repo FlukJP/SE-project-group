@@ -1,0 +1,2 @@
+ALTER TABLE User
+ADD COLUMN Auto_Reply_Message TEXT NULL AFTER Avatar_URL;

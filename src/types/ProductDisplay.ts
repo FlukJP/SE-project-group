@@ -24,6 +24,10 @@ export interface ProductDisplay {
   };
 }
 
+const LEGACY_LOCATION_PATTERN = /📍\s*พื้นที่:\s*(.+?)(?:\n|$)/;
+const LEGACY_PHONE_PATTERN = /📞\s*ติดต่อ:\s*(\S+)/;
+const MODERN_PHONE_SUFFIX_PATTERN = /\n\nPHONE:\s*[\s\S]*$/;
+
 export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
   let images: string[] = [];
   try {
@@ -43,18 +47,23 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
     }
   }
 
-  // Build province/district from dedicated columns; fallback to legacy regex in Description
   const province = p.Province?.trim() || "";
   const district = p.District?.trim() || "";
   let location = province && district ? `${province} (${district})` : province || district;
   if (!location) {
-    const locMatch = p.Description?.match(/📍\s*พื้นที่:\s*(.+?)(?:\n|$)/);
+    const locMatch = p.Description?.match(LEGACY_LOCATION_PATTERN);
     if (locMatch) location = locMatch[1].trim();
   }
 
+  const phoneFromDescription =
+    p.Description?.match(/(?:^|\n\n)PHONE:\s*(.+?)(?:\n|$)/)?.[1]?.trim() ||
+    p.Description?.match(LEGACY_PHONE_PATTERN)?.[1]?.trim() ||
+    "";
+
   const cleanDescription =
-    p.Description?.replace(/\n\n📍 พื้นที่:[\s\S]*$/, "")
-      .replace(/📞\s*ติดต่อ:\s*\S+/g, "")
+    p.Description?.replace(MODERN_PHONE_SUFFIX_PATTERN, "")
+      .replace(/\n\n📍 พื้นที่:[\s\S]*$/, "")
+      .replace(LEGACY_PHONE_PATTERN, "")
       .trim() || "";
 
   return {
@@ -75,13 +84,12 @@ export function toProductDisplay(p: ProductWithSeller): ProductDisplay {
       id: String(p.Seller_ID),
       name: p.SellerName || "ผู้ขาย",
       avatarUrl: p.SellerAvatar,
-      phone: p.SellerPhone_number,
+      phone: phoneFromDescription || p.SellerPhone_number,
       email: p.SellerEmail,
     },
   };
 }
 
-// Function to calculate relative time in Thai language
 function formatThaiRelativeTime(date?: Date | string): string {
   if (!date) return "";
   const now = Date.now();

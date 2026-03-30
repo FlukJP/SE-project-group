@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useChatLayout } from "@/src/contexts/ChatLayoutContext";
@@ -28,22 +28,21 @@ export default function ChatConversationPage() {
   const isInitialLoad = useRef(true);
 
   const chatIdNum = Number(chatId);
-
-  const currentRoom = rooms.find((r) => r.Chat_ID === chatIdNum);
+  const currentRoom = rooms.find((room) => room.Chat_ID === chatIdNum);
   const partnerName = currentRoom?.PartnerName || "คู่สนทนา";
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // Fetch messages + mark as read
   useEffect(() => {
     if (!chatId || !user) return;
 
     isInitialLoad.current = true;
     setIsLoading(true);
     setPage(1);
-    setMessages([]); // Fix #7: reset old messages when switching rooms
+    setMessages([]);
+
     chatApi
       .getMessages(chatIdNum)
       .then((res) => {
@@ -59,13 +58,11 @@ export default function ChatConversationPage() {
       });
   }, [chatId, chatIdNum, user]);
 
-  // Socket: join room, listen for newMessage
   useEffect(() => {
     if (!chatId) return;
 
     const roomId = String(chatId);
 
-    // Only join when socket is connected
     if (socket.connected) {
       socket.emit("join", roomId);
     }
@@ -74,10 +71,9 @@ export default function ChatConversationPage() {
       socket.emit("join", roomId);
     };
 
-    // Fix #6: Prevent duplicate messages by checking Messages_ID
     const handleNewMessage = (message: MessageWithSender) => {
       setMessages((prev) => {
-        if (prev.some((m) => m.Messages_ID === message.Messages_ID)) {
+        if (prev.some((item) => item.Messages_ID === message.Messages_ID)) {
           return prev;
         }
         return [...prev, message];
@@ -95,7 +91,6 @@ export default function ChatConversationPage() {
     };
   }, [chatId, chatIdNum]);
 
-  // Auto-scroll on initial load and new messages
   useEffect(() => {
     if (isInitialLoad.current && messages.length > 0) {
       scrollToBottom();
@@ -103,14 +98,12 @@ export default function ChatConversationPage() {
     }
   }, [messages, scrollToBottom]);
 
-  // Auto-scroll when a new message is appended (not when loading older)
   useEffect(() => {
     if (!isInitialLoad.current && !isLoadingMore) {
       scrollToBottom();
     }
   }, [messages.length, scrollToBottom, isLoadingMore]);
 
-  // Load older messages
   const loadMoreMessages = useCallback(async () => {
     if (isLoadingMore || !hasMore) return;
 
@@ -125,7 +118,6 @@ export default function ChatConversationPage() {
       setPage(nextPage);
       setHasMore(res.pagination.hasMore);
 
-      // Restore scroll position so it doesn't jump
       requestAnimationFrame(() => {
         if (container) {
           container.scrollTop = container.scrollHeight - prevScrollHeight;
@@ -138,7 +130,6 @@ export default function ChatConversationPage() {
     }
   }, [isLoadingMore, hasMore, page, chatIdNum]);
 
-  // Detect scroll to top
   const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -147,7 +138,6 @@ export default function ChatConversationPage() {
     }
   }, [hasMore, isLoadingMore, loadMoreMessages]);
 
-  // Send message
   const handleSend = async (content: string) => {
     if (!user?.User_ID || isSending) return;
 
@@ -155,7 +145,7 @@ export default function ChatConversationPage() {
     try {
       const res = await chatApi.sendMessage(chatIdNum, content);
 
-      const newMsg: MessageWithSender = {
+      const newMessage: MessageWithSender = {
         Messages_ID: res.messageId,
         Chat_ID: chatIdNum,
         Sender_ID: user.User_ID,
@@ -166,11 +156,11 @@ export default function ChatConversationPage() {
         SenderName: user.Username,
       };
 
-      setMessages((prev) => [...prev, newMsg]);
+      setMessages((prev) => [...prev, newMessage]);
 
       socket.emit("sendMessage", {
         roomId: String(chatId),
-        message: newMsg,
+        message: newMessage,
       });
     } catch (err) {
       showError(err instanceof Error ? err.message : "ส่งข้อความไม่สำเร็จ");
@@ -181,47 +171,36 @@ export default function ChatConversationPage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <p className="text-gray-500 text-sm">กำลังโหลดข้อความ...</p>
+      <div className="flex flex-1 items-center justify-center">
+        <p className="text-sm text-gray-500">กำลังโหลดข้อความ...</p>
       </div>
     );
   }
 
   return (
     <>
-      <div className="border-b border-gray-200 bg-white px-4 py-3 flex items-center gap-3 shrink-0">
-        <div className="h-8 w-8 rounded-full bg-[#121E4D] text-white flex items-center justify-center font-bold text-xs shrink-0">
+      <div className="flex shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-4 py-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#121E4D] text-xs font-bold text-white">
           {partnerName.charAt(0).toUpperCase()}
         </div>
-        <span className="font-medium text-sm text-gray-900">{partnerName}</span>
+        <span className="text-sm font-medium text-gray-900">{partnerName}</span>
       </div>
 
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4"
+        className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-4"
       >
-        {isLoadingMore && (
-          <div className="text-center text-xs text-gray-400 py-2">
-            กำลังโหลดข้อความเก่า...
-          </div>
-        )}
+        {isLoadingMore && <div className="py-2 text-center text-xs text-gray-400">กำลังโหลดข้อความเก่า...</div>}
         {!hasMore && messages.length > 0 && (
-          <div className="text-center text-xs text-gray-300 py-2">
-            ไม่มีข้อความเก่ากว่านี้แล้ว
-          </div>
+          <div className="py-2 text-center text-xs text-gray-300">ไม่มีข้อความเก่ากว่านี้แล้ว</div>
         )}
+
         {messages.length === 0 ? (
-          <div className="text-center text-sm text-gray-400 py-8">
-            เริ่มต้นการสนทนา
-          </div>
+          <div className="py-8 text-center text-sm text-gray-400">เริ่มต้นการสนทนา</div>
         ) : (
-          messages.map((msg) => (
-            <MessageBubble
-              key={msg.Messages_ID}
-              message={msg}
-              isMine={msg.Sender_ID === user?.User_ID}
-            />
+          messages.map((message) => (
+            <MessageBubble key={message.Messages_ID} message={message} isMine={message.Sender_ID === user?.User_ID} />
           ))
         )}
         <div ref={messagesEndRef} />

@@ -154,6 +154,7 @@ export const profileUpdateSchema: Schema = {
     Username: { type: 'string', custom: (v) => validateUsername(v as string) ? null : 'Username must be 2-50 characters (letters, numbers, spaces, underscores, hyphens, Thai)' },
     Phone_number: { type: 'string', custom: (v) => validatePhoneNumber(v as string) ? null : 'Phone number must be 10 digits' },
     Address: { type: 'string', min: 1, max: 255 },
+    Auto_Reply_Message: { type: 'string', max: 1000 },
 };
 
 // Order schemas

@@ -334,11 +334,11 @@ describe('AuthService', () => {
     // ===== resetPasswordWithOTP =====
     describe('resetPasswordWithOTP', () => {
         it('should throw on invalid email format', async () => {
-            await expect(AuthService.resetPasswordWithOTP('invalid', '123456', 'newpass12')).rejects.toThrow('Email and new password are required');
+            await expect(AuthService.resetPasswordWithOTP('invalid', '123456', 'newpass12')).rejects.toThrow('Invalid email format');
         });
 
         it('should throw when new password is missing', async () => {
-            await expect(AuthService.resetPasswordWithOTP('a@b.com', '123456', '')).rejects.toThrow('Email and new password are required');
+            await expect(AuthService.resetPasswordWithOTP('a@b.com', '123456', '')).rejects.toThrow('New password is required');
         });
 
         it('should throw when new password is too short', async () => {

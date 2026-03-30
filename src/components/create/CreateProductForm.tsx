@@ -1,11 +1,18 @@
 "use client";
 
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CreateCategory } from "@/src/data/categoriesData";
 import { PROVINCES } from "@/src/data/provinces";
 import ImageUploader, { UploadedImage } from "./ImageUploader";
-import { FieldLabel, ErrorText, FormErrorNotice, Input, Select, TextareaField } from "@/src/components/ui";
+import {
+    ErrorText,
+    FieldLabel,
+    FormErrorNotice,
+    Input,
+    Select,
+    TextareaField,
+} from "@/src/components/ui";
 import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 import { productApi } from "@/src/lib/api";
 
@@ -14,7 +21,10 @@ interface CreateProductFormProps {
     onChangeCategory?: (key: string) => void;
     onBackToPickCategory: () => void;
     categories: CreateCategory[];
+    sellerPhone: string;
 }
+
+const PRICE_INPUT_PATTERN = /^\d+(\.\d{0,2})?$/;
 
 // Renders the full product creation form including category, title, price, images, location, and contact fields
 export default function CreateProductForm({
@@ -22,12 +32,12 @@ export default function CreateProductForm({
     onChangeCategory,
     onBackToPickCategory,
     categories,
+    sellerPhone,
 }: CreateProductFormProps) {
     const [categoryKey, setCategoryKey] = useState(defaultCategoryKey);
     const [title, setTitle] = useState("");
     const [price, setPrice] = useState("");
     const [description, setDescription] = useState("");
-    const [phone, setPhone] = useState("");
     const [province, setProvince] = useState("");
     const [district, setDistrict] = useState("");
     const [images, setImages] = useState<UploadedImage[]>([]);
@@ -41,19 +51,13 @@ export default function CreateProductForm({
         if (defaultCategoryKey && defaultCategoryKey !== categoryKey) {
             setCategoryKey(defaultCategoryKey);
         }
-        // Only react to prop changes, not internal categoryKey changes
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [defaultCategoryKey]);
+    }, [defaultCategoryKey, categoryKey]);
 
-    const provinceOptions = useMemo(
-        () => PROVINCES.map((p) => ({ value: p.name, label: p.name })),
-        []
-    );
-
+    const provinceOptions = useMemo(() => PROVINCES.map((province) => ({ value: province.name, label: province.name })), []);
     const districtOptions = useMemo(() => {
-        const p = PROVINCES.find((x) => x.name === province);
-        if (!p) return [];
-        return p.districts.map((d) => ({ value: d, label: d }));
+        const matchedProvince = PROVINCES.find((item) => item.name === province);
+        if (!matchedProvince) return [];
+        return matchedProvince.districts.map((district) => ({ value: district, label: district }));
     }, [province]);
 
     const refs = {
@@ -66,38 +70,42 @@ export default function CreateProductForm({
         images: useRef<HTMLDivElement>(null),
     };
 
-    // Validates all form fields and scrolls to the first error if any exist
     const validate = (): boolean => {
-        const newErrors: Record<string, string> = {};
-        if (!categoryKey) newErrors.category = "กรุณาเลือกหมวดหมู่";
-        if (!title.trim()) newErrors.title = "กรุณากรอกหัวข้อประกาศ";
-        if (!price.trim() || isNaN(Number(price)) || Number(price) <= 0)
-            newErrors.price = "ระบุราคาที่ถูกต้อง";
-        if (!province) newErrors.province = "เลือกจังหวัด";
-        if (!district) newErrors.district = "เลือกอำเภอ/เขต";
-        if (!phone.trim()) newErrors.phone = "ระบุเบอร์โทรศัพท์";
-        else if (!/^0\d{9}$/.test(phone.replace(/\D/g, "")))
-            newErrors.phone = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักขึ้นต้นด้วย 0";
-        if (images.length === 0) newErrors.images = "เพิ่มรูปอย่างน้อย 1 รูป";
+        const nextErrors: Record<string, string> = {};
 
-        setErrors(newErrors);
-        if (Object.keys(newErrors).length > 0) {
-            const firstKey = Object.keys(newErrors)[0];
+        if (!categoryKey) nextErrors.category = "กรุณาเลือกหมวดหมู่";
+        if (!title.trim()) nextErrors.title = "กรุณากรอกหัวข้อประกาศ";
+        if (!price.trim() || !PRICE_INPUT_PATTERN.test(price) || Number.isNaN(Number(price)) || Number(price) <= 0) {
+            nextErrors.price = "ระบุราคาที่ถูกต้อง";
+        }
+        if (!province) nextErrors.province = "เลือกจังหวัด";
+        if (!district) nextErrors.district = "เลือกอำเภอ/เขต";
+        if (!sellerPhone.trim()) nextErrors.phone = "กรุณาเพิ่มเบอร์โทรในโปรไฟล์ก่อนลงขายสินค้า";
+        else if (!/^0\d{9}$/.test(sellerPhone.replace(/\D/g, ""))) {
+            nextErrors.phone = "เบอร์โทรในโปรไฟล์ต้องเป็นตัวเลข 10 หลักขึ้นต้นด้วย 0";
+        }
+        if (images.length === 0) nextErrors.images = "เพิ่มรูปอย่างน้อย 1 รูป";
+
+        setErrors(nextErrors);
+
+        if (Object.keys(nextErrors).length > 0) {
+            const firstKey = Object.keys(nextErrors)[0];
             const ref = refs[firstKey as keyof typeof refs] as React.RefObject<HTMLDivElement | null>;
-            if (ref && ref.current) {
+            if (ref?.current) {
                 ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
-                ref.current.focus && ref.current.focus();
+                ref.current.focus?.();
             }
             return false;
         }
+
         return true;
     };
 
-    // Validates and submits the product form data as multipart/form-data, then redirects on success
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (submitting) return;
         if (!validate()) return;
+
         setSubmitting(true);
         setSubmitError("");
 
@@ -109,9 +117,9 @@ export default function CreateProductForm({
             formData.append("categoryKey", categoryKey);
             formData.append("province", province);
             formData.append("district", district);
-            formData.append("phone", phone);
-            images.forEach((img) => {
-                formData.append("images", img.file);
+            formData.append("phone", sellerPhone);
+            images.forEach((image) => {
+                formData.append("images", image.file);
             });
             formData.append("coverIndex", String(coverIndex));
 
@@ -124,19 +132,18 @@ export default function CreateProductForm({
         }
     };
 
-    // Syncs the selected category key to local state and notifies the parent
     const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const key = e.target.value;
         setCategoryKey(key);
-        onChangeCategory && onChangeCategory(key);
+        onChangeCategory?.(key);
     };
 
     return (
-        <form onSubmit={onSubmit} className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+        <form onSubmit={onSubmit} className="space-y-6 rounded-xl bg-white p-6 shadow-sm">
             <button
                 type="button"
                 onClick={onBackToPickCategory}
-                className="text-sm text-[#D9734E] hover:underline mb-2 transition-colors"
+                className="mb-2 text-sm text-[#D9734E] transition-colors hover:underline"
             >
                 ← เปลี่ยนหมวดหมู่
             </button>
@@ -145,9 +152,9 @@ export default function CreateProductForm({
                 <FieldLabel>หมวดหมู่ *</FieldLabel>
                 <Select aria-label="เลือกหมวดหมู่" value={categoryKey} onChange={handleCategoryChange}>
                     <option value="">-- เลือกหมวด --</option>
-                    {categories.map((c) => (
-                        <option key={c.key} value={c.key}>
-                            {c.name}
+                    {categories.map((category) => (
+                        <option key={category.key} value={category.key}>
+                            {category.name}
                         </option>
                     ))}
                 </Select>
@@ -162,7 +169,7 @@ export default function CreateProductForm({
                     maxLength={255}
                     placeholder="ชื่อสินค้า เช่น ไอโฟน X 64GB สภาพเหมือนใหม่"
                 />
-                <div className="text-xs text-[#A89F91] text-right mt-1">{title.length}/255</div>
+                <div className="mt-1 text-right text-xs text-[#A89F91]">{title.length}/255</div>
                 {errors.title && <ErrorText>{errors.title}</ErrorText>}
             </div>
 
@@ -171,12 +178,13 @@ export default function CreateProductForm({
                 <Input
                     type="number"
                     min="0"
-                    step="1"
+                    step="0.01"
+                    inputMode="decimal"
                     value={price}
                     onChange={(e) => {
-                        const val = e.target.value;
-                        if (val === "" || /^\d+(\.\d{0,2})?$/.test(val)) {
-                            setPrice(val);
+                        const value = e.target.value;
+                        if (value === "" || PRICE_INPUT_PATTERN.test(value)) {
+                            setPrice(value);
                         }
                     }}
                     placeholder="ระบุราคา (บาท)"
@@ -207,22 +215,30 @@ export default function CreateProductForm({
                     textareaClassName={getFormFieldClassName({ size: "md" })}
                     placeholder="ข้อมูลเพิ่มเติม เช่น สภาพสินค้า สี อายุการใช้งาน"
                 />
-                <div className="text-xs text-[#A89F91] text-right mt-1">{description.length}/2000</div>
+                <div className="mt-1 text-right text-xs text-[#A89F91]">{description.length}/2000</div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div ref={refs.province}>
                     <FieldLabel>จังหวัด *</FieldLabel>
-                    <Select aria-label="เลือกจังหวัด" value={province} onChange={(e) => { setProvince(e.target.value); setDistrict(""); }}>
+                    <Select
+                        aria-label="เลือกจังหวัด"
+                        value={province}
+                        onChange={(e) => {
+                            setProvince(e.target.value);
+                            setDistrict("");
+                        }}
+                    >
                         <option value="">-- เลือกจังหวัด --</option>
-                        {provinceOptions.map((p) => (
-                            <option key={p.value} value={p.value}>
-                                {p.label}
+                        {provinceOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
                             </option>
                         ))}
                     </Select>
                     {errors.province && <ErrorText>{errors.province}</ErrorText>}
                 </div>
+
                 <div ref={refs.district}>
                     <FieldLabel>อำเภอ/เขต *</FieldLabel>
                     <Select
@@ -232,9 +248,9 @@ export default function CreateProductForm({
                         disabled={!province}
                     >
                         <option value="">-- เลือกอำเภอ/เขต --</option>
-                        {districtOptions.map((d) => (
-                            <option key={d.value} value={d.value}>
-                                {d.label}
+                        {districtOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
                             </option>
                         ))}
                     </Select>
@@ -245,10 +261,11 @@ export default function CreateProductForm({
             <div ref={refs.phone}>
                 <FieldLabel>เบอร์โทรศัพท์ติดต่อ *</FieldLabel>
                 <Input
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="08XXXXXXXX"
+                    value={sellerPhone}
+                    readOnly
+                    className="cursor-not-allowed bg-[#F9F6F0] text-[#6E6258]"
                 />
+                <p className="mt-1 text-xs text-[#A89F91]">ใช้เบอร์โทรจากโปรไฟล์ผู้ขาย หากต้องการเปลี่ยนให้แก้ไขที่หน้าโปรไฟล์ก่อน</p>
                 {errors.phone && <ErrorText>{errors.phone}</ErrorText>}
             </div>
 
@@ -257,7 +274,7 @@ export default function CreateProductForm({
             <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-indigo-900 hover:bg-indigo-800 text-white font-semibold py-3 rounded-md transition disabled:opacity-50"
+                className="w-full rounded-md bg-indigo-900 py-3 font-semibold text-white transition hover:bg-indigo-800 disabled:opacity-50"
             >
                 {submitting ? "กำลังส่ง..." : "ต่อไป"}
             </button>

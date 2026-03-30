@@ -17,6 +17,9 @@ export const UserService = {
         const safeData = pickUpdateFields(params.updateData);
         if (Object.keys(safeData).length === 0) throw new AppError("No valid fields to update", 400);
         if (safeData.Phone_number && !validatePhoneNumber(safeData.Phone_number)) throw new AppError("Phone number must be 10 digits", 400);
+        if (safeData.Auto_Reply_Message !== undefined && !(await UserModel.hasAutoReplyColumn())) {
+            throw new AppError("Auto reply is not available yet because the database migration has not been applied.", 503);
+        }
 
         const existingUser = await UserModel.findByIDSafe(params.userID);
         if (!existingUser) throw new AppError("User not found", 404);

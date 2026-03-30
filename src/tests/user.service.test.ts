@@ -109,5 +109,21 @@ describe('UserService', () => {
             });
             expect(result).toBe(true);
         });
+
+        it('should update auto reply message successfully', async () => {
+            vi.mocked(UserModel.findByIDSafe).mockResolvedValue(sampleUser);
+            vi.mocked(UserModel.updateUser).mockResolvedValue(true);
+
+            const result = await UserService.updateProfile({
+                userID: 1,
+                updateData: { Auto_Reply_Message: 'ตอนนี้ไม่สะดวกตอบ เดี๋ยวกลับมาตอบนะครับ' },
+            });
+
+            expect(result).toBe(true);
+            expect(UserModel.updateUser).toHaveBeenCalledWith(
+                1,
+                expect.objectContaining({ Auto_Reply_Message: 'ตอนนี้ไม่สะดวกตอบ เดี๋ยวกลับมาตอบนะครับ' })
+            );
+        });
     });
 });

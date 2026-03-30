@@ -12,7 +12,7 @@ export default function HistoryLayout({ children }: { children: React.ReactNode 
 
         <div className="border-b border-gray-200 px-6 py-4">
           <h1 className="text-[18px] font-bold text-[#121E4D]">
-            Kaidee History
+            ประวัติการใช้งาน
           </h1>
         </div>
 

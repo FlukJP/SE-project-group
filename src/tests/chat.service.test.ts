@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ChatService } from '@/src/services/chat.service';
 import { ChatModel } from '@/src/models/chatModel';
 import { MessageModel } from '@/src/models/messageModel';
+import { UserModel } from '@/src/models/UserModel';
 import { AppError } from '@/src/errors/AppError';
 import type { Chat } from '@/src/types/Chat';
 
 vi.mock('@/src/models/chatModel');
 vi.mock('@/src/models/messageModel');
+vi.mock('@/src/models/UserModel');
 
 const mockChat: Chat = {
     Chat_ID: 1,
@@ -200,9 +202,10 @@ describe('ChatService', () => {
         it('should send a text message successfully', async () => {
             vi.mocked(ChatModel.findByID).mockResolvedValue(mockChat);
             vi.mocked(MessageModel.createMessageTransaction).mockResolvedValue(42);
+            vi.mocked(MessageModel.hasMessageFromSender).mockResolvedValue(true);
 
             const result = await ChatService.sendMessage(1, 10, 'Hello', 'text');
-            expect(result).toBe(42);
+            expect(result).toEqual({ messageId: 42 });
             expect(MessageModel.createMessageTransaction).toHaveBeenCalledWith({
                 Chat_ID: 1,
                 Sender_ID: 10,
@@ -214,9 +217,47 @@ describe('ChatService', () => {
         it('should send an image message successfully', async () => {
             vi.mocked(ChatModel.findByID).mockResolvedValue(mockChat);
             vi.mocked(MessageModel.createMessageTransaction).mockResolvedValue(43);
+            vi.mocked(MessageModel.hasMessageFromSender).mockResolvedValue(true);
 
             const result = await ChatService.sendMessage(1, 10, 'http://img.url/pic.jpg', 'image');
-            expect(result).toBe(43);
+            expect(result).toEqual({ messageId: 43 });
+        });
+
+        it('should send auto reply when receiver has not replied yet and has a preset message', async () => {
+            vi.mocked(ChatModel.findByID).mockResolvedValue(mockChat);
+            vi.mocked(MessageModel.createMessageTransaction)
+                .mockResolvedValueOnce(42)
+                .mockResolvedValueOnce(43);
+            vi.mocked(MessageModel.hasMessageFromSender).mockResolvedValue(false);
+            vi.mocked(UserModel.findByIDSafe).mockResolvedValue({
+                User_ID: 20,
+                Username: 'Seller',
+                Email: 'seller@example.com',
+                Role: 'customer',
+                Auto_Reply_Message: 'ตอนนี้อาจตอบช้า เดี๋ยวกลับมาตอบครับ',
+                Avatar_URL: '/uploads/seller.jpg',
+            });
+
+            const result = await ChatService.sendMessage(1, 10, 'Hello', 'text');
+
+            expect(result.messageId).toBe(42);
+            expect(result.autoReply).toEqual(
+                expect.objectContaining({
+                    Messages_ID: 43,
+                    Chat_ID: 1,
+                    Sender_ID: 20,
+                    Content: 'ตอนนี้อาจตอบช้า เดี๋ยวกลับมาตอบครับ',
+                    MessagesType: 'text',
+                    SenderName: 'Seller',
+                    SenderImage: '/uploads/seller.jpg',
+                })
+            );
+            expect(MessageModel.createMessageTransaction).toHaveBeenNthCalledWith(2, {
+                Chat_ID: 1,
+                Sender_ID: 20,
+                Content: 'ตอนนี้อาจตอบช้า เดี๋ยวกลับมาตอบครับ',
+                MessagesType: 'text',
+            });
         });
 
         it('should throw 403 when sender is not a participant', async () => {

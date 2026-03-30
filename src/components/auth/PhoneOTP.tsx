@@ -47,13 +47,14 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
     const handleSendOTP = async () => {
         if (loading) return;
         setLoading(true);
+
         try {
             await authApi.requestPhoneOTP(phone);
             setStep("verify");
             setOtp("");
             startCountdown();
         } catch (err: unknown) {
-            onError(getApiErrorMessage(err, "Failed to send phone OTP. Please try again."));
+            onError(getApiErrorMessage(err, "ส่ง OTP ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"));
         } finally {
             setLoading(false);
         }
@@ -62,11 +63,12 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
     const handleVerifyOTP = async () => {
         if (loading || otp.length !== 6) return;
         setLoading(true);
+
         try {
             const result = await authApi.verifyPhoneOTP(phone, otp);
             await onVerified({ access_token: result.access_token });
         } catch (err: unknown) {
-            onError(getApiErrorMessage(err, "Invalid OTP. Please try again."));
+            onError(getApiErrorMessage(err, "รหัส OTP ไม่ถูกต้อง กรุณาลองใหม่"));
         } finally {
             setLoading(false);
         }
@@ -77,16 +79,14 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
             {step === "send" && (
                 <div className="space-y-3">
                     <p className="text-sm text-[#A89F91]">
-                        We will send a verification code by email to confirm this phone number:
-                        {" "}
-                        <span className="font-semibold">{phone}</span>
+                        ระบบจะส่งรหัส OTP สำหรับยืนยันเบอร์โทร <span className="font-semibold">{phone}</span>
                     </p>
                     <button
                         onClick={handleSendOTP}
                         disabled={loading}
                         className="w-full rounded-xl bg-[#D9734E] py-3 font-semibold text-white transition hover:bg-[#C25B38] disabled:opacity-50"
                     >
-                        {loading ? "Sending..." : "Send OTP by Email"}
+                        {loading ? "กำลังส่ง..." : "ส่งรหัส OTP"}
                     </button>
                 </div>
             )}
@@ -94,16 +94,14 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
             {step === "verify" && (
                 <div className="space-y-3">
                     <p className="text-sm text-[#A89F91]">
-                        Enter the 6-digit OTP sent to your email for phone number
-                        {" "}
-                        <span className="font-semibold">{phone}</span>
+                        กรอกรหัส OTP 6 หลักสำหรับยืนยันเบอร์โทร <span className="font-semibold">{phone}</span>
                     </p>
                     <input
                         type="text"
                         inputMode="numeric"
                         value={otp}
                         onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        placeholder="Enter 6-digit OTP"
+                        placeholder="กรอกรหัส OTP 6 หลัก"
                         maxLength={6}
                         className="w-full rounded-xl border border-[#E6D5C3] px-4 py-3 text-center font-mono text-sm tracking-[0.5em] focus:border-[#D9734E] focus:outline-none focus:ring-2 focus:ring-[#D9734E]/30"
                     />
@@ -112,7 +110,7 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
                         disabled={loading || otp.length !== 6}
                         className="w-full rounded-xl bg-[#D9734E] py-3 font-semibold text-white transition hover:bg-[#C25B38] disabled:opacity-50"
                     >
-                        {loading ? "Verifying..." : "Verify OTP"}
+                        {loading ? "กำลังยืนยัน..." : "ยืนยัน OTP"}
                     </button>
 
                     <button
@@ -120,7 +118,7 @@ export default function PhoneOTP({ phone, onVerified, onError }: PhoneOTPProps) 
                         disabled={loading || countdown > 0}
                         className="w-full py-2 text-sm text-[#D9734E] hover:underline disabled:text-[#A89F91] disabled:no-underline"
                     >
-                        {countdown > 0 ? `Resend available in ${countdown}s` : "Send OTP Again"}
+                        {countdown > 0 ? `ส่งใหม่ได้ใน ${countdown} วินาที` : "ส่งรหัส OTP อีกครั้ง"}
                     </button>
                 </div>
             )}

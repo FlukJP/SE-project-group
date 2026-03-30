@@ -84,8 +84,9 @@ function SearchPageContent() {
     if (debouncedQuery.trim()) p.q = debouncedQuery.trim();
     if (province) p.province = province;
     if (district) p.district = district;
+    if (selectedCats.length === 1) p.category = selectedCats[0];
     return p;
-  }, [debouncedQuery, province, district]);
+  }, [debouncedQuery, province, district, selectedCats]);
 
   // SWR: products — auto-refetches when productParams key changes
   const { data: results = [], isLoading: loading, error: fetchError } = useProducts(productParams);

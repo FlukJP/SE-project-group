@@ -23,12 +23,18 @@ describe('pickUpdateFields', () => {
         expect(result).toEqual({ Avatar_URL: 'https://example.com/avatar.png' });
     });
 
+    it('should include Auto_Reply_Message when provided', () => {
+        const result = pickUpdateFields({ Auto_Reply_Message: 'สวัสดีครับ เดี๋ยวตอบกลับอีกครั้ง' });
+        expect(result).toEqual({ Auto_Reply_Message: 'สวัสดีครับ เดี๋ยวตอบกลับอีกครั้ง' });
+    });
+
     it('should include all allowed fields when all are provided', () => {
         const data: Partial<User> = {
             Username: 'Bob',
             Phone_number: '0899999999',
             Address: '456 Elm St',
             Avatar_URL: 'https://example.com/pic.jpg',
+            Auto_Reply_Message: 'ขอบคุณที่ทักมาครับ',
         };
         const result = pickUpdateFields(data);
         expect(result).toEqual(data);

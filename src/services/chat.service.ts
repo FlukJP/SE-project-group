@@ -1,8 +1,14 @@
 import { ChatModel } from "@/src/models/chatModel";
 import { Chat } from "@/src/types/Chat";
-import { Message } from "@/src/types/Messages";
+import { Message, MessageWithSender } from "@/src/types/Messages";
 import { MessageModel } from "@/src/models/messageModel";
 import { AppError } from "@/src/errors/AppError";
+import { UserModel } from "@/src/models/UserModel";
+
+type SendMessageResult = {
+    messageId: number;
+    autoReply?: MessageWithSender;
+};
 
 export const ChatService = {
     /** Find a chat room by ID and verify that the requesting user is a participant */
@@ -81,7 +87,7 @@ export const ChatService = {
     },
 
     /** Validate the sender's membership in the chat room and persist a new message */
-    sendMessage: async (chatID: number, senderID: number, content: string, type: 'text' | 'image') => {
+    sendMessage: async (chatID: number, senderID: number, content: string, type: 'text' | 'image'): Promise<SendMessageResult> => {
         if (!chatID || !senderID || !content) throw new AppError("Chat ID, Sender ID and content are required", 400);
 
         const chatRoom = await ChatModel.findByID(chatID);
@@ -93,8 +99,44 @@ export const ChatService = {
             Content: content,
             MessagesType: type,
         };
-        const createdMessage = await MessageModel.createMessageTransaction(newMessage);
-        return createdMessage;
+        const messageId = await MessageModel.createMessageTransaction(newMessage);
+
+        const receiverID = chatRoom.Participant_1 === senderID
+            ? chatRoom.Participant_2
+            : chatRoom.Participant_1;
+
+        const receiverHasMessaged = await MessageModel.hasMessageFromSender(chatID, receiverID);
+        if (receiverHasMessaged) {
+            return { messageId };
+        }
+
+        const receiver = await UserModel.findByIDSafe(receiverID);
+        const autoReplyText = receiver?.Auto_Reply_Message?.trim();
+        if (!receiver || !autoReplyText) {
+            return { messageId };
+        }
+
+        const autoReplyId = await MessageModel.createMessageTransaction({
+            Chat_ID: chatID,
+            Sender_ID: receiverID,
+            Content: autoReplyText,
+            MessagesType: 'text',
+        });
+
+        return {
+            messageId,
+            autoReply: {
+                Messages_ID: autoReplyId,
+                Chat_ID: chatID,
+                Sender_ID: receiverID,
+                Content: autoReplyText,
+                MessagesType: 'text',
+                Is_Read: 0,
+                Timestamp: new Date().toISOString(),
+                SenderName: receiver.Username,
+                SenderImage: receiver.Avatar_URL,
+            },
+        };
     },
 
     /** Mark all unread messages in a chat as read for the requesting user */

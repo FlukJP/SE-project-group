@@ -113,6 +113,7 @@ export default function ProductDetailPage() {
     : 0;
 
   const isSelfProduct = isLoggedIn && user && String(user.User_ID) === product.seller.id;
+  const isVerified = !!user?.Is_Email_Verified && !!user?.Is_Phone_Verified;
 
   const handleReport = async (reason: string) => {
     setReportError("");
@@ -246,12 +247,19 @@ export default function ProductDetailPage() {
                   <span className="flex-1 text-center bg-[#DCD0C0] text-[#A89F91] px-4 py-3 rounded-lg font-semibold cursor-not-allowed">
                     สินค้าของคุณ
                   </span>
-                ) : isLoggedIn ? (
+                ) : isLoggedIn && isVerified ? (
                   <Link
                     href={`/chat?seller=${product.seller.id}&product=${product.id}`}
                     className="flex-1 text-center bg-[#D9734E] text-white px-4 py-3 rounded-lg font-semibold hover:bg-[#C25B38]"
                   >
                     แชท
+                  </Link>
+                ) : isLoggedIn ? (
+                  <Link
+                    href="/profile?tab=profile"
+                    className="flex-1 text-center bg-[#D9734E] text-white px-4 py-3 rounded-lg font-semibold hover:bg-[#C25B38]"
+                  >
+                    ยืนยันตัวตนเพื่อแชท
                   </Link>
                 ) : (
                   <Link

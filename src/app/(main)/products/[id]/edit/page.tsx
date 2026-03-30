@@ -12,6 +12,8 @@ import { PROVINCES } from "@/src/data/provinces";
 import { FormSuccessNotice, TextareaField } from "@/src/components/ui";
 import { getFormFieldClassName } from "@/src/components/ui/formFieldStyles";
 
+const PRICE_INPUT_PATTERN = /^\d+(\.\d{0,2})?$/;
+
 function parseDescription(description: string) {
   const locMatch = description.match(/📍\s*พื้นที่:\s*(.+?)\s*\((.+?)\)/);
   const phoneMatch = description.match(/📞\s*ติดต่อ:\s*(\S+)/);
@@ -19,6 +21,7 @@ function parseDescription(description: string) {
     .replace(/\n\n📍 พื้นที่:[\s\S]*$/, "")
     .replace(/📞\s*ติดต่อ:\s*\S+/g, "")
     .trim();
+
   return {
     cleanDescription: clean,
     province: locMatch?.[1]?.trim() || "",
@@ -32,12 +35,12 @@ export default function EditProductPage() {
   const router = useRouter();
   const { user, isLoggedIn, isLoading: authLoading } = useAuth();
   const { showError } = useError();
+  const sellerPhone = user?.Phone_number?.trim() || "";
 
   const [product, setProduct] = useState<ProductWithSeller | null>(null);
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Form fields
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -47,7 +50,6 @@ export default function EditProductPage() {
   const [categoryKey, setCategoryKey] = useState("");
   const [condition, setCondition] = useState("มือสอง");
 
-  // Image state
   const [existingImagePaths, setExistingImagePaths] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<{ file: File; preview: string }[]>([]);
   const newFilesRef = useRef(newFiles);
@@ -59,117 +61,121 @@ export default function EditProductPage() {
 
   useEffect(() => {
     return () => {
-      newFilesRef.current.forEach((f) => URL.revokeObjectURL(f.preview));
+      newFilesRef.current.forEach((file) => URL.revokeObjectURL(file.preview));
     };
   }, []);
 
   useEffect(() => {
     if (!id) return;
+
     Promise.all([productApi.getById(id), categoryApi.list()])
-      .then(([prodRes, catRes]) => {
-        const p = prodRes.data;
-        setProduct(p);
-        setCategories(catRes.data);
+      .then(([productRes, categoryRes]) => {
+        const currentProduct = productRes.data;
+        setProduct(currentProduct);
+        setCategories(categoryRes.data);
 
-        const parsed = parseDescription(p.Description || "");
+        const parsed = parseDescription(currentProduct.Description || "");
+        const modernPhoneMatch = currentProduct.Description?.match(/(?:^|\n\n)PHONE:\s*(.+?)(?:\n|$)/);
 
-        setTitle(p.Title);
-        setPrice(String(p.Price));
-        setDescription(parsed.cleanDescription);
+        setTitle(currentProduct.Title);
+        setPrice(String(currentProduct.Price));
+        setDescription(parsed.cleanDescription.replace(/\n\nPHONE:\s*[\s\S]*$/, "").trim());
         setProvince(parsed.province);
         setDistrict(parsed.district);
-        setPhone(parsed.phone);
-        setCategoryKey(p.Category_Key || "");
-        setCondition(p.Condition || "มือสอง");
+        setPhone(sellerPhone || parsed.phone || modernPhoneMatch?.[1]?.trim() || "");
+        setCategoryKey(currentProduct.Category_Key || "");
+        setCondition(currentProduct.Condition || "มือสอง");
 
-        // Parse image paths
         try {
-          const imgs = JSON.parse(p.Image_URL);
-          setExistingImagePaths(Array.isArray(imgs) ? imgs : []);
+          const images = JSON.parse(currentProduct.Image_URL);
+          setExistingImagePaths(Array.isArray(images) ? images : []);
         } catch {
-          setExistingImagePaths(p.Image_URL ? [p.Image_URL] : []);
+          setExistingImagePaths(currentProduct.Image_URL ? [currentProduct.Image_URL] : []);
         }
       })
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, sellerPhone]);
 
-  const provinceOptions = useMemo(
-    () => PROVINCES.map((p) => ({ value: p.name, label: p.name })),
-    []
-  );
+  const provinceOptions = useMemo(() => PROVINCES.map((provinceItem) => ({ value: provinceItem.name, label: provinceItem.name })), []);
   const districtOptions = useMemo(() => {
-    const p = PROVINCES.find((x) => x.name === province);
-    return p ? p.districts.map((d) => ({ value: d, label: d })) : [];
+    const matchedProvince = PROVINCES.find((item) => item.name === province);
+    return matchedProvince ? matchedProvince.districts.map((districtItem) => ({ value: districtItem, label: districtItem })) : [];
   }, [province]);
 
   const removeExistingImage = (path: string) => {
-    setExistingImagePaths((prev) => prev.filter((p) => p !== path));
+    setExistingImagePaths((prev) => prev.filter((item) => item !== path));
   };
 
   const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const valid = files.filter((f) => {
-      if (f.size > 5 * 1024 * 1024) {
-        alert(`ไฟล์ "${f.name}" มีขนาดเกิน 5MB`);
+    const validFiles = files.filter((file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`ไฟล์ "${file.name}" มีขนาดเกิน 5MB`);
         return false;
       }
       return true;
     });
-    const toAdd = valid.map((file) => ({ file, preview: URL.createObjectURL(file) }));
-    setNewFiles((prev) => [...prev, ...toAdd]);
+
+    const filesToAdd = validFiles.map((file) => ({ file, preview: URL.createObjectURL(file) }));
+    setNewFiles((prev) => [...prev, ...filesToAdd]);
     e.target.value = "";
   };
 
   const removeNewFile = (preview: string) => {
     setNewFiles((prev) => {
       URL.revokeObjectURL(preview);
-      return prev.filter((f) => f.preview !== preview);
+      return prev.filter((item) => item.preview !== preview);
     });
   };
 
   const validate = () => {
-    const errs: Record<string, string> = {};
-    if (!title.trim()) errs.title = "กรุณากรอกชื่อสินค้า";
-    if (!price || isNaN(Number(price)) || Number(price) <= 0) errs.price = "ระบุราคาที่ถูกต้อง";
-    if (!province) errs.province = "เลือกจังหวัด";
-    if (!district) errs.district = "เลือกอำเภอ/เขต";
-    if (!phone.trim()) errs.phone = "ระบุเบอร์โทรศัพท์";
-    else if (!/^0\d{9}$/.test(phone.replace(/\D/g, "")))
-      errs.phone = "เบอร์โทรต้องเป็น 10 หลัก ขึ้นต้นด้วย 0";
-    if (existingImagePaths.length === 0 && newFiles.length === 0)
-      errs.images = "ต้องมีรูปภาพอย่างน้อย 1 รูป";
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+    const nextErrors: Record<string, string> = {};
+
+    if (!categoryKey) nextErrors.categoryKey = "กรุณาเลือกหมวดหมู่";
+    if (!title.trim()) nextErrors.title = "กรุณากรอกชื่อสินค้า";
+    if (!price || !PRICE_INPUT_PATTERN.test(price) || Number.isNaN(Number(price)) || Number(price) <= 0) nextErrors.price = "ระบุราคาที่ถูกต้อง";
+    if (!province) nextErrors.province = "เลือกจังหวัด";
+    if (!district) nextErrors.district = "เลือกอำเภอ/เขต";
+    if (!sellerPhone) {
+      nextErrors.phone = "กรุณาเพิ่มเบอร์โทรในโปรไฟล์ก่อนแก้ไขสินค้า";
+    } else if (!/^0\d{9}$/.test(sellerPhone.replace(/\D/g, ""))) {
+      nextErrors.phone = "เบอร์โทรในโปรไฟล์ต้องเป็น 10 หลัก ขึ้นต้นด้วย 0";
+    }
+    if (existingImagePaths.length === 0 && newFiles.length === 0) {
+      nextErrors.images = "ต้องมีรูปภาพอย่างน้อย 1 รูป";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting || !validate()) return;
+
     setSubmitting(true);
 
     try {
-      const fd = new FormData();
-      fd.append("title", title.trim());
-      fd.append("price", price);
-      fd.append("description", description.trim());
-      fd.append("categoryKey", categoryKey);
-      fd.append("province", province);
-      fd.append("district", district);
-      fd.append("phone", phone.trim());
-      fd.append("condition", condition);
+      const formData = new FormData();
+      formData.append("title", title.trim());
+      formData.append("price", price);
+      formData.append("description", description.trim());
+      formData.append("categoryKey", categoryKey);
+      formData.append("province", province);
+      formData.append("district", district);
+      formData.append("phone", sellerPhone);
+      formData.append("condition", condition);
+      formData.append("Image_URL", JSON.stringify(existingImagePaths));
 
       if (newFiles.length > 0) {
-        newFiles.forEach((f) => fd.append("images", f.file));
-      } else {
-        // No new files — send remaining existing image paths as Image_URL
-        fd.append("Image_URL", JSON.stringify(existingImagePaths));
+        newFiles.forEach((file) => formData.append("images", file.file));
       }
 
-      await productApi.update(id, fd);
+      await productApi.update(id, formData);
       setSubmitSuccess(true);
       setTimeout(() => router.push("/my-products"), 1500);
-    } catch (err) {
+    } catch (err: unknown) {
       showError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
       setSubmitting(false);
@@ -180,7 +186,7 @@ export default function EditProductPage() {
     return (
       <>
         <Navbar />
-        <div className="text-center py-16 text-[#A89F91]">กำลังโหลด...</div>
+        <div className="py-16 text-center text-[#A89F91]">กำลังโหลด...</div>
       </>
     );
   }
@@ -189,7 +195,7 @@ export default function EditProductPage() {
     return (
       <>
         <Navbar />
-        <div className="text-center py-16">
+        <div className="py-16 text-center">
           <p className="mb-4">กรุณาเข้าสู่ระบบก่อน</p>
           <Link href="/login" className="text-[#D9734E] hover:underline">
             เข้าสู่ระบบ
@@ -203,7 +209,7 @@ export default function EditProductPage() {
     return (
       <>
         <Navbar />
-        <div className="text-center py-16">
+        <div className="py-16 text-center">
           <p className="mb-4 text-lg">ไม่พบสินค้า</p>
           <Link href="/" className="text-[#D9734E] hover:underline">
             กลับหน้าหลัก
@@ -217,7 +223,7 @@ export default function EditProductPage() {
     return (
       <>
         <Navbar />
-        <div className="text-center py-16">
+        <div className="py-16 text-center">
           <p className="mb-4 text-lg">คุณไม่มีสิทธิ์แก้ไขสินค้านี้</p>
           <Link href="/" className="text-[#D9734E] hover:underline">
             กลับหน้าหลัก
@@ -233,28 +239,25 @@ export default function EditProductPage() {
     <>
       <Navbar />
       <main className="min-h-screen bg-[#F9F6F0]">
-        <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="container mx-auto max-w-2xl px-4 py-8">
           <div className="mb-4">
             <Link href="/my-products" className="text-sm text-[#D9734E] hover:underline">
               &larr; กลับหน้าสินค้าของฉัน
             </Link>
           </div>
 
-          <h1 className="text-2xl font-extrabold text-[#D9734E] mb-6">แก้ไขสินค้า</h1>
+          <h1 className="mb-6 text-2xl font-extrabold text-[#D9734E]">แก้ไขสินค้า</h1>
 
           {submitSuccess && (
             <FormSuccessNotice
               message="บันทึกสำเร็จ กำลังกลับไปหน้าสินค้าของฉัน..."
-              className="rounded-xl px-4 py-3 mb-6 font-semibold"
+              className="mb-6 rounded-xl px-4 py-3 font-semibold"
             />
           )}
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-[#E6D5C3] p-6 space-y-5">
-            {/* Category */}
+          <form onSubmit={handleSubmit} className="space-y-5 rounded-xl border border-[#E6D5C3] bg-white p-6">
             <div>
-              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
-                หมวดหมู่ *
-              </label>
+              <label className="mb-1 block text-sm font-semibold text-[#4A3B32]">หมวดหมู่ *</label>
               <select
                 title="เลือกหมวดหมู่"
                 value={categoryKey}
@@ -262,19 +265,17 @@ export default function EditProductPage() {
                 className={getFormFieldClassName({ size: "lg" })}
               >
                 <option value="">-- เลือกหมวด --</option>
-                {categories.map((c) => (
-                  <option key={c.category_key} value={c.category_key}>
-                    {c.emoji} {c.name}
+                {categories.map((category) => (
+                  <option key={category.category_key} value={category.category_key}>
+                    {category.emoji} {category.name}
                   </option>
                 ))}
               </select>
+              {errors.categoryKey && <p className="mt-1 text-xs text-red-600">{errors.categoryKey}</p>}
             </div>
 
-            {/* Title */}
             <div>
-              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
-                ชื่อสินค้า *
-              </label>
+              <label className="mb-1 block text-sm font-semibold text-[#4A3B32]">ชื่อสินค้า *</label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -282,31 +283,32 @@ export default function EditProductPage() {
                 placeholder="ชื่อสินค้า"
                 className={getFormFieldClassName({ size: "lg" })}
               />
-              <div className="text-xs text-[#A89F91] text-right mt-0.5">{title.length}/255</div>
-              {errors.title && <p className="text-red-600 text-xs mt-1">{errors.title}</p>}
+              <div className="mt-0.5 text-right text-xs text-[#A89F91]">{title.length}/255</div>
+              {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title}</p>}
             </div>
 
-            {/* Price */}
             <div>
-              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
-                ราคา (฿) *
-              </label>
+              <label className="mb-1 block text-sm font-semibold text-[#4A3B32]">ราคา (฿) *</label>
               <input
                 type="number"
                 min="0"
+                step="0.01"
+                inputMode="decimal"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "" || PRICE_INPUT_PATTERN.test(value)) {
+                    setPrice(value);
+                  }
+                }}
                 placeholder="ราคา"
                 className={getFormFieldClassName({ size: "lg" })}
               />
-              {errors.price && <p className="text-red-600 text-xs mt-1">{errors.price}</p>}
+              {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price}</p>}
             </div>
 
-            {/* Condition */}
             <div>
-              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
-                สภาพสินค้า
-              </label>
+              <label className="mb-1 block text-sm font-semibold text-[#4A3B32]">สภาพสินค้า</label>
               <select
                 title="เลือกสภาพสินค้า"
                 value={condition}
@@ -319,11 +321,8 @@ export default function EditProductPage() {
               </select>
             </div>
 
-            {/* Description */}
             <div>
-              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
-                รายละเอียดสินค้า
-              </label>
+              <label className="mb-1 block text-sm font-semibold text-[#4A3B32]">รายละเอียดสินค้า</label>
               <TextareaField
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -332,15 +331,12 @@ export default function EditProductPage() {
                 placeholder="รายละเอียดเพิ่มเติม"
                 textareaClassName={getFormFieldClassName({ size: "lg" })}
               />
-              <div className="text-xs text-[#A89F91] text-right mt-0.5">
-                {description.length}/2000
-              </div>
+              <div className="mt-0.5 text-right text-xs text-[#A89F91]">{description.length}/2000</div>
             </div>
 
-            {/* Province / District */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="province-select" className="block text-sm font-semibold text-[#4A3B32] mb-1">
+                <label htmlFor="province-select" className="mb-1 block text-sm font-semibold text-[#4A3B32]">
                   จังหวัด *
                 </label>
                 <select
@@ -354,20 +350,17 @@ export default function EditProductPage() {
                   className={getFormFieldClassName({ size: "lg" })}
                 >
                   <option value="">-- เลือกจังหวัด --</option>
-                  {provinceOptions.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
+                  {provinceOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
-                {errors.province && (
-                  <p className="text-red-600 text-xs mt-1">{errors.province}</p>
-                )}
+                {errors.province && <p className="mt-1 text-xs text-red-600">{errors.province}</p>}
               </div>
+
               <div>
-                <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
-                  อำเภอ/เขต *
-                </label>
+                <label className="mb-1 block text-sm font-semibold text-[#4A3B32]">อำเภอ/เขต *</label>
                 <select
                   title="เลือกอำเภอ/เขต"
                   value={district}
@@ -376,117 +369,96 @@ export default function EditProductPage() {
                   className={getFormFieldClassName({ size: "lg", disabled: !province })}
                 >
                   <option value="">-- เลือกอำเภอ/เขต --</option>
-                  {districtOptions.map((d) => (
-                    <option key={d.value} value={d.value}>
-                      {d.label}
+                  {districtOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
-                {errors.district && (
-                  <p className="text-red-600 text-xs mt-1">{errors.district}</p>
-                )}
+                {errors.district && <p className="mt-1 text-xs text-red-600">{errors.district}</p>}
               </div>
             </div>
 
-            {/* Phone */}
             <div>
-              <label className="block text-sm font-semibold text-[#4A3B32] mb-1">
-                เบอร์โทรศัพท์ *
-              </label>
+              <label className="mb-1 block text-sm font-semibold text-[#4A3B32]">เบอร์โทรศัพท์ *</label>
               <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                value={sellerPhone}
+                readOnly
                 placeholder="08XXXXXXXX"
-                className={getFormFieldClassName({ size: "lg" })}
+                className={getFormFieldClassName({ size: "lg", readOnly: true })}
               />
-              {errors.phone && <p className="text-red-600 text-xs mt-1">{errors.phone}</p>}
+              <p className="mt-1 text-xs text-[#A89F91]">ใช้เบอร์โทรจากโปรไฟล์ผู้ขาย หากต้องการเปลี่ยนให้แก้ไขที่หน้าโปรไฟล์ก่อน</p>
+              {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
             </div>
 
-            {/* Images */}
             <div>
-              <label className="block text-sm font-semibold text-[#4A3B32] mb-2">
-                รูปภาพ ({totalImages} รูป)
-              </label>
+              <label className="mb-2 block text-sm font-semibold text-[#4A3B32]">รูปภาพ ({totalImages} รูป)</label>
 
-              <div className="flex flex-wrap gap-2 mb-2">
-                {/* Existing images */}
+              <div className="mb-2 flex flex-wrap gap-2">
                 {existingImagePaths.map((path) => {
                   const src = path.startsWith("http") ? path : `${API_BASE}${path}`;
+
                   return (
-                    <div
-                      key={path}
-                      className="relative w-24 h-24 rounded-lg overflow-hidden border border-[#E6D5C3]"
-                    >
-                      <img src={src} alt="" className="w-full h-full object-cover" />
+                    <div key={path} className="relative h-24 w-24 overflow-hidden rounded-lg border border-[#E6D5C3]">
+                      <img src={src} alt="" className="h-full w-full object-cover" />
                       <button
                         type="button"
                         onClick={() => removeExistingImage(path)}
-                        className="absolute top-1 right-1 bg-white/90 rounded-full w-5 h-5 flex items-center justify-center text-red-600 text-xs font-bold hover:bg-white"
+                        className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-red-600 hover:bg-white"
                       >
                         ×
                       </button>
-                      <span className="absolute bottom-1 left-1 bg-[#4A3B32]/70 text-white text-[9px] px-1 rounded">
+                      <span className="absolute bottom-1 left-1 rounded bg-[#4A3B32]/70 px-1 text-[9px] text-white">
                         เดิม
                       </span>
                     </div>
                   );
                 })}
 
-                {/* New files */}
-                {newFiles.map((f) => (
-                  <div
-                    key={f.preview}
-                    className="relative w-24 h-24 rounded-lg overflow-hidden border border-[#D9734E]"
-                  >
-                    <img src={f.preview} alt="" className="w-full h-full object-cover" />
+                {newFiles.map((file) => (
+                  <div key={file.preview} className="relative h-24 w-24 overflow-hidden rounded-lg border border-[#D9734E]">
+                    <img src={file.preview} alt="" className="h-full w-full object-cover" />
                     <button
                       type="button"
-                      onClick={() => removeNewFile(f.preview)}
-                      className="absolute top-1 right-1 bg-white/90 rounded-full w-5 h-5 flex items-center justify-center text-red-600 text-xs font-bold hover:bg-white"
+                      onClick={() => removeNewFile(file.preview)}
+                      className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-red-600 hover:bg-white"
                     >
                       ×
                     </button>
-                    <span className="absolute bottom-1 left-1 bg-[#D9734E] text-white text-[9px] px-1 rounded">
+                    <span className="absolute bottom-1 left-1 rounded bg-[#D9734E] px-1 text-[9px] text-white">
                       ใหม่
                     </span>
                   </div>
                 ))}
 
-                {/* Add button */}
                 {totalImages < 5 && (
-                  <label className="w-24 h-24 flex flex-col items-center justify-center rounded-lg border border-dashed border-[#DCD0C0] text-[#A89F91] hover:bg-[#F9F6F0] cursor-pointer text-xs gap-1">
+                  <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[#DCD0C0] text-xs text-[#A89F91] hover:bg-[#F9F6F0]">
                     <span className="text-2xl leading-none">+</span>
                     <span>เพิ่มรูป</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                      onChange={handleFileAdd}
-                    />
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={handleFileAdd} />
                   </label>
                 )}
               </div>
 
               {newFiles.length > 0 && (
-                <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                  หมายเหตุ: การอัปโหลดรูปใหม่จะแทนที่รูปเดิมทั้งหมด
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-600">
+                  หมายเหตุ: รูปใหม่จะถูกเพิ่มร่วมกับรูปเดิมที่ยังไม่ได้ลบออก
                 </p>
               )}
-              {errors.images && <p className="text-red-600 text-xs mt-1">{errors.images}</p>}
+              {errors.images && <p className="mt-1 text-xs text-red-600">{errors.images}</p>}
             </div>
 
             <div className="flex gap-3 pt-2">
               <button
                 type="submit"
                 disabled={submitting || submitSuccess}
-                className="flex-1 bg-[#D9734E] text-white py-3 rounded-xl font-semibold hover:bg-[#C25B38] transition disabled:opacity-50"
+                className="flex-1 rounded-xl bg-[#D9734E] py-3 font-semibold text-white transition hover:bg-[#C25B38] disabled:opacity-50"
               >
                 {submitting ? "กำลังบันทึก..." : "บันทึก"}
               </button>
               <Link
                 href="/my-products"
-                className="px-6 py-3 rounded-xl border border-[#DCD0C0] text-[#4A3B32] font-semibold hover:bg-[#F9F6F0] transition text-center"
+                className="rounded-xl border border-[#DCD0C0] px-6 py-3 text-center font-semibold text-[#4A3B32] transition hover:bg-[#F9F6F0]"
               >
                 ยกเลิก
               </Link>

@@ -4,7 +4,12 @@ import { User } from '@/src/types/User';
 // Mock the db module before importing UserModel
 vi.mock('@/src/lib/mysql', () => ({
     default: {
-        query: vi.fn().mockResolvedValue([{ affectedRows: 1 }]),
+        query: vi.fn(async (sql: string) => {
+            if (sql.includes("SHOW COLUMNS FROM User LIKE 'Auto_Reply_Message'")) {
+                return [[{ Field: 'Auto_Reply_Message' }], undefined];
+            }
+            return [{ affectedRows: 1 }, undefined];
+        }),
     },
 }));
 
@@ -18,7 +23,7 @@ describe('UserModel.updateUser - SQL injection protection', () => {
         });
 
         expect(db.query).toHaveBeenCalled();
-        const [sql] = vi.mocked(db.query).mock.calls[0];
+        const [sql] = vi.mocked(db.query).mock.calls.at(-1)!;
         expect(sql).toContain('`Username`');
         expect(sql).not.toContain('DROP');
     });
@@ -37,12 +42,14 @@ describe('UserModel.updateUser - SQL injection protection', () => {
             Username: 'test',
             Is_Banned: true,
             Avatar_URL: '/uploads/test.jpg',
+            Auto_Reply_Message: 'ตอบกลับภายหลัง',
         });
 
         const [sql, params] = vi.mocked(db.query).mock.calls.at(-1)!;
         expect(sql).toContain('`Username`');
         expect(sql).toContain('`Is_Banned`');
         expect(sql).toContain('`Avatar_URL`');
-        expect(params).toEqual(['test', true, '/uploads/test.jpg', 1]);
+        expect(sql).toContain('`Auto_Reply_Message`');
+        expect(params).toEqual(['test', true, '/uploads/test.jpg', 'ตอบกลับภายหลัง', 1]);
     });
 });

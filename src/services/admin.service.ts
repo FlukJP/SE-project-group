@@ -10,7 +10,7 @@ export const AdminService = {
     getAllUsers: async (page: number = 1, limit: number = 20) => {
         const offset = (page - 1) * limit;
         const users = await UserModel.findAll(offset, limit);
-        const [[{ total }]] = await db.query<RowDataPacket[]>('SELECT COUNT(*) AS total FROM `User`');
+        const [[{ total }]] = await db.query<RowDataPacket[]>('SELECT COUNT(*) AS total FROM `User` WHERE Is_Banned = 0');
         return { data: users, total: Number(total) };
     },
 

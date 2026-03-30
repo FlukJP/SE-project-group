@@ -34,7 +34,16 @@ export const validateImageMagicBytes = async (req: Request, _res: Response, next
     if (files.length === 0) return next();
 
     try {
-        const { fromBuffer } = await import('file-type');
+        const fileTypeModule = await import('file-type');
+        const fromBuffer =
+            (fileTypeModule as { fromBuffer?: (buffer: Buffer) => Promise<{ mime: string } | undefined> }).fromBuffer
+            ?? (fileTypeModule as { fileTypeFromBuffer?: (buffer: Buffer) => Promise<{ mime: string } | undefined> }).fileTypeFromBuffer
+            ?? (fileTypeModule as { default?: { fromBuffer?: (buffer: Buffer) => Promise<{ mime: string } | undefined>; fileTypeFromBuffer?: (buffer: Buffer) => Promise<{ mime: string } | undefined> } }).default?.fromBuffer
+            ?? (fileTypeModule as { default?: { fileTypeFromBuffer?: (buffer: Buffer) => Promise<{ mime: string } | undefined> } }).default?.fileTypeFromBuffer;
+
+        if (!fromBuffer) {
+            throw new AppError('Image validation library is unavailable. Please try again later.', 500);
+        }
 
         for (const file of files) {
             const meta = await fromBuffer(file.buffer);

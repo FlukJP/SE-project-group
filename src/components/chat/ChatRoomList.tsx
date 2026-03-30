@@ -19,19 +19,19 @@ export default function ChatRoomList({ rooms, activeTab }: Props) {
 
     const filteredRooms = rooms.filter((room) => {
         if (activeTab === "all") return true;
-        if (activeTab === "buyer") {
-            return user?.User_ID === room.Participant_2;
-        }
-        if (activeTab === "seller") {
-            return user?.User_ID === room.Participant_1;
-        }
+        if (activeTab === "buyer") return user?.User_ID === room.Participant_2;
+        if (activeTab === "seller") return user?.User_ID === room.Participant_1;
         return true;
     });
 
     if (filteredRooms.length === 0) {
         return (
-            <div className="flex-1 flex items-center justify-center text-sm text-[#A89F91] py-8">
-                ไม่มีแชท
+            <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-[#DCD0C0] bg-white/70 px-4 py-8 text-center">
+                <div className="mb-3 text-3xl">💬</div>
+                <div className="text-sm font-medium text-[#4A3B32]">ยังไม่มีแชทในหมวดนี้</div>
+                <p className="mt-1 text-xs text-[#A89F91]">
+                    เมื่อเริ่มคุยกับผู้ซื้อหรือผู้ขาย รายการแชทจะมาแสดงที่นี่
+                </p>
             </div>
         );
     }

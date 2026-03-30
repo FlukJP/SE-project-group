@@ -91,7 +91,11 @@ export const ChatController = {
             if (content.trim().length > 5000) throw new AppError("Message content must not exceed 5000 characters", 400);
 
             const messageType = type === 'image' ? 'image' : 'text';
-            const messageId = await ChatService.sendMessage(chatId, req.user.userID, content.trim(), messageType);
+            const { messageId, autoReply } = await ChatService.sendMessage(chatId, req.user.userID, content.trim(), messageType);
+
+            if (autoReply) {
+                req.app?.get?.("io")?.to(String(chatId)).emit("newMessage", autoReply);
+            }
 
             res.status(201).json({
                 success: true,

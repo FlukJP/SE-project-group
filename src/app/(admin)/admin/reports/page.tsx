@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import DataTable from "@/src/components/admin/DataTable";
 import ConfirmDialog from "@/src/components/admin/ConfirmDialog";
 import { adminApi } from "@/src/lib/api";
@@ -35,6 +36,12 @@ const banBadge = (isBanned: boolean | number | undefined) => {
       ปกติ
     </span>
   );
+};
+
+const getTargetHref = (report: Report) => {
+  if (report.ReportType === "product" && report.Reported_Product_ID) return `/products/${report.Reported_Product_ID}`;
+  if (report.ReportType === "user" && report.Reported_User_ID) return `/users/${report.Reported_User_ID}`;
+  return null;
 };
 
 export default function AdminReportsPage() {
@@ -114,12 +121,29 @@ export default function AdminReportsPage() {
     {
       key: "target",
       header: "เป้าหมาย",
-      render: (r: Report) => (
-        <div className="flex items-center gap-2">
-          <span className="text-kd-text">{r.TargetName || `#${r.Target_ID}`}</span>
-          {banBadge(r.TargetIsBanned)}
-        </div>
-      ),
+      render: (r: Report) => {
+        const href = getTargetHref(r);
+        const label = r.TargetName || `#${r.Target_ID}`;
+
+        return (
+          <div className="flex items-center gap-2">
+            {href ? (
+              <Link
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-kd-primary hover:underline"
+                title="เปิดหน้าตรวจสอบในแท็บใหม่"
+              >
+                {label}
+              </Link>
+            ) : (
+              <span className="text-kd-text">{label}</span>
+            )}
+            {banBadge(r.TargetIsBanned)}
+          </div>
+        );
+      },
     },
     {
       key: "reason",

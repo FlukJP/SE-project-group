@@ -5,6 +5,41 @@ import { ProductService } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { Product, pickProductUpdateFields } from '../types/Product';
+import { UserModel } from '../models/UserModel';
+
+const PRODUCT_PHONE_SUFFIX_PATTERN = /\n\nPHONE:\s*[\s\S]*$/;
+const PRICE_DECIMAL_PATTERN = /^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/;
+
+const buildStoredDescription = (description: unknown, phone: unknown): string => {
+    const baseDescription = typeof description === 'string'
+        ? description.replace(PRODUCT_PHONE_SUFFIX_PATTERN, '').trim()
+        : '';
+    const phoneValue = typeof phone === 'string' ? phone.trim() : '';
+
+    if (!phoneValue) return baseDescription;
+    return `${baseDescription}${baseDescription ? '\n\n' : ''}PHONE: ${phoneValue}`;
+};
+
+const parseImageUrlList = (imageUrlJson: unknown): string[] => {
+    if (typeof imageUrlJson !== 'string' || !imageUrlJson.trim()) return [];
+
+    try {
+        const parsed = JSON.parse(imageUrlJson);
+        return Array.isArray(parsed) ? parsed.filter((url): url is string => typeof url === 'string' && !!url.trim()) : [];
+    } catch {
+        return imageUrlJson.trim() ? [imageUrlJson.trim()] : [];
+    }
+};
+
+const isValidPriceValue = (value: unknown): value is string | number => {
+    const normalized = typeof value === 'number'
+        ? value.toString()
+        : typeof value === 'string'
+            ? value.trim()
+            : '';
+
+    return PRICE_DECIMAL_PATTERN.test(normalized) && Number(normalized) > 0;
+};
 
 export const ProductController = {
     /** Parse and validate the multipart form, reorder images by coverIndex, then create a new product listing */
@@ -17,8 +52,14 @@ export const ProductController = {
                 throw new AppError("All fields are required", 400);
             }
 
+            const seller = await UserModel.findByIDSafe(req.user.userID);
+            if (!seller) throw new AppError("Seller not found", 404);
+            if (!seller.Phone_number?.trim()) {
+                throw new AppError("Please add your phone number to your profile before creating a product.", 400);
+            }
+
+            if (!isValidPriceValue(price)) throw new AppError("Price must be a positive number with up to 2 decimal places", 400);
             const numPrice = Number(price);
-            if (isNaN(numPrice) || numPrice <= 0) throw new AppError("Price must be a positive number", 400);
 
             const numQuantity = quantity ? Number(quantity) : 1;
             if (isNaN(numQuantity) || numQuantity <= 0) throw new AppError("Quantity must be a positive integer", 400);
@@ -40,7 +81,7 @@ export const ProductController = {
                 )
             );
 
-            const fullDescription = description ? description.trim() : '';
+            const fullDescription = buildStoredDescription(description, seller.Phone_number);
             const category = await CategoryService.getByKey(categoryKey.trim());
 
             const newProductData: Omit<Product, 'Product_ID'> = {
@@ -126,10 +167,35 @@ export const ProductController = {
             const isAdmin = req.user.role === 'admin';
             const files = req.files as Express.Multer.File[] | undefined;
 
-            const rawBody = { ...req.body };
+            const rawBody = { ...req.body } as Record<string, unknown>;
+            const seller = await UserModel.findByIDSafe(req.user.userID);
+            if (!seller) throw new AppError("Seller not found", 404);
+            if (!seller.Phone_number?.trim()) {
+                throw new AppError("Please add your phone number to your profile before updating a product.", 400);
+            }
+            if (rawBody.title !== undefined) rawBody.Title = String(rawBody.title);
+            if (rawBody.price !== undefined) {
+                if (!isValidPriceValue(rawBody.price)) {
+                    throw new AppError("Price must be a positive number with up to 2 decimal places", 400);
+                }
+                rawBody.Price = Number(rawBody.price);
+            }
+            if (rawBody.description !== undefined || rawBody.phone !== undefined) {
+                rawBody.Description = buildStoredDescription(rawBody.description, seller.Phone_number);
+            }
+            if (rawBody.condition !== undefined) rawBody.Condition = String(rawBody.condition).trim();
+            if (rawBody.quantity !== undefined) rawBody.Quantity = Number(rawBody.quantity);
+            if (rawBody.status !== undefined) rawBody.Status = String(rawBody.status).trim();
             if (rawBody.province) rawBody.Province = String(rawBody.province).trim();
             if (rawBody.district) rawBody.District = String(rawBody.district).trim();
+
+            if (typeof rawBody.categoryKey === 'string' && rawBody.categoryKey.trim()) {
+                const category = await CategoryService.getByKey(rawBody.categoryKey.trim());
+                rawBody.Category_ID = category.Category_ID;
+            }
+
             const updateData = pickProductUpdateFields(rawBody);
+            const retainedImageUrls = parseImageUrlList(rawBody.Image_URL);
 
             if (files && files.length > 0) {
                 const imageUrls = await Promise.all(
@@ -137,13 +203,19 @@ export const ProductController = {
                         uploadToStorage(file.buffer, file.mimetype, 'products', generateUniqueFilename('product', file.mimetype))
                     )
                 );
-                updateData.Image_URL = JSON.stringify(imageUrls);
+                updateData.Image_URL = JSON.stringify([...retainedImageUrls, ...imageUrls]);
             }
 
             const result = await ProductService.updateProduct(productId, req.user.userID, updateData, isAdmin);
 
-            if (files && files.length > 0 && result.oldImageURL) {
-                deleteStorageImages(result.oldImageURL).catch(() => {});
+            if (result.oldImageURL && updateData.Image_URL !== undefined) {
+                const oldImageUrls = parseImageUrlList(result.oldImageURL);
+                const nextImageUrls = parseImageUrlList(updateData.Image_URL);
+                const removedImageUrls = oldImageUrls.filter((url) => !nextImageUrls.includes(url));
+
+                if (removedImageUrls.length > 0) {
+                    deleteStorageImages(JSON.stringify(removedImageUrls)).catch(() => {});
+                }
             }
 
             res.status(200).json({ success: true, message: "Product updated successfully" });
