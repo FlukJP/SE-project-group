@@ -243,10 +243,9 @@ function ProfileInfo({
     setShowEmailOTP(false);
   };
 
-  const handlePhoneOTPVerified = async (data: { idToken: string }) => {
+  const handlePhoneOTPVerified = async (data: { access_token: string }) => {
     try {
-      const result = await authApi.verifyPhoneFirebase(data.idToken);
-      await onVerified(result);
+      await onVerified(data);
       setShowPhoneOTP(false);
     } catch (err: unknown) {
       setOtpError(err instanceof Error ? err.message : "ยืนยันเบอร์โทรไม่สำเร็จ");

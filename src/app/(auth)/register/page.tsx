@@ -165,10 +165,9 @@ export default function RegisterPage() {
     }
   };
 
-  const handlePhoneVerified = async (data: { idToken: string }) => {
+  const handlePhoneVerified = async (data: { access_token: string }) => {
     try {
-      const result = await authApi.verifyPhoneFirebase(data.idToken);
-      await setTokensAndLoadUser(result.access_token);
+      await setTokensAndLoadUser(data.access_token);
       router.push("/");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : AUTH_TEXT.register.phoneVerifyFailed);
