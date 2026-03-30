@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import DataTable from "@/src/components/admin/DataTable";
 import ConfirmDialog from "@/src/components/admin/ConfirmDialog";
 import { adminApi } from "@/src/lib/api";
 import { useError } from "@/src/contexts/ErrorContext";
 import type { Report } from "@/src/types/Report";
+
+type ReportFilterKey = "all" | "product" | "user";
 
 const typeBadge = (type: string) => {
   const isProduct = type === "product";
@@ -46,6 +48,7 @@ const getTargetHref = (report: Report) => {
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
+  const [filter, setFilter] = useState<ReportFilterKey>("all");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -68,6 +71,25 @@ export default function AdminReportsPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const filteredReports = useMemo(() => {
+    if (filter === "all") return reports;
+    return reports.filter((report) => report.ReportType === filter);
+  }, [filter, reports]);
+
+  const filterCounts = useMemo(
+    () =>
+      reports.reduce(
+        (acc, report) => {
+          acc.all += 1;
+          if (report.ReportType === "product") acc.product += 1;
+          if (report.ReportType === "user") acc.user += 1;
+          return acc;
+        },
+        { all: 0, product: 0, user: 0 }
+      ),
+    [reports]
+  );
 
   const handleAction = async () => {
     if (!confirmTarget) return;
@@ -194,18 +216,50 @@ export default function AdminReportsPage() {
     ? confirmTarget.report.TargetName || `#${confirmTarget.report.Target_ID}`
     : "";
 
+  const filters: { key: ReportFilterKey; label: string; count: number }[] = [
+    { key: "all", label: "ทั้งหมด", count: filterCounts.all },
+    { key: "product", label: "สินค้า", count: filterCounts.product },
+    { key: "user", label: "ผู้ใช้", count: filterCounts.user },
+  ];
+
   return (
     <>
       <h2 className="text-xl font-bold text-kd-primary mb-6">รายงาน</h2>
 
+      <div className="mb-5 flex flex-wrap gap-2">
+        {filters.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => {
+              setFilter(item.key);
+              setPage(1);
+            }}
+            className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+              filter === item.key
+                ? "border-kd-primary bg-kd-primary text-white"
+                : "border-[#DCD0C0] bg-white text-[#4A3B32] hover:border-kd-primary"
+            }`}
+          >
+            {item.label} ({item.count})
+          </button>
+        ))}
+      </div>
+
       <DataTable
         columns={columns}
-        data={reports}
+        data={filteredReports}
         loading={loading}
         page={page}
         total={total}
         onPageChange={setPage}
-        emptyText="ไม่มีรายงาน"
+        emptyText={
+          filter === "product"
+            ? "ไม่มีรายงานสินค้า"
+            : filter === "user"
+              ? "ไม่มีรายงานผู้ใช้"
+              : "ไม่มีรายงาน"
+        }
       />
 
       <ConfirmDialog
