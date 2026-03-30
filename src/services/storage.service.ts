@@ -21,20 +21,27 @@ export const uploadToStorage = async (
     filename: string,
 ): Promise<string> => {
     const bucket = admin.storage().bucket();
+    if (!bucket.name) {
+        throw new Error("Firebase Storage bucket is not configured");
+    }
+
+    const safeBucketName = bucket.name.replace(/^gs:\/\//i, "").replace(/\/+$/, "");
     const destination = `uploads/${folder}/${filename}`;
     const file = bucket.file(destination);
 
     await file.save(buffer, { metadata: { contentType: mimetype } });
     await file.makePublic();
 
-    return `https://storage.googleapis.com/${bucket.name}/${destination}`;
+    return `https://storage.googleapis.com/${safeBucketName}/${destination}`;
 };
 
 /** Delete a file from Firebase Storage by its public URL (silently skips on error) */
 export const deleteFromStorage = async (url: string): Promise<void> => {
     try {
         const bucket = admin.storage().bucket();
-        const prefix = `https://storage.googleapis.com/${bucket.name}/`;
+        if (!bucket.name) return;
+        const safeBucketName = bucket.name.replace(/^gs:\/\//i, "").replace(/\/+$/, "");
+        const prefix = `https://storage.googleapis.com/${safeBucketName}/`;
         if (!url.startsWith(prefix)) return;
         const filePath = url.slice(prefix.length);
         await bucket.file(filePath).delete();

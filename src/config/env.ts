@@ -49,6 +49,7 @@ const serverSchema = z.object({
         .default("Marketplace <onboarding@resend.dev>"),
 
     FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
+    FIREBASE_STORAGE_BUCKET: z.string().optional(),
     FIREBASE_PROJECT_ID: z.string().optional(),
     FIREBASE_CLIENT_EMAIL: z.string().optional(),
     FIREBASE_PRIVATE_KEY: z.string().optional(),

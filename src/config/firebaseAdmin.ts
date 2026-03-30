@@ -4,7 +4,26 @@ import path from "path";
 import { SERVER_ENV as ENV } from "@/src/config/env";
 
 const serviceAccountPath = path.resolve(process.cwd(), "firebase-service-account.json");
-const storageBucket = ENV.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+
+const normalizeBucketName = (value: string | undefined): string => {
+    if (!value) return "";
+
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+
+    const withoutProtocol = trimmed.replace(/^gs:\/\//i, "");
+
+    try {
+        const parsed = new URL(trimmed);
+        return parsed.hostname;
+    } catch {
+        return withoutProtocol.replace(/\/+$/, "");
+    }
+};
+
+const storageBucket = normalizeBucketName(
+    ENV.FIREBASE_STORAGE_BUCKET || ENV.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+);
 
 const loadServiceAccount = (): admin.ServiceAccount | undefined => {
     if (!ENV.FIREBASE_SERVICE_ACCOUNT) return undefined;
