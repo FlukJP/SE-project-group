@@ -246,6 +246,133 @@ SoftwareEngineerProject/
 - Backend API: `http://localhost:5000`
 - Health check: `http://localhost:5000/health`
 
+## API Routes Overview
+
+Base URL ของ API คือ `http://localhost:5000/api`
+
+หมายเหตุ:
+- `Auth` = ต้องส่ง `Authorization: Bearer <access_token>`
+- `Verified` = ผู้ใช้ต้องยืนยันตัวตนแล้ว
+- `Admin` = ต้องเป็นผู้ดูแลระบบ
+- endpoint อัปโหลดไฟล์ใช้ `multipart/form-data`
+
+### System
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| GET | `/health` | Public | ตรวจสอบสถานะของ server และ Redis |
+
+### Authentication
+
+| Method | Endpoint | Access | Request สำคัญ | Description |
+| --- | --- | --- | --- | --- |
+| POST | `/api/auth/register` | Public | `username`, `email`, `password`, `phone` | สมัครสมาชิกและส่ง OTP ไปยืนยันอีเมล |
+| POST | `/api/auth/login` | Public | `email`, `password` | เข้าสู่ระบบและรับ `access_token` พร้อม refresh token cookie |
+| POST | `/api/auth/refresh-token` | Public | `refresh_token` หรือ cookie | ขอ access token ใหม่ |
+| POST | `/api/auth/request-otp` | Public | `email` | ขอ OTP สำหรับยืนยันอีเมล |
+| POST | `/api/auth/verify-otp` | Public | `email`, `otp` | ยืนยัน OTP อีเมลและออก token ใหม่ |
+| POST | `/api/auth/request-phone-otp` | Public | `phone` | ขอ OTP สำหรับยืนยันเบอร์โทร |
+| POST | `/api/auth/verify-phone-otp` | Public | `phone`, `otp` | ยืนยัน OTP เบอร์โทรและออก token ใหม่ |
+| POST | `/api/auth/verify-phone-firebase` | Public | `idToken` | ยืนยันเบอร์โทรผ่าน Firebase |
+| POST | `/api/auth/reset-password` | Public | `email`, `otp`, `newPassword` | รีเซ็ตรหัสผ่านด้วย OTP |
+| POST | `/api/auth/logout` | Auth | - | ออกจากระบบและล้าง refresh token |
+| POST | `/api/auth/change-password` | Auth | `oldPassword`, `newPassword` | เปลี่ยนรหัสผ่านของผู้ใช้ปัจจุบัน |
+
+### Users
+
+| Method | Endpoint | Access | Request สำคัญ | Description |
+| --- | --- | --- | --- | --- |
+| GET | `/api/users/me` | Auth | - | ดึงข้อมูลโปรไฟล์ของผู้ใช้ที่ล็อกอินอยู่ |
+| PUT | `/api/users/me` | Auth | `Username`, `Email`, `Phone_number`, `Address`, `Auto_Reply_Message` | แก้ไขข้อมูลโปรไฟล์ |
+| PUT | `/api/users/me/avatar` | Auth | file `avatar` | อัปโหลดหรือเปลี่ยนรูปโปรไฟล์ |
+| GET | `/api/users/:id` | Public | path `id` | ดู public profile ของผู้ใช้ |
+
+### Products
+
+| Method | Endpoint | Access | Request สำคัญ | Description |
+| --- | --- | --- | --- | --- |
+| GET | `/api/products` | Public | query `q`, `category`, `minPrice`, `maxPrice`, `page`, `limit`, `sortBy`, `sortOrder`, `province`, `district`, `excludeSeller` | ดึงรายการสินค้า พร้อมค้นหา กรอง เรียง และแบ่งหน้า |
+| GET | `/api/products/seller/:sellerId` | Public | path `sellerId` | ดึงสินค้าทั้งหมดของผู้ขายรายหนึ่ง |
+| GET | `/api/products/:id` | Public | path `id` | ดูรายละเอียดสินค้า |
+| POST | `/api/products` | Auth + Verified | `title`, `price`, `description`, `categoryKey`, `province`, `district`, `condition`, `quantity`, files `images[]`, `coverIndex` | สร้างประกาศสินค้าใหม่ |
+| PUT | `/api/products/:id` | Auth + Verified | path `id`, field ที่ต้องการแก้ไข, files `images[]` | แก้ไขข้อมูลสินค้าและรูปภาพ |
+| DELETE | `/api/products/:id` | Auth + Verified | path `id` | ลบสินค้าของตนเอง |
+
+### Categories
+
+| Method | Endpoint | Access | Request สำคัญ | Description |
+| --- | --- | --- | --- | --- |
+| GET | `/api/categories` | Public | - | ดึงหมวดหมู่ทั้งหมด |
+| GET | `/api/categories/popular` | Public | query `limit` | ดึงหมวดหมู่ยอดนิยม |
+| POST | `/api/categories` | Auth + Admin | `category_key`, `name`, `emoji`, `sort_order` | สร้างหมวดหมู่ใหม่ |
+| PUT | `/api/categories/:id` | Auth + Admin | path `id` | แก้ไขหมวดหมู่ |
+| DELETE | `/api/categories/:id` | Auth + Admin | path `id` | ลบหมวดหมู่แบบ soft delete |
+
+### Chats
+
+| Method | Endpoint | Access | Request สำคัญ | Description |
+| --- | --- | --- | --- | --- |
+| GET | `/api/chats` | Auth + Verified | - | ดึงรายการห้องแชตของผู้ใช้ |
+| GET | `/api/chats/unread` | Auth + Verified | - | ดึงจำนวนข้อความที่ยังไม่อ่าน |
+| POST | `/api/chats` | Auth + Verified | `productId`, `sellerId` | ค้นหาห้องแชตเดิมหรือสร้างห้องแชตใหม่ |
+| GET | `/api/chats/:chatId` | Auth + Verified | path `chatId` | ดูรายละเอียดห้องแชต |
+| DELETE | `/api/chats/:chatId` | Auth + Verified | path `chatId` | ซ่อนห้องแชตของผู้ใช้ |
+| GET | `/api/chats/:chatId/messages` | Auth + Verified | path `chatId`, query `page` | ดึงข้อความในห้องแชตแบบแบ่งหน้า |
+| POST | `/api/chats/:chatId/messages` | Auth + Verified | path `chatId`, `content`, `type` | ส่งข้อความใหม่ในห้องแชต |
+| PATCH | `/api/chats/:chatId/read` | Auth + Verified | path `chatId` | ทำเครื่องหมายว่าอ่านข้อความแล้ว |
+
+### Orders
+
+| Method | Endpoint | Access | Request สำคัญ | Description |
+| --- | --- | --- | --- | --- |
+| GET | `/api/orders/buyer/my` | Auth | - | ดึงรายการคำสั่งซื้อของผู้ซื้อปัจจุบัน |
+| GET | `/api/orders/seller/my` | Auth | - | ดึงรายการคำสั่งขายของผู้ขายปัจจุบัน |
+| GET | `/api/orders/:orderId` | Auth | path `orderId` | ดูรายละเอียดคำสั่งซื้อ 1 รายการ |
+| POST | `/api/orders` | Auth + Verified | `Product_ID`, `Quantity` | สร้างคำสั่งซื้อใหม่ |
+| POST | `/api/orders/seller-record` | Auth + Verified | `Product_ID`, `Buyer_ID`, `targetStatus` | ให้ผู้ขายบันทึกการขายแทนผู้ซื้อ |
+| PATCH | `/api/orders/:orderId/status` | Auth + Verified | path `orderId`, `status` = `paid` หรือ `completed` | อัปเดตสถานะคำสั่งซื้อ |
+| PATCH | `/api/orders/:orderId/cancel` | Auth + Verified | path `orderId` | ยกเลิกคำสั่งซื้อและคืนสต็อก |
+
+### Reviews
+
+| Method | Endpoint | Access | Request สำคัญ | Description |
+| --- | --- | --- | --- | --- |
+| GET | `/api/reviews/seller/:sellerId` | Public | path `sellerId` | ดึงรีวิวทั้งหมดของผู้ขาย |
+| GET | `/api/reviews/seller/:sellerId/rating` | Public | path `sellerId` | ดึงคะแนนเฉลี่ยและจำนวนรีวิวของผู้ขาย |
+| GET | `/api/reviews/my` | Auth | - | ดึงรีวิวที่ผู้ใช้ปัจจุบันเขียนไว้ |
+| GET | `/api/reviews/check/:orderId` | Auth | path `orderId` | ตรวจสอบว่าคำสั่งซื้อนี้ถูกรีวิวแล้วหรือยัง |
+| POST | `/api/reviews` | Auth + Verified | `orderId`, `rating`, `comment` | สร้างรีวิวหลังธุรกรรมเสร็จสิ้น |
+
+### Reports
+
+| Method | Endpoint | Access | Request สำคัญ | Description |
+| --- | --- | --- | --- | --- |
+| POST | `/api/reports` | Auth + Verified | `targetId`, `reportType`, `reason` | แจ้งรายงานผู้ใช้หรือสินค้า |
+| GET | `/api/reports/me` | Auth | - | ดูรายการ report ที่ผู้ใช้ปัจจุบันส่ง |
+
+### Admin
+
+ทุก endpoint ใต้ `/api/admin` ต้องเป็น `Auth + Admin`
+
+| Method | Endpoint | Access | Request สำคัญ | Description |
+| --- | --- | --- | --- | --- |
+| GET | `/api/admin/stats` | Auth + Admin | - | ดึงสถิติภาพรวมสำหรับ dashboard ผู้ดูแลระบบ |
+| GET | `/api/admin/users` | Auth + Admin | query `page`, `limit` | ดึงรายการผู้ใช้ทั้งหมด |
+| GET | `/api/admin/users/banned` | Auth + Admin | query `page`, `limit` | ดึงรายการผู้ใช้ที่ถูกแบน |
+| PATCH | `/api/admin/users/:userId/ban` | Auth + Admin | path `userId` | แบนผู้ใช้ |
+| PATCH | `/api/admin/users/:userId/unban` | Auth + Admin | path `userId` | ปลดแบนผู้ใช้ |
+| GET | `/api/admin/products/banned` | Auth + Admin | query `page`, `limit` | ดึงรายการสินค้าที่ถูกแบน |
+| PATCH | `/api/admin/products/:productId/ban` | Auth + Admin | path `productId` | แบนสินค้า |
+| PATCH | `/api/admin/products/:productId/unban` | Auth + Admin | path `productId` | ปลดแบนสินค้า |
+| GET | `/api/admin/reports` | Auth + Admin | query `page`, `limit` | ดึงรายการรายงานทั้งหมด |
+
+### Real-time Chat (Socket.IO)
+
+- เชื่อมต่อผ่าน Socket.IO server เดียวกับ backend
+- ต้องส่ง token ใน `socket.handshake.auth.token`
+- event หลักที่รองรับคือ `join`, `leave`, `sendMessage`
+- server จะ push event `newMessage` เมื่อมีข้อความใหม่หรือ auto-reply
+
 ## Testing
 
 Run tests with:
