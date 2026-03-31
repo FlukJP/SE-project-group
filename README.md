@@ -248,130 +248,130 @@ SoftwareEngineerProject/
 
 ## API Routes Overview
 
-Base URL ของ API คือ `http://localhost:5000/api`
+The base URL for the API is `http://localhost:5000/api`
 
-หมายเหตุ:
-- `Auth` = ต้องส่ง `Authorization: Bearer <access_token>`
-- `Verified` = ผู้ใช้ต้องยืนยันตัวตนแล้ว
-- `Admin` = ต้องเป็นผู้ดูแลระบบ
-- endpoint อัปโหลดไฟล์ใช้ `multipart/form-data`
+**Notes:**
+- `Auth` = Requires sending `Authorization: Bearer <access_token>`
+- `Verified` = User must be verified
+- `Admin` = Must be an administrator
+- File upload endpoints use `multipart/form-data`
 
 ### System
 
 | Method | Endpoint | Access | Description |
 | --- | --- | --- | --- |
-| GET | `/health` | Public | ตรวจสอบสถานะของ server และ Redis |
+| GET | `/health` | Public | Check the status of the server and Redis |
 
 ### Authentication
 
-| Method | Endpoint | Access | Request สำคัญ | Description |
+| Method | Endpoint | Access | Key Request Data | Description |
 | --- | --- | --- | --- | --- |
-| POST | `/api/auth/register` | Public | `username`, `email`, `password`, `phone` | สมัครสมาชิกและส่ง OTP ไปยืนยันอีเมล |
-| POST | `/api/auth/login` | Public | `email`, `password` | เข้าสู่ระบบและรับ `access_token` พร้อม refresh token cookie |
-| POST | `/api/auth/refresh-token` | Public | `refresh_token` หรือ cookie | ขอ access token ใหม่ |
-| POST | `/api/auth/request-otp` | Public | `email` | ขอ OTP สำหรับยืนยันอีเมล |
-| POST | `/api/auth/verify-otp` | Public | `email`, `otp` | ยืนยัน OTP อีเมลและออก token ใหม่ |
-| POST | `/api/auth/request-phone-otp` | Public | `phone` | ขอ OTP สำหรับยืนยันเบอร์โทร |
-| POST | `/api/auth/verify-phone-otp` | Public | `phone`, `otp` | ยืนยัน OTP เบอร์โทรและออก token ใหม่ |
-| POST | `/api/auth/verify-phone-firebase` | Public | `idToken` | ยืนยันเบอร์โทรผ่าน Firebase |
-| POST | `/api/auth/reset-password` | Public | `email`, `otp`, `newPassword` | รีเซ็ตรหัสผ่านด้วย OTP |
-| POST | `/api/auth/logout` | Auth | - | ออกจากระบบและล้าง refresh token |
-| POST | `/api/auth/change-password` | Auth | `oldPassword`, `newPassword` | เปลี่ยนรหัสผ่านของผู้ใช้ปัจจุบัน |
+| POST | `/api/auth/register` | Public | `username`, `email`, `password`, `phone` | Register a new user and send email verification OTP |
+| POST | `/api/auth/login` | Public | `email`, `password` | Log in and receive `access_token` with refresh token cookie |
+| POST | `/api/auth/refresh-token` | Public | `refresh_token` or cookie | Request a new access token |
+| POST | `/api/auth/request-otp` | Public | `email` | Request an OTP for email verification |
+| POST | `/api/auth/verify-otp` | Public | `email`, `otp` | Verify email OTP and issue a new token |
+| POST | `/api/auth/request-phone-otp` | Public | `phone` | Request an OTP for phone verification |
+| POST | `/api/auth/verify-phone-otp` | Public | `phone`, `otp` | Verify phone OTP and issue a new token |
+| POST | `/api/auth/verify-phone-firebase` | Public | `idToken` | Verify phone number via Firebase |
+| POST | `/api/auth/reset-password` | Public | `email`, `otp`, `newPassword` | Reset password using OTP |
+| POST | `/api/auth/logout` | Auth | - | Log out and clear refresh token |
+| POST | `/api/auth/change-password` | Auth | `oldPassword`, `newPassword` | Change the current user's password |
 
 ### Users
 
-| Method | Endpoint | Access | Request สำคัญ | Description |
+| Method | Endpoint | Access | Key Request Data | Description |
 | --- | --- | --- | --- | --- |
-| GET | `/api/users/me` | Auth | - | ดึงข้อมูลโปรไฟล์ของผู้ใช้ที่ล็อกอินอยู่ |
-| PUT | `/api/users/me` | Auth | `Username`, `Email`, `Phone_number`, `Address`, `Auto_Reply_Message` | แก้ไขข้อมูลโปรไฟล์ |
-| PUT | `/api/users/me/avatar` | Auth | file `avatar` | อัปโหลดหรือเปลี่ยนรูปโปรไฟล์ |
-| GET | `/api/users/:id` | Public | path `id` | ดู public profile ของผู้ใช้ |
+| GET | `/api/users/me` | Auth | - | Get the logged-in user's profile data |
+| PUT | `/api/users/me` | Auth | `Username`, `Email`, `Phone_number`, `Address`, `Auto_Reply_Message` | Update profile information |
+| PUT | `/api/users/me/avatar` | Auth | file `avatar` | Upload or change profile picture |
+| GET | `/api/users/:id` | Public | path `id` | View a user's public profile |
 
 ### Products
 
-| Method | Endpoint | Access | Request สำคัญ | Description |
+| Method | Endpoint | Access | Key Request Data | Description |
 | --- | --- | --- | --- | --- |
-| GET | `/api/products` | Public | query `q`, `category`, `minPrice`, `maxPrice`, `page`, `limit`, `sortBy`, `sortOrder`, `province`, `district`, `excludeSeller` | ดึงรายการสินค้า พร้อมค้นหา กรอง เรียง และแบ่งหน้า |
-| GET | `/api/products/seller/:sellerId` | Public | path `sellerId` | ดึงสินค้าทั้งหมดของผู้ขายรายหนึ่ง |
-| GET | `/api/products/:id` | Public | path `id` | ดูรายละเอียดสินค้า |
-| POST | `/api/products` | Auth + Verified | `title`, `price`, `description`, `categoryKey`, `province`, `district`, `condition`, `quantity`, files `images[]`, `coverIndex` | สร้างประกาศสินค้าใหม่ |
-| PUT | `/api/products/:id` | Auth + Verified | path `id`, field ที่ต้องการแก้ไข, files `images[]` | แก้ไขข้อมูลสินค้าและรูปภาพ |
-| DELETE | `/api/products/:id` | Auth + Verified | path `id` | ลบสินค้าของตนเอง |
+| GET | `/api/products` | Public | query `q`, `category`, `minPrice`, `maxPrice`, `page`, `limit`, `sortBy`, `sortOrder`, `province`, `district`, `excludeSeller` | Get a list of products with search, filter, sort, and pagination |
+| GET | `/api/products/seller/:sellerId` | Public | path `sellerId` | Get all products from a specific seller |
+| GET | `/api/products/:id` | Public | path `id` | View product details |
+| POST | `/api/products` | Auth + Verified | `title`, `price`, `description`, `categoryKey`, `province`, `district`, `condition`, `quantity`, files `images[]`, `coverIndex` | Create a new product listing |
+| PUT | `/api/products/:id` | Auth + Verified | path `id`, specific fields to update, files `images[]` | Update product details and images |
+| DELETE | `/api/products/:id` | Auth + Verified | path `id` | Delete own product |
 
 ### Categories
 
-| Method | Endpoint | Access | Request สำคัญ | Description |
+| Method | Endpoint | Access | Key Request Data | Description |
 | --- | --- | --- | --- | --- |
-| GET | `/api/categories` | Public | - | ดึงหมวดหมู่ทั้งหมด |
-| GET | `/api/categories/popular` | Public | query `limit` | ดึงหมวดหมู่ยอดนิยม |
-| POST | `/api/categories` | Auth + Admin | `category_key`, `name`, `emoji`, `sort_order` | สร้างหมวดหมู่ใหม่ |
-| PUT | `/api/categories/:id` | Auth + Admin | path `id` | แก้ไขหมวดหมู่ |
-| DELETE | `/api/categories/:id` | Auth + Admin | path `id` | ลบหมวดหมู่แบบ soft delete |
+| GET | `/api/categories` | Public | - | Get all categories |
+| GET | `/api/categories/popular` | Public | query `limit` | Get popular categories |
+| POST | `/api/categories` | Auth + Admin | `category_key`, `name`, `emoji`, `sort_order` | Create a new category |
+| PUT | `/api/categories/:id` | Auth + Admin | path `id` | Edit a category |
+| DELETE | `/api/categories/:id` | Auth + Admin | path `id` | Soft delete a category |
 
 ### Chats
 
-| Method | Endpoint | Access | Request สำคัญ | Description |
+| Method | Endpoint | Access | Key Request Data | Description |
 | --- | --- | --- | --- | --- |
-| GET | `/api/chats` | Auth + Verified | - | ดึงรายการห้องแชตของผู้ใช้ |
-| GET | `/api/chats/unread` | Auth + Verified | - | ดึงจำนวนข้อความที่ยังไม่อ่าน |
-| POST | `/api/chats` | Auth + Verified | `productId`, `sellerId` | ค้นหาห้องแชตเดิมหรือสร้างห้องแชตใหม่ |
-| GET | `/api/chats/:chatId` | Auth + Verified | path `chatId` | ดูรายละเอียดห้องแชต |
-| DELETE | `/api/chats/:chatId` | Auth + Verified | path `chatId` | ซ่อนห้องแชตของผู้ใช้ |
-| GET | `/api/chats/:chatId/messages` | Auth + Verified | path `chatId`, query `page` | ดึงข้อความในห้องแชตแบบแบ่งหน้า |
-| POST | `/api/chats/:chatId/messages` | Auth + Verified | path `chatId`, `content`, `type` | ส่งข้อความใหม่ในห้องแชต |
-| PATCH | `/api/chats/:chatId/read` | Auth + Verified | path `chatId` | ทำเครื่องหมายว่าอ่านข้อความแล้ว |
+| GET | `/api/chats` | Auth + Verified | - | Get the user's chat room list |
+| GET | `/api/chats/unread` | Auth + Verified | - | Get the number of unread messages |
+| POST | `/api/chats` | Auth + Verified | `productId`, `sellerId` | Find an existing chat room or create a new one |
+| GET | `/api/chats/:chatId` | Auth + Verified | path `chatId` | View chat room details |
+| DELETE | `/api/chats/:chatId` | Auth + Verified | path `chatId` | Hide a chat room for the user |
+| GET | `/api/chats/:chatId/messages` | Auth + Verified | path `chatId`, query `page` | Get paginated messages in a chat room |
+| POST | `/api/chats/:chatId/messages` | Auth + Verified | path `chatId`, `content`, `type` | Send a new message in a chat room |
+| PATCH | `/api/chats/:chatId/read` | Auth + Verified | path `chatId` | Mark messages as read |
 
 ### Orders
 
-| Method | Endpoint | Access | Request สำคัญ | Description |
+| Method | Endpoint | Access | Key Request Data | Description |
 | --- | --- | --- | --- | --- |
-| GET | `/api/orders/buyer/my` | Auth | - | ดึงรายการคำสั่งซื้อของผู้ซื้อปัจจุบัน |
-| GET | `/api/orders/seller/my` | Auth | - | ดึงรายการคำสั่งขายของผู้ขายปัจจุบัน |
-| GET | `/api/orders/:orderId` | Auth | path `orderId` | ดูรายละเอียดคำสั่งซื้อ 1 รายการ |
-| POST | `/api/orders` | Auth + Verified | `Product_ID`, `Quantity` | สร้างคำสั่งซื้อใหม่ |
-| POST | `/api/orders/seller-record` | Auth + Verified | `Product_ID`, `Buyer_ID`, `targetStatus` | ให้ผู้ขายบันทึกการขายแทนผู้ซื้อ |
-| PATCH | `/api/orders/:orderId/status` | Auth + Verified | path `orderId`, `status` = `paid` หรือ `completed` | อัปเดตสถานะคำสั่งซื้อ |
-| PATCH | `/api/orders/:orderId/cancel` | Auth + Verified | path `orderId` | ยกเลิกคำสั่งซื้อและคืนสต็อก |
+| GET | `/api/orders/buyer/my` | Auth | - | Get the current buyer's order list |
+| GET | `/api/orders/seller/my` | Auth | - | Get the current seller's order list |
+| GET | `/api/orders/:orderId` | Auth | path `orderId` | View details of a specific order |
+| POST | `/api/orders` | Auth + Verified | `Product_ID`, `Quantity` | Create a new order |
+| POST | `/api/orders/seller-record` | Auth + Verified | `Product_ID`, `Buyer_ID`, `targetStatus` | Allow seller to record a sale on behalf of a buyer |
+| PATCH | `/api/orders/:orderId/status` | Auth + Verified | path `orderId`, `status` = `paid` or `completed` | Update order status |
+| PATCH | `/api/orders/:orderId/cancel` | Auth + Verified | path `orderId` | Cancel an order and restore stock |
 
 ### Reviews
 
-| Method | Endpoint | Access | Request สำคัญ | Description |
+| Method | Endpoint | Access | Key Request Data | Description |
 | --- | --- | --- | --- | --- |
-| GET | `/api/reviews/seller/:sellerId` | Public | path `sellerId` | ดึงรีวิวทั้งหมดของผู้ขาย |
-| GET | `/api/reviews/seller/:sellerId/rating` | Public | path `sellerId` | ดึงคะแนนเฉลี่ยและจำนวนรีวิวของผู้ขาย |
-| GET | `/api/reviews/my` | Auth | - | ดึงรีวิวที่ผู้ใช้ปัจจุบันเขียนไว้ |
-| GET | `/api/reviews/check/:orderId` | Auth | path `orderId` | ตรวจสอบว่าคำสั่งซื้อนี้ถูกรีวิวแล้วหรือยัง |
-| POST | `/api/reviews` | Auth + Verified | `orderId`, `rating`, `comment` | สร้างรีวิวหลังธุรกรรมเสร็จสิ้น |
+| GET | `/api/reviews/seller/:sellerId` | Public | path `sellerId` | Get all reviews for a seller |
+| GET | `/api/reviews/seller/:sellerId/rating` | Public | path `sellerId` | Get the average rating and total review count for a seller |
+| GET | `/api/reviews/my` | Auth | - | Get reviews written by the current user |
+| GET | `/api/reviews/check/:orderId` | Auth | path `orderId` | Check if this order has already been reviewed |
+| POST | `/api/reviews` | Auth + Verified | `orderId`, `rating`, `comment` | Create a review after a transaction is completed |
 
 ### Reports
 
-| Method | Endpoint | Access | Request สำคัญ | Description |
+| Method | Endpoint | Access | Key Request Data | Description |
 | --- | --- | --- | --- | --- |
-| POST | `/api/reports` | Auth + Verified | `targetId`, `reportType`, `reason` | แจ้งรายงานผู้ใช้หรือสินค้า |
-| GET | `/api/reports/me` | Auth | - | ดูรายการ report ที่ผู้ใช้ปัจจุบันส่ง |
+| POST | `/api/reports` | Auth + Verified | `targetId`, `reportType`, `reason` | Submit a report for a user or product |
+| GET | `/api/reports/me` | Auth | - | View reports submitted by the current user |
 
 ### Admin
 
-ทุก endpoint ใต้ `/api/admin` ต้องเป็น `Auth + Admin`
+All endpoints under `/api/admin` require `Auth + Admin` access.
 
-| Method | Endpoint | Access | Request สำคัญ | Description |
+| Method | Endpoint | Access | Key Request Data | Description |
 | --- | --- | --- | --- | --- |
-| GET | `/api/admin/stats` | Auth + Admin | - | ดึงสถิติภาพรวมสำหรับ dashboard ผู้ดูแลระบบ |
-| GET | `/api/admin/users` | Auth + Admin | query `page`, `limit` | ดึงรายการผู้ใช้ทั้งหมด |
-| GET | `/api/admin/users/banned` | Auth + Admin | query `page`, `limit` | ดึงรายการผู้ใช้ที่ถูกแบน |
-| PATCH | `/api/admin/users/:userId/ban` | Auth + Admin | path `userId` | แบนผู้ใช้ |
-| PATCH | `/api/admin/users/:userId/unban` | Auth + Admin | path `userId` | ปลดแบนผู้ใช้ |
-| GET | `/api/admin/products/banned` | Auth + Admin | query `page`, `limit` | ดึงรายการสินค้าที่ถูกแบน |
-| PATCH | `/api/admin/products/:productId/ban` | Auth + Admin | path `productId` | แบนสินค้า |
-| PATCH | `/api/admin/products/:productId/unban` | Auth + Admin | path `productId` | ปลดแบนสินค้า |
-| GET | `/api/admin/reports` | Auth + Admin | query `page`, `limit` | ดึงรายการรายงานทั้งหมด |
+| GET | `/api/admin/stats` | Auth + Admin | - | Get overall statistics for the admin dashboard |
+| GET | `/api/admin/users` | Auth + Admin | query `page`, `limit` | Get a list of all users |
+| GET | `/api/admin/users/banned` | Auth + Admin | query `page`, `limit` | Get a list of banned users |
+| PATCH | `/api/admin/users/:userId/ban` | Auth + Admin | path `userId` | Ban a user |
+| PATCH | `/api/admin/users/:userId/unban` | Auth + Admin | path `userId` | Unban a user |
+| GET | `/api/admin/products/banned` | Auth + Admin | query `page`, `limit` | Get a list of banned products |
+| PATCH | `/api/admin/products/:productId/ban` | Auth + Admin | path `productId` | Ban a product |
+| PATCH | `/api/admin/products/:productId/unban` | Auth + Admin | path `productId` | Unban a product |
+| GET | `/api/admin/reports` | Auth + Admin | query `page`, `limit` | Get a list of all reports |
 
 ### Real-time Chat (Socket.IO)
 
-- เชื่อมต่อผ่าน Socket.IO server เดียวกับ backend
-- ต้องส่ง token ใน `socket.handshake.auth.token`
-- event หลักที่รองรับคือ `join`, `leave`, `sendMessage`
-- server จะ push event `newMessage` เมื่อมีข้อความใหม่หรือ auto-reply
+- Connect via the same Socket.IO server as the backend
+- Must send token in `socket.handshake.auth.token`
+- Main supported events are `join`, `leave`, `sendMessage`
+- The server will push a `newMessage` event when there is a new message or auto-reply
 
 ## Testing
 
@@ -389,24 +389,25 @@ Notes:
 ## Deployment
 
 This project is commonly deployed with:
-
-- Render for the backend
-- Vercel for the frontend
+- **Backend:** [Render](https://render.com/)
+- **Frontend:** [Vercel](https://vercel.com/)
 
 ### Render Backend Checklist
 
-- Set `NODE_ENV=production`
-- Configure the full server environment, including MySQL, Redis, JWT, Resend, and Firebase
-- Make sure `CLIENT_URL` and `CLIENT_URLS` include your frontend domains
-- Set `FIREBASE_STORAGE_BUCKET`
-- Confirm `/health` returns a successful response after deploy
+Before deploying the backend, ensure you have completed the following steps:
+- [ ] Set `NODE_ENV=production`
+- [ ] Configure the full server environment variables (MySQL, Redis, JWT, Resend, and Firebase Service Account)
+- [ ] Make sure `CLIENT_URL` and `CLIENT_URLS` include your production frontend domains
+- [ ] Set `FIREBASE_STORAGE_BUCKET` explicitly
+- [ ] Confirm `https://your-backend-url.onrender.com/api/health` returns a successful response after deployment
 
 ### Vercel Frontend Checklist
 
-- Set `NEXT_PUBLIC_API_URL`
-- Set `NEXT_PUBLIC_SOCKET_URL` if it differs from the API URL
-- Set the Firebase web environment variables
-- Verify login, uploads, chat, and image loading after deployment
+Before deploying the frontend, ensure you have configured the following:
+- [ ] Set `NEXT_PUBLIC_API_URL` to your production backend URL
+- [ ] Set `NEXT_PUBLIC_SOCKET_URL` (if it differs from the API URL)
+- [ ] Set all Firebase web environment variables (`NEXT_PUBLIC_FIREBASE_*`)
+- [ ] Post-deployment verification: Test user login, profile image uploads, real-time chat, and product image loading
 
 ## Security Notes
 
